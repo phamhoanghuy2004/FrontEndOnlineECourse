@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { navLinks } from "../../data/mockData";
 import LOGO from "../../assets/LOGO.png";
 import { FaChevronDown } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
@@ -57,12 +58,18 @@ const Navbar = () => {
                 </ul>
                 {/* Login - Register Buttons */}
                 <div className="hidden md:flex items-center gap-4">
-                    <button className="text-gray-600 font-semibold hover:text-primary transition-colors px-4 py-2">
+                    <Link 
+                        to="/register"
+                        className="text-gray-600 font-semibold hover:text-primary transition-colors px-4 py-2"
+                    >
                         Đăng ký
-                    </button>
-                    <button className="bg-primary text-white px-6 py-2 rounded-full font-semibold hover:bg-primary-dark transition-all transform hover:scale-105 shadow-lg shadow-primary/30">
+                    </Link>
+                    <Link 
+                        to="/login"
+                        className="bg-primary text-white px-6 py-2 rounded-full font-semibold hover:bg-primary-dark transition-all transform hover:scale-105 shadow-lg shadow-primary/30"
+                    >
                         Đăng nhập
-                    </button>
+                    </Link>
                 </div>
             </div>
         </nav>

@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme{
+  --color-primary: #34D399;  /* Màu xanh ngọc chủ đạo */
+  --color-primary-dark: #059669;
+  --color-dark: #1F2937;
+  --font-sans: "Inter", sans-serif; /* Bạn có thể thay bằng font khác nếu muốn */
+}
+
+/* Base styles */
+body {
+  background-color: #F9FAFB;
+  color: var(--color-dark);
+}
+
+/* Tùy chỉnh thanh định vị (Pagination) của Swiper */
+.swiper-pagination-bullet {
+  width: 10px;
+  height: 10px;
+  background-color: #D1D5DB; /* gray-300 */
+  opacity: 1;
+  transition: all 0.3s ease; /* Hiệu ứng chuyển động mượt */
+}
+
+.swiper-pagination-bullet-active {
+  width: 32px !important; /* Kéo dài ra khi active */
+  border-radius: 999px;
+  background-color: var(--color-primary) !important; /* Dùng màu primary */
+}
+
+/* Đẩy các chấm xuống dưới một chút để không dính vào khóa học */
+.swiper-pagination {
+  position: static !important;
+  margin-top: 32px;
+}
+
+/* Animation chạy chữ vô tận (Marquee) */
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); } 
+  /* Chạy từ 0 đến -50% vì mình sẽ nhân đôi danh sách item lên */
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content; /* Quan trọng: để nội dung không bị xuống dòng */
+  animation: scroll 30s linear infinite; /* 30s là tốc độ, linear để chạy đều */
+}
+
+/* Class tạm dừng khi hover */
+.pause-on-hover:hover .animate-marquee {
+  animation-play-state: paused;
+}

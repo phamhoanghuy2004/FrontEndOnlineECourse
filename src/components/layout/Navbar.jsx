@@ -1,0 +1,72 @@
+import { useState, useEffect } from "react";
+import { navLinks } from "../../data/mockData";
+import LOGO from "../../assets/LOGO.png";
+import { FaChevronDown } from "react-icons/fa";
+
+const Navbar = () => {
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => setScrolled(window.scrollY > 50);
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    return (
+        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled
+                ? "bg-white/30 backdrop-blur-md shadow-sm py-0" // Đổi từ /90 xuống /30 hoặc /20
+                : "bg-transparent py-4"
+            }`}>
+            <div className="container mx-auto px-6 flex justify-between items-center h-full">
+                {/* LOGO AREA */}
+                <a href="#" className="flex items-center h-18">
+                    <img
+                        src={LOGO}
+                        alt="EduSkill Logo"
+                        className="w-auto h-full object-contain"
+                    />
+                </a>
+                {/* Menu Option */}
+                <ul className="hidden md:flex gap-8 font-medium text-gray-600 items-center">
+                    {navLinks.map((link) => (
+                        <li key={link.name} className="relative group h-full flex items-center">
+
+                            <a href={link.href} className="flex items-center gap-1 hover:text-primary transition-colors py-2">
+                                {link.name}
+                                {link.dropdown && <FaChevronDown className="text-xs transition-transform group-hover:rotate-180" />}
+                            </a>
+                            {/* DROPDOWN AREA */}
+                            {link.dropdown && (
+                                <div className="absolute top-full left-0 pt-4 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:-translate-y-2 translate-y-0 z-50">
+                                    <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden p-2">
+                                        {link.dropdown.map((subItem) => (
+                                            <a
+                                                key={subItem.name}
+                                                href={subItem.href}
+                                                className="block px-4 py-3 rounded-lg hover:bg-green-50 hover:text-primary transition-colors text-sm font-semibold"
+                                            >
+                                                {subItem.name}
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                        </li>
+                    ))}
+                </ul>
+                {/* Login - Register Buttons */}
+                <div className="hidden md:flex items-center gap-4">
+                    <button className="text-gray-600 font-semibold hover:text-primary transition-colors px-4 py-2">
+                        Đăng ký
+                    </button>
+                    <button className="bg-primary text-white px-6 py-2 rounded-full font-semibold hover:bg-primary-dark transition-all transform hover:scale-105 shadow-lg shadow-primary/30">
+                        Đăng nhập
+                    </button>
+                </div>
+            </div>
+        </nav>
+    );
+};
+
+export default Navbar;

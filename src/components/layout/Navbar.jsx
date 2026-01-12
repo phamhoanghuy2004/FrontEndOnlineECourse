@@ -20,7 +20,7 @@ const Navbar = () => {
             }`}>
             <div className="container mx-auto px-6 flex justify-between items-center h-full">
                 {/* LOGO AREA */}
-                <a href="#" className="flex items-center h-18">
+                <a href="/" className="flex items-center h-18">
                     <img
                         src={LOGO}
                         alt="EduSkill Logo"

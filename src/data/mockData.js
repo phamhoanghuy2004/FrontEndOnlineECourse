@@ -1,40 +1,40 @@
 export const navLinks = [{
         name: "Khóa học",
-        href: "#coursesList",
+        href: "/courses",
         dropdown: [{
                 name: "TOEIC",
-                href: "#toeic"
+                href: "/courses"
             },
             {
                 name: "IELTS",
-                href: "#ielts"
+                href: "/courses"
             },
         ]
     },
     {
         name: "Đánh giá trình độ",
-        href: "#assessmentTest"
+        href: "/"
     },
     {
         name: "Luyện đề",
-        href: "#testSet",
+        href: "/",
         dropdown: [{
                 name: "TOEIC",
-                href: "#toeic"
+                href: "/"
             },
             {
                 name: "IELTS",
-                href: "#ielts"
+                href: "/"
             },
         ]
     },
     {
         name: "Blog",
-        href: "#blog"
+        href: "/"
     },
     {
         name: "Liên hệ",
-        href: "#contact"
+        href: "/"
     },
 ];
 

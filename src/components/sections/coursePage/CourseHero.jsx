@@ -48,8 +48,9 @@ const CourseHero = () => {
 
                     {/* --- LEFT COLUMN --- */}
                     {/* Giữ nguyên shadow-xl cho bên trái */}
-                    <div className="bg-[#EAF8F6] rounded-[40px] shadow-xl p-10 md:p-14 lg:pr-20 flex flex-col justify-center items-center text-center relative overflow-hidden z-0 h-full w-full">
+                    <div className="bg-[#EAF8F6] rounded-[40px] shadow-[0_0_40px_-10px_rgba(0,0,0,0.4)] p-10 md:p-14 lg:pr-20 flex flex-col justify-center items-center text-center relative overflow-hidden z-0 h-full w-full">
 
+                        {/* Background Decoration */}
                         <div className="absolute top-0 right-0 w-64 h-64 bg-green-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
                         <motion.div

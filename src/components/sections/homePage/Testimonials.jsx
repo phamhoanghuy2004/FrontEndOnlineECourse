@@ -1,5 +1,5 @@
-import React from 'react';
-import { FaStar } from "react-icons/fa";
+import ReviewCard from '../../common/ReviewCard';
+import CommonMarquee from '../../common/CommonMarquee';
 
 // 1. Mock Data: Chia làm 2 hàng (Row 1 & Row 2)
 const row1 = [
@@ -16,31 +16,6 @@ const row2 = [
   { id: 8, name: "Phạm Thoại", comment: "Học xong tự tin hẳn.", avatar: "https://i.pravatar.cc/150?img=60" },
 ];
 
-// Component con: Thẻ Review đơn lẻ
-const ReviewCard = ({ item }) => (
-  <div className="w-[350px] bg-white p-6 rounded-xl shadow-md mx-3 flex flex-col justify-center h-full border border-green-100/50">
-    {/* Header: Avatar + Tên */}
-    <div className="flex items-center gap-3 mb-4">
-      <img
-        src={item.avatar}
-        alt={item.name}
-        className="w-10 h-10 rounded-full object-cover border border-gray-200"
-      />
-      <span className="font-bold text-gray-800 text-sm">{item.name}</span>
-    </div>
-
-    {/* Content: Comment */}
-    <h4 className="text-lg font-bold text-gray-900 mb-3">
-      {item.comment}
-    </h4>
-
-    {/* Footer: Stars */}
-    <div className="flex text-yellow-400 text-sm gap-1">
-      {[...Array(5)].map((_, i) => <FaStar key={i} />)}
-    </div>
-  </div>
-);
-
 const Testimonials = () => {
   return (
     <section className="py-20 bg-primary text-white overflow-hidden">
@@ -56,26 +31,20 @@ const Testimonials = () => {
       {/* --- MARQUEE AREA --- */}
       <div className="flex flex-col gap-6"> {/* Khoảng cách giữa 2 hàng */}
 
-        {/* Hàng 1: Chạy từ Trái sang Phải */}
-        {/* pause-on-hover: Class tự chế trong CSS để dừng khi hover */}
-        <div className="relative w-full overflow-hidden pause-on-hover py-2">
-          <div className="animate-marquee flex">
-            {/* Render 2 lần danh sách để tạo vòng lặp không đứt đoạn */}
-            {[...row1, ...row1, ...row1].map((item, index) => (
-              <ReviewCard key={`${item.id}-${index}`} item={item} />
-            ))}
-          </div>
-        </div>
+        {/* Hàng 1: Chạy từ Trái sang Phải (Mặc định) */}
+        <CommonMarquee
+          data={row1}
+          CardComponent={ReviewCard}
+          duration="40s" // Tốc độ như cũ
+        />
 
-        {/* Hàng 2: Chạy từ Phải sang Trái (Hoặc chạy chậm hơn/nhanh hơn để so le) */}
-        <div className="relative w-full overflow-hidden pause-on-hover py-2">
-          {/* style={{ animationDirection: 'reverse' }} để chạy ngược chiều */}
-          <div className="animate-marquee flex" style={{ animationDuration: '35s', animationDirection: 'reverse' }}>
-            {[...row2, ...row2, ...row2].map((item, index) => (
-              <ReviewCard key={`${item.id}-${index}`} item={item} />
-            ))}
-          </div>
-        </div>
+        {/* Hàng 2: Chạy từ Phải sang Trái (Reverse) & Nhanh hơn xíu */}
+        <CommonMarquee
+          data={row2}
+          CardComponent={ReviewCard}
+          direction="reverse" // Đảo chiều như cũ
+          duration="35s"      // Chạy nhanh hơn để so le
+        />
 
       </div>
     </section>

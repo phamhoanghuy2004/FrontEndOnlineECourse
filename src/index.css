@@ -44,7 +44,9 @@ body {
 .animate-marquee {
   display: flex;
   width: max-content; /* Quan trọng: để nội dung không bị xuống dòng */
-  animation: scroll 30s linear infinite; /* 30s là tốc độ, linear để chạy đều */
+  animation-name: scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
 
 /* Class tạm dừng khi hover */

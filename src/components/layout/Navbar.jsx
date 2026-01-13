@@ -15,7 +15,7 @@ const Navbar = () => {
 
     return (
         <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled
-            ? "bg-white/30 backdrop-blur-md shadow-sm py-0" // Đổi từ /90 xuống /30 hoặc /20
+            ? "bg-white/30 backdrop-blur-md shadow-sm py-0" 
             : "bg-transparent py-4"
             }`}>
             <div className="container mx-auto px-6 flex justify-between items-center h-full">
@@ -31,7 +31,6 @@ const Navbar = () => {
                 <ul className="hidden md:flex gap-8 font-medium text-gray-600 items-center">
                     {navLinks.map((link) => (
                         <li key={link.name} className="relative group h-full flex items-center">
-
                             <Link
                                 to={link.href}
                                 className="flex items-center gap-1 hover:text-primary transition-colors py-2"
@@ -55,7 +54,6 @@ const Navbar = () => {
                                     </div>
                                 </div>
                             )}
-
                         </li>
                     ))}
                 </ul>

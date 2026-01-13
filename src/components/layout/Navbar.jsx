@@ -15,8 +15,8 @@ const Navbar = () => {
 
     return (
         <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled
-                ? "bg-white/30 backdrop-blur-md shadow-sm py-0" // Đổi từ /90 xuống /30 hoặc /20
-                : "bg-transparent py-4"
+            ? "bg-white/30 backdrop-blur-md shadow-sm py-0" // Đổi từ /90 xuống /30 hoặc /20
+            : "bg-transparent py-4"
             }`}>
             <div className="container mx-auto px-6 flex justify-between items-center h-full">
                 {/* LOGO AREA */}
@@ -32,22 +32,25 @@ const Navbar = () => {
                     {navLinks.map((link) => (
                         <li key={link.name} className="relative group h-full flex items-center">
 
-                            <a href={link.href} className="flex items-center gap-1 hover:text-primary transition-colors py-2">
+                            <Link
+                                to={link.href}
+                                className="flex items-center gap-1 hover:text-primary transition-colors py-2"
+                            >
                                 {link.name}
                                 {link.dropdown && <FaChevronDown className="text-xs transition-transform group-hover:rotate-180" />}
-                            </a>
+                            </Link>
                             {/* DROPDOWN AREA */}
                             {link.dropdown && (
                                 <div className="absolute top-full left-0 pt-4 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:-translate-y-2 translate-y-0 z-50">
                                     <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden p-2">
                                         {link.dropdown.map((subItem) => (
-                                            <a
+                                            <Link
                                                 key={subItem.name}
-                                                href={subItem.href}
+                                                to={subItem.href}
                                                 className="block px-4 py-3 rounded-lg hover:bg-green-50 hover:text-primary transition-colors text-sm font-semibold"
                                             >
                                                 {subItem.name}
-                                            </a>
+                                            </Link>
                                         ))}
                                     </div>
                                 </div>
@@ -58,13 +61,13 @@ const Navbar = () => {
                 </ul>
                 {/* Login - Register Buttons */}
                 <div className="hidden md:flex items-center gap-4">
-                    <Link 
+                    <Link
                         to="/register"
                         className="text-gray-600 font-semibold hover:text-primary transition-colors px-4 py-2"
                     >
                         Đăng ký
                     </Link>
-                    <Link 
+                    <Link
                         to="/login"
                         className="bg-primary text-white px-6 py-2 rounded-full font-semibold hover:bg-primary-dark transition-all transform hover:scale-105 shadow-lg shadow-primary/30"
                     >

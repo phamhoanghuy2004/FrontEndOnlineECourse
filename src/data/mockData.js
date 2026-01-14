@@ -102,14 +102,16 @@ export const courses = [{
     },
 ];
 
-export const instructors = [
-    {
+export const instructors = [{
         id: 1,
         name: "Thầy Huy",
         qualification: "TOEIC 990",
         bio: "Chuyên gia lấy gốc tiếng Anh, cam kết đầu ra 450+ cho người mất gốc hoàn toàn.",
         image: "https://i.pravatar.cc/300?img=11", // Ảnh mẫu
-        social: { twitter: "#", linkedin: "#" }
+        social: {
+            twitter: "#",
+            linkedin: "#"
+        }
     },
     {
         id: 2,
@@ -117,7 +119,10 @@ export const instructors = [
         qualification: "IELTS 8.5",
         bio: "Hơn 10 năm kinh nghiệm, chuyên thiết kế lộ trình cá nhân hóa giúp học viên đạt aim nhanh chóng.",
         image: "https://i.pravatar.cc/300?img=5",
-        social: { twitter: "#", linkedin: "#" }
+        social: {
+            twitter: "#",
+            linkedin: "#"
+        }
     },
     {
         id: 3,
@@ -125,7 +130,10 @@ export const instructors = [
         qualification: "IELTS 8.0",
         bio: "Bậc thầy chiến thuật Reading & Listening, giúp bạn chinh phục các bài thi khó nhằn nhất.",
         image: "https://i.pravatar.cc/300?img=3",
-        social: { twitter: "#", linkedin: "#" }
+        social: {
+            twitter: "#",
+            linkedin: "#"
+        }
     },
     {
         id: 4,
@@ -133,7 +141,10 @@ export const instructors = [
         qualification: "TESOL Master",
         bio: "Phương pháp giảng dạy hiện đại, tập trung vào phản xạ giao tiếp tự nhiên và phát âm chuẩn.",
         image: "https://i.pravatar.cc/300?img=9",
-        social: { twitter: "#", linkedin: "#" }
+        social: {
+            twitter: "#",
+            linkedin: "#"
+        }
     },
     {
         id: 5,
@@ -141,7 +152,10 @@ export const instructors = [
         qualification: "Business English",
         bio: "Cựu giám đốc nhân sự tập đoàn đa quốc gia, chuyên đào tạo tiếng Anh thương mại và phỏng vấn.",
         image: "https://i.pravatar.cc/300?img=13", // Ảnh mới
-        social: { twitter: "#", linkedin: "#" }
+        social: {
+            twitter: "#",
+            linkedin: "#"
+        }
     },
     {
         id: 6,
@@ -149,7 +163,10 @@ export const instructors = [
         qualification: "SAT 1500+",
         bio: "Chuyên luyện thi chứng chỉ SAT/ACT, giúp học viên săn học bổng du học Mỹ, Canada.",
         image: "https://i.pravatar.cc/300?img=24", // Ảnh mới
-        social: { twitter: "#", linkedin: "#" }
+        social: {
+            twitter: "#",
+            linkedin: "#"
+        }
     },
 ];
 
@@ -173,5 +190,60 @@ export const testimonials = [{
         role: "IT Dev",
         content: "Giao diện web đẹp, dễ học, lộ trình rõ ràng.",
         avatar: "https://i.pravatar.cc/150?img=3"
+    },
+];
+
+
+export const sections = [{
+        id: 'basic',
+        title: 'Basic',
+        description: 'Khởi đầu vững chắc cho người mới bắt đầu hoặc mất gốc. Lộ trình được thiết kế tinh gọn giúp bạn nhanh chóng lấy lại nền tảng ngữ pháp và từ vựng cốt lõi.',
+        data: [...courses, ...courses] // Ở đây tôi dùng chung data mẫu, thực tế bạn filter: courses.filter(c => c.level === 'Basic')
+    },
+    {
+        id: 'medium',
+        title: 'Medium',
+        description: 'Bứt phá giới hạn và hoàn thiện kỹ năng toàn diện. Lộ trình tập trung vào tư duy ngôn ngữ chuyên sâu, giúp bạn tự tin giao tiếp và xử lý các dạng đề thi phức tạp.',
+        data: [...courses, ...courses] // courses.filter(c => c.level === 'Medium')
+    },
+    {
+        id: 'advanced',
+        title: 'Advanced',
+        description: 'Chinh phục đỉnh cao ngôn ngữ với các bài giảng nâng cao. Phù hợp cho những ai muốn đạt điểm số tối đa và sử dụng tiếng Anh như người bản xứ.',
+        data: [...courses, ...courses] // courses.filter(c => c.level === 'Advanced')
+    }
+];
+
+// Mock Data học viên
+export const topStudents = [
+    { 
+        id: 1, 
+        name: "Phạm Hoàng Huy", 
+        avatar: "https://i.pravatar.cc/150?img=11",
+        scores: { reading: 8.5, listening: 8.0, speaking: 8.0, writing: 8.0, total: 8.0 }
+    },
+    { 
+        id: 2, 
+        name: "Nguyễn Thảo Ly", 
+        avatar: "https://i.pravatar.cc/150?img=5",
+        scores: { reading: 9.0, listening: 8.5, speaking: 7.5, writing: 7.0, total: 8.0 }
+    },
+    { 
+        id: 3, 
+        name: "Trần Đức Bo", 
+        avatar: "https://i.pravatar.cc/150?img=3",
+        scores: { reading: 7.5, listening: 8.0, speaking: 8.5, writing: 7.5, total: 8.0 }
+    },
+    { 
+        id: 4, 
+        name: "Lê Văn Luyện", 
+        avatar: "https://i.pravatar.cc/150?img=13",
+        scores: { reading: 8.0, listening: 7.5, speaking: 7.0, writing: 7.5, total: 7.5 }
+    },
+    { 
+        id: 5, 
+        name: "Đỗ Nhật Nam", 
+        avatar: "https://i.pravatar.cc/150?img=60",
+        scores: { reading: 9.0, listening: 9.0, speaking: 8.5, writing: 8.0, total: 8.5 }
     },
 ];

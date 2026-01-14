@@ -39,6 +39,14 @@ const floatingAnimation = {
     transition: { duration: 4, repeat: Infinity, ease: "easeInOut" },
 };
 
+// 1. Thêm hàm xử lý scroll mượt
+const scrollToCourses = () => {
+    const element = document.getElementById('course-list');
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+};
+
 const CourseHero = () => {
     return (
         <section className="pt-32 pb-20 bg-white overflow-hidden">
@@ -90,7 +98,7 @@ const CourseHero = () => {
                                 <button className="bg-primary text-white px-8 py-4 rounded-full font-bold shadow-lg shadow-primary/30 hover:bg-green-600 transition-all transform hover:-translate-y-1">
                                     Nhận gợi ý khóa học
                                 </button>
-                                <button className="bg-white text-primary px-8 py-4 rounded-full font-bold shadow-sm hover:shadow-md hover:bg-gray-50 transition-all transform hover:-translate-y-1">
+                                <button onClick={scrollToCourses} className="bg-white text-primary px-8 py-4 rounded-full font-bold shadow-sm hover:shadow-md hover:bg-gray-50 transition-all transform hover:-translate-y-1">
                                     Xem các khóa học ngay
                                 </button>
                             </div>

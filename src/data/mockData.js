@@ -13,7 +13,7 @@ export const navLinks = [{
     },
     {
         name: "Đánh giá trình độ",
-        href: "/"
+        href: "/level-test"
     },
     {
         name: "Luyện đề",

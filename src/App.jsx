@@ -5,6 +5,7 @@ import HomePage from "./page/customer/homePage";
 import Login from "./page/authPage/Login";
 import Register from "./page/authPage/Register";
 import CoursePage from "./page/customer/CoursePage";
+import LevelTest from "./page/customer/LevelTestPage";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/courses" element={<CoursePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/level-test" element={<LevelTest />} />
         </Routes>
         <Footer />
       </div>

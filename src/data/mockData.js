@@ -17,14 +17,14 @@ export const navLinks = [{
     },
     {
         name: "Luyện đề",
-        href: "/",
+        href: "/testPractice",
         dropdown: [{
                 name: "TOEIC",
-                href: "/"
+                href: "/testPractice"
             },
             {
                 name: "IELTS",
-                href: "/"
+                href: "/testPractice"
             },
         ]
     },
@@ -66,7 +66,7 @@ export const courses = [{
         rating: 4.5,
         reviewCount: "16,325",
         students: 120,
-        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/614786882_2632756040432705_8535312098585471585_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeFiUI8Tyoi3zZ7nkK7uv2Apqr_r2eqFO22qv-vZ6oU7bcB7iwz3DfWfwvryhpSXJdb8GFZ57OlvbFwK4E2BrOcj&_nc_ohc=6m9wxbo-2OkQ7kNvwHzJAQ0&_nc_oc=AdnpPo0MsWuBPUF4W95BbNC4NrH2qB-pR9yWRV196biLF8i5seF0e-J4493vdYTD_9U&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=C-TMq--z1QfgHsQJaztO_Q&oh=00_AfpewqlpzJ023Hdwadt2gXEM5-Mr-uUmDQ6sD7eyX_OZBw&oe=69683D7B", // Thay ảnh thật sau
+        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/614786882_2632756040432705_8535312098585471585_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeFiUI8Tyoi3zZ7nkK7uv2Apqr_r2eqFO22qv-vZ6oU7bcB7iwz3DfWfwvryhpSXJdb8GFZ57OlvbFwK4E2BrOcj&_nc_ohc=O2RJQxrDZusQ7kNvwH88Wya&_nc_oc=AdkWEcgs76zRy8mCFf6KN1FSmMVkDY-6OZcbpAeTjdptq7x07yxeK42UXQa8bSQPX6s&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=abinq4ju-7TdJ0SGgbgy8g&oh=00_Afr_k1C6gdOiM90m6mTLQB6gAByeppvpELj6pbrvzy-6SA&oe=696F7DBB", // Thay ảnh thật sau
         tutor: "Ms. Hoa",
         avatarGV: "https://i.pravatar.cc/150?img=1",
         tag: "TOEIC",
@@ -86,7 +86,7 @@ export const courses = [{
         rating: 4.8,
         reviewCount: "8,450",
         students: 85,
-        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/614045228_2632756207099355_5276660425071840258_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeExmGrAVfnq7TIY2UrFLiJXjfLKEZxcx4yN8soRnFzHjM7sdAHzwFobXN1sCaiss-Pf6qXzWsxNcdjLP0g2lAsD&_nc_ohc=puQ2VkJGgw8Q7kNvwFvllLt&_nc_oc=Adnp6KO6QpvJgGOPN1YQpSmB7ni-8e1BeIaWL7Lx2fn7GFM2LPCHLxh8Lrz1ESfyMlI&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=FiRC578zTW6MVp7DU__20w&oh=00_AfoY8NAudbaMI-GT0mbFgCbX2ikLx1rA0rz8JNSzfUNYlg&oe=69682C71",
+        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/614045228_2632756207099355_5276660425071840258_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeExmGrAVfnq7TIY2UrFLiJXjfLKEZxcx4yN8soRnFzHjM7sdAHzwFobXN1sCaiss-Pf6qXzWsxNcdjLP0g2lAsD&_nc_ohc=lhFry8nFoGIQ7kNvwEKIkaq&_nc_oc=AdlhVBC4u2-qVSqDVTv2UOPtR9SkMKnDBIniP0EVCQ9w9laCqUkx-bUrekSvAfiZDbI&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=Y-pWySP24kcgskGLG32TmQ&oh=00_Afq2oaO2g7qoeu8xgvFS_ANX0tnPb6xkFuvFiVzKeyxB7A&oe=696F6CB1",
         tutor: "Mr. Jack",
         avatarGV: "https://i.pravatar.cc/150?img=5",
         tag: "TOEIC",
@@ -106,7 +106,7 @@ export const courses = [{
         rating: 4.9,
         reviewCount: "12,100",
         students: 200,
-        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/614908279_2632756120432697_2974025794158688791_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeHO4gOhNZ7TasHfvuwqN5_0GlU6DgL-QqwaVToOAv5CrK_lMF7L5ztAPa4gfryiEXszldW--qO078EnhXGFzm8y&_nc_ohc=pq-Eteqsx2UQ7kNvwHrx7Wa&_nc_oc=AdlpL4SFEqY5G1L6S_mZGECRTkG83F3bSFgTxqu9tAC2jR7BU08NNU978ZI3gUGYBTo&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=ivlV5Q7rTRqS5f-1E9_qcA&oh=00_AfoMfAObVWxyJK5mZ1H8ehmD0TaaEFFaTFGWCugZ9tp1YA&oe=696834F6",
+        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/614908279_2632756120432697_2974025794158688791_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeHO4gOhNZ7TasHfvuwqN5_0GlU6DgL-QqwaVToOAv5CrK_lMF7L5ztAPa4gfryiEXszldW--qO078EnhXGFzm8y&_nc_ohc=qRzKuntQ1vQQ7kNvwE3skGK&_nc_oc=Adm9RMXrc7IR3NnfqRFp4zg0oSP9ihlAgvNTMp2vtSU8_tMGH9mz0Q1E3X5FU3seT4E&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=G6Koh02Pu0nUtRPPbYyteg&oh=00_AfpnKCWX625-SlIgSpUQkeR36AFlJnm1oO77b4FS8YbuqA&oe=696F7536",
         tutor: "Ms. Lan",
         avatarGV: "https://i.pravatar.cc/150?img=3",
         tag: "IELTS",
@@ -232,36 +232,134 @@ export const sections = [{
     }
 ];
 
+export const testSets = [
+    // --- TOEIC ---
+    {
+        id: 1,
+        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/615684832_2637666403275002_6151656838858651882_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeFXaSzx4wBnSekofig17CgRKN8eFgMf4roo3x4WAx_iuiacx4KYwCviym3ts93BVHC66WTV2trC5CXiomRhdcrn&_nc_ohc=CsVXNWczSNMQ7kNvwE0vi3d&_nc_oc=AdlcR6Imn-ETbdV5X2H3tooxMCr14Ovg_fENtUigzoXJtYGpwBrXp7yfkkqbB-GCbiY&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=EowHgpP1aRsf7mRUR_4IHg&oh=00_AfoXR_jwFIxG-WQq3h2oUMN7nINLWrIAyn9vbeVknkq4PA&oe=696FD0E9",
+        tag: "TOEIC",
+        title: "ETS 2024 - Full Test",
+        description: "Bộ đề cập nhật mới nhất từ IIG, bám sát cấu trúc đề thi thật năm nay.",
+        price: 15,
+    },
+    {
+        id: 2,
+        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/615684832_2637666403275002_6151656838858651882_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeFXaSzx4wBnSekofig17CgRKN8eFgMf4roo3x4WAx_iuiacx4KYwCviym3ts93BVHC66WTV2trC5CXiomRhdcrn&_nc_ohc=CsVXNWczSNMQ7kNvwE0vi3d&_nc_oc=AdlcR6Imn-ETbdV5X2H3tooxMCr14Ovg_fENtUigzoXJtYGpwBrXp7yfkkqbB-GCbiY&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=EowHgpP1aRsf7mRUR_4IHg&oh=00_AfoXR_jwFIxG-WQq3h2oUMN7nINLWrIAyn9vbeVknkq4PA&oe=696FD0E9",
+        tag: "TOEIC",
+        title: "Hacker TOEIC 3",
+        description: "Bộ đề khó hơn thi thật, giúp rèn luyện tâm lý vững vàng để đạt 900+.",
+        price: 10,
+    },
+    {
+        id: 3,
+        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/615684832_2637666403275002_6151656838858651882_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeFXaSzx4wBnSekofig17CgRKN8eFgMf4roo3x4WAx_iuiacx4KYwCviym3ts93BVHC66WTV2trC5CXiomRhdcrn&_nc_ohc=CsVXNWczSNMQ7kNvwE0vi3d&_nc_oc=AdlcR6Imn-ETbdV5X2H3tooxMCr14Ovg_fENtUigzoXJtYGpwBrXp7yfkkqbB-GCbiY&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=EowHgpP1aRsf7mRUR_4IHg&oh=00_AfoXR_jwFIxG-WQq3h2oUMN7nINLWrIAyn9vbeVknkq4PA&oe=696FD0E9",
+        tag: "TOEIC",
+        title: "YBM TOEIC Vol.3",
+        description: "Giọng đọc giống 99% đề thi thật, phù hợp luyện nghe chuyên sâu.",
+        price: 12,
+    },
+
+    // --- IELTS ---
+    {
+        id: 4,
+        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/616172523_2637666399941669_5416493300576885571_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeHk6oraPyrs4bPz_xETbhw2HFw_ZcTDuyQcXD9lxMO7JDDENnvVSA4GWTXYrabmYmliVoDpPlCnLbQNBVP0nJzd&_nc_ohc=be1UKsM2N7YQ7kNvwFB4gWR&_nc_oc=AdlA2yMdxeZFc3Cj4tB0IpSgtoOTwsJSGwwaMcrgiwlciIXWdukYWzr5HkIfGMA7YAc&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=yVssFuCGZM_Wl9PM_qMB7g&oh=00_AfpvPwyIp9BmMwQ-pQzWKSw_3KXGp7mvpmYLoVKda4Knmg&oe=696FF482",
+        tag: "IELTS",
+        title: "Cambridge IELTS 18",
+        description: "Bộ đề 'gối đầu giường' cho dân IELTS, cập nhật xu hướng ra đề mới nhất.",
+        price: 20,
+    },
+    {
+        id: 5,
+        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/616172523_2637666399941669_5416493300576885571_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeHk6oraPyrs4bPz_xETbhw2HFw_ZcTDuyQcXD9lxMO7JDDENnvVSA4GWTXYrabmYmliVoDpPlCnLbQNBVP0nJzd&_nc_ohc=be1UKsM2N7YQ7kNvwFB4gWR&_nc_oc=AdlA2yMdxeZFc3Cj4tB0IpSgtoOTwsJSGwwaMcrgiwlciIXWdukYWzr5HkIfGMA7YAc&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=yVssFuCGZM_Wl9PM_qMB7g&oh=00_AfpvPwyIp9BmMwQ-pQzWKSw_3KXGp7mvpmYLoVKda4Knmg&oe=696FF482",
+        tag: "IELTS",
+        title: "IELTS Trainer 2",
+        description: "6 bài test kèm hướng dẫn giải chi tiết từng kỹ năng từ Cambridge.",
+        price: 18,
+    },
+    {
+        id: 6,
+        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/616172523_2637666399941669_5416493300576885571_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeHk6oraPyrs4bPz_xETbhw2HFw_ZcTDuyQcXD9lxMO7JDDENnvVSA4GWTXYrabmYmliVoDpPlCnLbQNBVP0nJzd&_nc_ohc=be1UKsM2N7YQ7kNvwFB4gWR&_nc_oc=AdlA2yMdxeZFc3Cj4tB0IpSgtoOTwsJSGwwaMcrgiwlciIXWdukYWzr5HkIfGMA7YAc&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=yVssFuCGZM_Wl9PM_qMB7g&oh=00_AfpvPwyIp9BmMwQ-pQzWKSw_3KXGp7mvpmYLoVKda4Knmg&oe=696FF482",
+        tag: "IELTS",
+        title: "Mindset for IELTS 3",
+        description: "Giáo trình tích hợp luyện đề và phát triển tư duy ngôn ngữ academic.",
+        price: 25,
+    }
+];
+
+
+export const testSetType = [{
+        id: 'toeic',
+        title: 'TOEIC',
+        description: 'Tổng hợp các bộ đề TOEIC chất lượng, bám sát cấu trúc đề thi thật. Hệ thống bài tập phong phú giúp người học củng cố kiến thức, hoàn thiện kỹ năng làm bài và tự tin chinh phục mục tiêu điểm số.',
+        data: testSets // Ở đây tôi dùng chung data mẫu, thực tế bạn filter: courses.filter(c => c.level === 'Basic')
+    },
+    {
+        id: 'ielts',
+        title: 'IELTS',
+        description: 'Hệ thống bài test IELTS chất lượng giúp người học làm quen với áp lực phòng thi và đa dạng dạng bài. Hỗ trợ củng cố kiến thức nền tảng, khắc phục điểm yếu và tối ưu hóa kết quả trong thời gian ngắn nhất.',
+        data: testSets // Ở đây tôi dùng chung data mẫu, thực tế bạn filter: courses.filter(c => c.level === 'Basic')
+    }
+]
+
 // Mock Data học viên
-export const topStudents = [
-    { 
-        id: 1, 
-        name: "Phạm Hoàng Huy", 
+export const topStudents = [{
+        id: 1,
+        name: "Phạm Hoàng Huy",
         avatar: "https://i.pravatar.cc/150?img=11",
-        scores: { reading: 8.5, listening: 8.0, speaking: 8.0, writing: 8.0, total: 8.0 }
+        scores: {
+            reading: 8.5,
+            listening: 8.0,
+            speaking: 8.0,
+            writing: 8.0,
+            total: 8.0
+        }
     },
-    { 
-        id: 2, 
-        name: "Nguyễn Thảo Ly", 
+    {
+        id: 2,
+        name: "Nguyễn Thảo Ly",
         avatar: "https://i.pravatar.cc/150?img=5",
-        scores: { reading: 9.0, listening: 8.5, speaking: 7.5, writing: 7.0, total: 8.0 }
+        scores: {
+            reading: 9.0,
+            listening: 8.5,
+            speaking: 7.5,
+            writing: 7.0,
+            total: 8.0
+        }
     },
-    { 
-        id: 3, 
-        name: "Trần Đức Bo", 
+    {
+        id: 3,
+        name: "Trần Đức Bo",
         avatar: "https://i.pravatar.cc/150?img=3",
-        scores: { reading: 7.5, listening: 8.0, speaking: 8.5, writing: 7.5, total: 8.0 }
+        scores: {
+            reading: 7.5,
+            listening: 8.0,
+            speaking: 8.5,
+            writing: 7.5,
+            total: 8.0
+        }
     },
-    { 
-        id: 4, 
-        name: "Lê Văn Luyện", 
+    {
+        id: 4,
+        name: "Lê Văn Luyện",
         avatar: "https://i.pravatar.cc/150?img=13",
-        scores: { reading: 8.0, listening: 7.5, speaking: 7.0, writing: 7.5, total: 7.5 }
+        scores: {
+            reading: 8.0,
+            listening: 7.5,
+            speaking: 7.0,
+            writing: 7.5,
+            total: 7.5
+        }
     },
-    { 
-        id: 5, 
-        name: "Đỗ Nhật Nam", 
+    {
+        id: 5,
+        name: "Đỗ Nhật Nam",
         avatar: "https://i.pravatar.cc/150?img=60",
-        scores: { reading: 9.0, listening: 9.0, speaking: 8.5, writing: 8.0, total: 8.5 }
+        scores: {
+            reading: 9.0,
+            listening: 9.0,
+            speaking: 8.5,
+            writing: 8.0,
+            total: 8.5
+        }
     },
 ];

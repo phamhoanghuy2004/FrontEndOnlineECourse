@@ -70,7 +70,13 @@ export const courses = [{
         tutor: "Ms. Hoa",
         avatarGV: "https://i.pravatar.cc/150?img=1",
         tag: "TOEIC",
-        level: "BASIC"
+        level: "BASIC",
+        trialLesson: {
+            video: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Ví dụ video
+            document: "https://example.com/document.pdf",
+            test: "https://example.com/test",
+            description: "Học thử bài 1: Giới thiệu về TOEIC và các thì cơ bản trong tiếng Anh."
+        }
     },
     {
         id: 2,
@@ -84,7 +90,13 @@ export const courses = [{
         tutor: "Mr. Jack",
         avatarGV: "https://i.pravatar.cc/150?img=5",
         tag: "TOEIC",
-        level: "ADVANCE"
+        level: "ADVANCE",
+        trialLesson: {
+            video: "https://www.youtube.com/embed/dQw4w9WgXcQ", 
+            document: "https://example.com/document-adv.pdf",
+            test: "https://example.com/test-adv",
+            description: "Học thử bài 1: Chiến thuật nghe Part 3, 4 đỉnh cao."
+        }
     },
     {
         id: 3,
@@ -98,7 +110,13 @@ export const courses = [{
         tutor: "Ms. Lan",
         avatarGV: "https://i.pravatar.cc/150?img=3",
         tag: "IELTS",
-        level: "BASIC"
+        level: "BASIC",
+        trialLesson: {
+            video: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            document: "https://example.com/ielts-doc.pdf",
+            test: "https://example.com/ielts-test",
+            description: "Học thử bài 1: Speaking Part 1 - Intro & Interview."
+        }
     },
 ];
 

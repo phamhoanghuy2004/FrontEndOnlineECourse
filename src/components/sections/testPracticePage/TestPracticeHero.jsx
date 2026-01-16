@@ -21,13 +21,25 @@ const itemVariants = {
     }
 };
 
+// 1. Thêm hàm xử lý scroll mượt
 const scrollToTests = () => {
     const element = document.getElementById('test-list');
     if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // 1. Xác định khoảng cách muốn "lùi lại" (Chiều cao Navbar + khoảng thở)
+        // Ví dụ: Navbar cao 80px, muốn hở thêm 20px thì để offset = 100
+        const headerOffset = 60; 
+
+        // 2. Tính vị trí tuyệt đối của phần tử trong trang
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+        // 3. Cuộn tới vị trí đã tính toán
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+        });
     }
 };
-
 const HeroSection = () => {
     return (
         <section className="relative w-full min-h-screen flex items-center justify-center bg-transparent overflow-hidden">

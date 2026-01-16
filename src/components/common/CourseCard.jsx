@@ -1,18 +1,18 @@
 import { FaStar } from "react-icons/fa";
 import { FiArrowUpRight } from "react-icons/fi";
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 const CourseCard = ({ data }) => {
     return (
-        <motion.div 
+        <motion.div
             // 3. Hiệu ứng hover: Bay lên 10px
             whileHover={{ y: -10 }}
             // 4. Cấu hình độ nảy (spring) để tạo cảm giác "tưng"
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            
-            className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-2xl transition-shadow duration-300 overflow-hidden cursor-pointer h-full flex flex-col"
+            className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-2xl transition-shadow duration-300 overflow-hidden cursor-pointer h-full flex flex-col relative"
         >
-
+            <Link to={`/courses/${data.id}`} className="absolute inset-0 z-10"></Link>
             {/* 1. IMAGE AREA */}
             <div className="relative overflow-hidden h-56 flex-shrink-0">
                 <img src={data.image} alt={data.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />

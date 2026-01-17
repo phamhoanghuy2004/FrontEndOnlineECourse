@@ -8,10 +8,13 @@ import CoursePage from "./page/customer/CoursePage";
 import LevelTest from "./page/customer/LevelTestPage";
 import CourseDetail from "./page/customer/CourseDetail";
 import TestPracticePage from './page/customer/TestPracticePage';
+import TestDetailPage from "./page/customer/TestDetailPage";
+import ScrollToTop from "./components/common/ScrollToTop";
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <div className="font-sans">
         <Navbar />
         <Routes>
@@ -22,6 +25,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/level-test" element={<LevelTest />} />
           <Route path="/testPractice" element={<TestPracticePage />} />
+          <Route path="/testDetail" element={<TestDetailPage />} />
         </Routes>
         <Footer />
       </div>

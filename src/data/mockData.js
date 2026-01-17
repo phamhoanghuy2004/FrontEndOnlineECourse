@@ -238,8 +238,8 @@ export const testSets = [
         id: 1,
         image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/615684832_2637666403275002_6151656838858651882_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeFXaSzx4wBnSekofig17CgRKN8eFgMf4roo3x4WAx_iuiacx4KYwCviym3ts93BVHC66WTV2trC5CXiomRhdcrn&_nc_ohc=CsVXNWczSNMQ7kNvwE0vi3d&_nc_oc=AdlcR6Imn-ETbdV5X2H3tooxMCr14Ovg_fENtUigzoXJtYGpwBrXp7yfkkqbB-GCbiY&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=EowHgpP1aRsf7mRUR_4IHg&oh=00_AfoXR_jwFIxG-WQq3h2oUMN7nINLWrIAyn9vbeVknkq4PA&oe=696FD0E9",
         tag: "TOEIC",
-        title: "ETS 2024 - Full Test",
-        description: "Bộ đề cập nhật mới nhất từ IIG, bám sát cấu trúc đề thi thật năm nay.",
+        title: "ETS 2024",
+        description: "Bộ đề độc quyền mới nhất từ IIG, được cập nhật sát với xu hướng ra đề thi thật năm 2024. Đây là tài liệu chuẩn mực giúp bạn làm quen với nhịp độ và độ khó thực tế của bài thi.",
         price: 15,
     },
     {
@@ -247,7 +247,7 @@ export const testSets = [
         image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/615684832_2637666403275002_6151656838858651882_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeFXaSzx4wBnSekofig17CgRKN8eFgMf4roo3x4WAx_iuiacx4KYwCviym3ts93BVHC66WTV2trC5CXiomRhdcrn&_nc_ohc=CsVXNWczSNMQ7kNvwE0vi3d&_nc_oc=AdlcR6Imn-ETbdV5X2H3tooxMCr14Ovg_fENtUigzoXJtYGpwBrXp7yfkkqbB-GCbiY&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=EowHgpP1aRsf7mRUR_4IHg&oh=00_AfoXR_jwFIxG-WQq3h2oUMN7nINLWrIAyn9vbeVknkq4PA&oe=696FD0E9",
         tag: "TOEIC",
         title: "Hacker TOEIC 3",
-        description: "Bộ đề khó hơn thi thật, giúp rèn luyện tâm lý vững vàng để đạt 900+.",
+        description: "Được mệnh danh là bộ đề 'khắc nghiệt' với độ khó cao hơn đề thi thật, giúp bạn rèn luyện tâm lý thép. Lựa chọn hoàn hảo cho các bạn muốn chinh phục mốc điểm 900+.",
         price: 10,
     },
     {
@@ -255,7 +255,7 @@ export const testSets = [
         image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/615684832_2637666403275002_6151656838858651882_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeFXaSzx4wBnSekofig17CgRKN8eFgMf4roo3x4WAx_iuiacx4KYwCviym3ts93BVHC66WTV2trC5CXiomRhdcrn&_nc_ohc=CsVXNWczSNMQ7kNvwE0vi3d&_nc_oc=AdlcR6Imn-ETbdV5X2H3tooxMCr14Ovg_fENtUigzoXJtYGpwBrXp7yfkkqbB-GCbiY&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=EowHgpP1aRsf7mRUR_4IHg&oh=00_AfoXR_jwFIxG-WQq3h2oUMN7nINLWrIAyn9vbeVknkq4PA&oe=696FD0E9",
         tag: "TOEIC",
         title: "YBM TOEIC Vol.3",
-        description: "Giọng đọc giống 99% đề thi thật, phù hợp luyện nghe chuyên sâu.",
+        description: "Sở hữu giọng đọc giống đến 99% so với đề thi thật tại IIG, giúp bạn không bị bỡ ngỡ trong phòng thi. Cực kỳ phù hợp để luyện kỹ năng nghe chuyên sâu và tránh các bẫy âm thanh.",
         price: 12,
     },
 
@@ -265,7 +265,7 @@ export const testSets = [
         image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/616172523_2637666399941669_5416493300576885571_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeHk6oraPyrs4bPz_xETbhw2HFw_ZcTDuyQcXD9lxMO7JDDENnvVSA4GWTXYrabmYmliVoDpPlCnLbQNBVP0nJzd&_nc_ohc=be1UKsM2N7YQ7kNvwFB4gWR&_nc_oc=AdlA2yMdxeZFc3Cj4tB0IpSgtoOTwsJSGwwaMcrgiwlciIXWdukYWzr5HkIfGMA7YAc&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=yVssFuCGZM_Wl9PM_qMB7g&oh=00_AfpvPwyIp9BmMwQ-pQzWKSw_3KXGp7mvpmYLoVKda4Knmg&oe=696FF482",
         tag: "IELTS",
         title: "Cambridge IELTS 18",
-        description: "Bộ đề 'gối đầu giường' cho dân IELTS, cập nhật xu hướng ra đề mới nhất.",
+        description: "Tài liệu kinh điển 'gối đầu giường' cho dân IELTS, phản ánh chính xác xu hướng ra đề mới nhất. Giúp bạn đánh giá năng lực thực tế trước khi bước vào kỳ thi chính thức.",
         price: 20,
     },
     {
@@ -273,7 +273,7 @@ export const testSets = [
         image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/616172523_2637666399941669_5416493300576885571_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeHk6oraPyrs4bPz_xETbhw2HFw_ZcTDuyQcXD9lxMO7JDDENnvVSA4GWTXYrabmYmliVoDpPlCnLbQNBVP0nJzd&_nc_ohc=be1UKsM2N7YQ7kNvwFB4gWR&_nc_oc=AdlA2yMdxeZFc3Cj4tB0IpSgtoOTwsJSGwwaMcrgiwlciIXWdukYWzr5HkIfGMA7YAc&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=yVssFuCGZM_Wl9PM_qMB7g&oh=00_AfpvPwyIp9BmMwQ-pQzWKSw_3KXGp7mvpmYLoVKda4Knmg&oe=696FF482",
         tag: "IELTS",
         title: "IELTS Trainer 2",
-        description: "6 bài test kèm hướng dẫn giải chi tiết từng kỹ năng từ Cambridge.",
+        description: "Cung cấp 6 bài test trọn vẹn kèm theo hướng dẫn giải thích chi tiết và các mẹo làm bài độc quyền từ chuyên gia. Đóng vai trò như huấn luyện viên riêng giúp bạn bứt phá điểm số.",
         price: 18,
     },
     {
@@ -281,11 +281,10 @@ export const testSets = [
         image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/616172523_2637666399941669_5416493300576885571_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeHk6oraPyrs4bPz_xETbhw2HFw_ZcTDuyQcXD9lxMO7JDDENnvVSA4GWTXYrabmYmliVoDpPlCnLbQNBVP0nJzd&_nc_ohc=be1UKsM2N7YQ7kNvwFB4gWR&_nc_oc=AdlA2yMdxeZFc3Cj4tB0IpSgtoOTwsJSGwwaMcrgiwlciIXWdukYWzr5HkIfGMA7YAc&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=yVssFuCGZM_Wl9PM_qMB7g&oh=00_AfpvPwyIp9BmMwQ-pQzWKSw_3KXGp7mvpmYLoVKda4Knmg&oe=696FF482",
         tag: "IELTS",
         title: "Mindset for IELTS 3",
-        description: "Giáo trình tích hợp luyện đề và phát triển tư duy ngôn ngữ academic.",
+        description: "Sự kết hợp hoàn hảo giữa giáo trình học thuật và luyện đề, thiết kế chuyên biệt cho người học hướng tới band điểm cao. Phát triển tư duy ngôn ngữ Academic một cách bài bản.",
         price: 25,
     }
 ];
-
 
 export const testSetType = [{
         id: 'toeic',

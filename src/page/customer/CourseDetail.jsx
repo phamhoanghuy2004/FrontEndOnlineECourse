@@ -6,6 +6,7 @@ import CourseHero from "../../components/sections/courseDetailPage/CourseHero";
 import TrialLesson from "../../components/sections/courseDetailPage/TrialLesson";
 import InstructorInfo from "../../components/sections/courseDetailPage/InstructorInfo";
 import CourseSidebar from "../../components/sections/courseDetailPage/CourseSidebar";
+import CourseContent from "../../components/sections/courseDetailPage/CourseContent";
 
 const CourseDetail = () => {
     const { id } = useParams();
@@ -45,14 +46,17 @@ const CourseDetail = () => {
                     {/* --- LEFT COLUMN: MAIN CONTENT --- */}
                     <div className="lg:col-span-2 space-y-10">
 
-                        {/* 1. HEADER INFO */}
+                        {/* 1. HERO MAIN INFO */}
                         <CourseHero course={course} />
 
-                        {/* 2. TRIAL LESSON SECTION */}
+                        {/* 2. INSTRUCTOR INFO (Moved up as requested) */}
+                        <InstructorInfo teacher={teacher} />
+
+                        {/* 3. TRIAL LESSON SECTION */}
                         <TrialLesson course={course} />
 
-                        {/* 3. INSTRUCTOR INFO */}
-                        <InstructorInfo teacher={teacher} />
+                        {/* 4. COURSE CONTENT (Lesson List) */}
+                        <CourseContent course={course} />
 
                     </div>
 

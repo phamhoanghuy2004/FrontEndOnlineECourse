@@ -1,6 +1,5 @@
 import HeroSection from "../../components/sections/testPracticePage/TestPracticeHero";
 import TestSet from "../../components/sections/testPracticePage/TestSet";
-import Footer from "../../components/layout/Footer";
 
 const TestPracticePage = () => {
     return (
@@ -24,7 +23,7 @@ const TestPracticePage = () => {
                 <HeroSection />
                 <TestSet />
             </div>
-            
+
         </div>
     );
 };

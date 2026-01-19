@@ -1,25 +1,49 @@
-import TestDetailHero from "../../components/sections/TestSetDetail/TestSetHero";
+import React from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
+import TestDetailHero from "../../components/sections/TestSetDetail/TestSetHero";
+import TestListSection from "../../components/sections/TestSetDetail/TestList";
 
 const TestDetailPage = () => {
     const location = useLocation();
     const data = location.state;
 
+    // Xử lý khi không có data (F5 trang)
     if (!data) {
         return (
-            <div className="min-h-screen bg-white">
-                <TestDetailHero data={{
-                    title: "Dữ Liệu Mẫu (Do F5)",
-                    description: "Dữ liệu bị mất do reload trang",
-                    image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/616172523_2637666399941669_5416493300576885571_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeHk6oraPyrs4bPz_xETbhw2HFw_ZcTDuyQcXD9lxMO7JDDENnvVSA4GWTXYrabmYmliVoDpPlCnLbQNBVP0nJzd&_nc_ohc=be1UKsM2N7YQ7kNvwFB4gWR&_nc_oc=AdlA2yMdxeZFc3Cj4tB0IpSgtoOTwsJSGwwaMcrgiwlciIXWdukYWzr5HkIfGMA7YAc&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=yVssFuCGZM_Wl9PM_qMB7g&oh=00_AfpvPwyIp9BmMwQ-pQzWKSw_3KXGp7mvpmYLoVKda4Knmg&oe=696FF482"
-                }} />
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <p>Dữ liệu không tồn tại. Vui lòng quay lại trang danh sách.</p>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-white">
-            <TestDetailHero data={data} />
+        <div className="relative min-h-screen w-full overflow-hidden">
+
+            {/* --- 1. GLOBAL BACKGROUND (Dùng chung cho cả trang) --- */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                {/* Nền Gradient Xanh Ngọc/Xanh Dương nhạt */}
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-50"></div>
+
+                {/* Blobs trang trí (Hiệu ứng trôi) */}
+                <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-emerald-200/40 rounded-full mix-blend-multiply blur-3xl animate-blob"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-200/40 rounded-full mix-blend-multiply blur-3xl animate-blob animation-delay-2000"></div>
+                <div className="absolute top-[40%] left-[20%] w-[400px] h-[400px] bg-teal-200/30 rounded-full mix-blend-multiply blur-3xl animate-blob animation-delay-4000"></div>
+
+                {/* Họa tiết chấm bi mờ */}
+                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #333 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+            </div>
+
+            {/* --- 2. NỘI DUNG CHÍNH (Nằm đè lên nền) --- */}
+            <div className="relative z-10 pb-20"> {/* pb-20 để cách footer */}
+                
+                {/* Hero Section */}
+                <TestDetailHero data={data} />
+                
+                {/* List Section */}
+                <TestListSection tests={data.tests} coins={data.price} />
+                
+            </div>
+
         </div>
     );
 };

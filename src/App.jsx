@@ -9,6 +9,7 @@ import LevelTest from "./page/customer/LevelTestPage";
 import CourseDetail from "./page/customer/CourseDetail";
 import TestPracticePage from './page/customer/TestPracticePage';
 import TestDetailPage from "./page/customer/TestDetailPage";
+import TestPage from "./page/customer/TestPage";
 import ScrollToTop from "./components/common/ScrollToTop";
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Route path="/level-test" element={<LevelTest />} />
           <Route path="/testPractice" element={<TestPracticePage />} />
           <Route path="/testDetail" element={<TestDetailPage />} />
+          <Route path="/testPage" element={<TestPage />} />
         </Routes>
         <Footer />
       </div>

@@ -1,50 +1,39 @@
-export const navLinks = [{
-        name: "Khóa học",
-        href: "/courses",
-        dropdown: [{
-                name: "TOEIC",
-                href: "/courses"
-            },
-            {
-                name: "IELTS",
-                href: "/courses"
-            },
-        ],
-    },
-    {
-        name: "Đánh giá trình độ",
-        href: "/level-test",
-    },
-    {
-        name: "Luyện đề",
+export const navLinks = [
+  {
+    name: "Khóa học",
+    href: "/courses",
+    dropdown: [
+      { name: "TOEIC", href: "/courses" },
+      { name: "IELTS", href: "/courses" },
+    ],
+  },
+  {
+    name: "Đánh giá trình độ",
+    href: "/level-test",
+  },
+  {
+    name: "Luyện đề",
+    href: "/testPractice",
+    dropdown: [
+      { name: "TOEIC", href: "/testPractice" },
+      {
+        name: "Luyện đề nâng cao", // Đổi tên để tránh trùng lặp dễ nhìn hơn
         href: "/testPractice",
-        dropdown: [{
-                name: "TOEIC",
-                href: "/testPractice"
-            },
-            {
-                name: "Luyện đề nâng cao", // Đổi tên để tránh trùng lặp dễ nhìn hơn
-                href: "/testPractice",
-                dropdown: [{
-                        name: "TOEIC",
-                        href: "/testPractice"
-                    },
-                    {
-                        name: "IELTS",
-                        href: "/testPractice"
-                    },
-                ],
-            },
+        dropdown: [
+          { name: "TOEIC", href: "/testPractice" },
+          { name: "IELTS", href: "/testPractice" },
         ],
-    },
-    {
-        name: "Blog",
-        href: "/",
-    },
-    {
-        name: "Liên hệ tư vấn",
-        href: "/consultation",
-    },
+      },
+    ],
+  },
+  {
+    name: "Blog",
+    href: "/",
+  },
+  {
+    name: "Liên hệ tư vấn",
+    href: "/consultation",
+  },
 ];
 
 export const steps = [{
@@ -297,7 +286,7 @@ export const testSets = [
         tests: [{
                 id: 101,
                 title: "ETS 2024 - Test 01",
-                time: 120,
+                time: 2,
                 totalQuestions: 200,
                 status: "new", // TRẠNG THÁI: New
                 parts: [

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BsChatDotsFill } from "react-icons/bs";
 import AccordionItem from '../../common/AccordionItem';
+import { useChat } from '../../../context/ChatContext';
 
 // Mock Data câu hỏi
 const faqData = [
@@ -34,6 +35,8 @@ const FAQSection = () => {
         // Nếu click vào cái đang mở thì đóng lại, ngược lại thì mở cái mới
         setActiveIndex(activeIndex === index ? null : index);
     };
+
+    const { openChat } = useChat();
 
     return (
         <section className="py-20 bg-gray-50 relative overflow-hidden">
@@ -70,7 +73,7 @@ const FAQSection = () => {
                                     <p className="font-bold text-gray-900">Chat với tư vấn viên</p>
                                 </div>
                             </div>
-                            <button className="w-full bg-primary text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-primary/30 hover:bg-green-600 hover:-translate-y-1 transition-all duration-300">
+                            <button onClick={openChat} className="w-full bg-primary text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-primary/30 hover:bg-green-600 hover:-translate-y-1 transition-all duration-300">
                                 Trao đổi trực tiếp
                             </button>
                         </div>

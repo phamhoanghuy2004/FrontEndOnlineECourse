@@ -10,28 +10,35 @@ import CourseDetail from "./page/customer/CourseDetail";
 import TestPracticePage from './page/customer/TestPracticePage';
 import TestDetailPage from "./page/customer/TestDetailPage";
 import TestPage from "./page/customer/TestPage";
+import ConsulationPage from "./page/customer/ConsulationPage";
 import ScrollToTop from "./components/common/ScrollToTop";
+import ChatWidget from "./components/common/ChatWidget";
+import { ChatProvider } from "./context/ChatContext";
 
 function App() {
   return (
-    <Router>
-      <ScrollToTop />
-      <div className="font-sans">
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/courses" element={<CoursePage />} />
-          <Route path="/courses/:id" element={<CourseDetail />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/level-test" element={<LevelTest />} />
-          <Route path="/testPractice" element={<TestPracticePage />} />
-          <Route path="/testDetail" element={<TestDetailPage />} />
-          <Route path="/testPage" element={<TestPage />} />
-        </Routes>
-        <Footer />
-      </div>
-    </Router>
+    <ChatProvider>
+      <Router>
+        <ScrollToTop />
+        <div className="font-sans">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/courses" element={<CoursePage />} />
+            <Route path="/courses/:id" element={<CourseDetail />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/level-test" element={<LevelTest />} />
+            <Route path="/testPractice" element={<TestPracticePage />} />
+            <Route path="/testDetail" element={<TestDetailPage />} />
+            <Route path="/testPage" element={<TestPage />} />
+            <Route path="/consultation" element={<ConsulationPage />} />
+          </Routes>
+          <Footer />
+          <ChatWidget />
+        </div>
+      </Router>
+    </ChatProvider>
   );
 }
 

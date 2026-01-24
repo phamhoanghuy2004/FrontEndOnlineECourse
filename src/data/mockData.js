@@ -33,8 +33,8 @@ export const navLinks = [{
         href: "/"
     },
     {
-        name: "Liên hệ",
-        href: "/"
+        name: "Liên hệ tư vấn",
+        href: "/consultation"
     },
 ];
 
@@ -245,7 +245,7 @@ export const testSets = [
         tests: [{
                 id: 101,
                 title: "ETS 2024 - Test 01",
-                time: 2,
+                time: 120,
                 totalQuestions: 200,
                 status: "new",  // TRẠNG THÁI: New
                 parts: [

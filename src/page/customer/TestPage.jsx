@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { FaClock, FaListOl, FaCheckCircle, FaTimesCircle, FaFlag, FaArrowLeft, FaPlay, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { testSets } from "../../data/mockData";
 
-
 // Helper: Format giây thành mm:ss
 const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -14,7 +13,7 @@ const formatTime = (seconds) => {
 const TestPracticePage = () => {
     const location = useLocation();
     const navigate = useNavigate();
-
+    
     const { testId, selectedParts, mode } = location.state || {};
 
     const [testData, setTestData] = useState(null);
@@ -24,7 +23,6 @@ const TestPracticePage = () => {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [result, setResult] = useState(null);
     const [currentPartIndex, setCurrentPartIndex] = useState(0);
-    const [showResultModal, setShowResultModal] = useState(false);
 
     // --- 1. KHỞI TẠO DỮ LIỆU ---
     useEffect(() => {
@@ -44,7 +42,7 @@ const TestPracticePage = () => {
 
         if (foundTest) {
             setTestData(foundTest);
-            const selectedPartsIds = selectedParts || [];
+            const selectedPartsIds = selectedParts || []; 
             const parts = foundTest.parts.filter(p => selectedPartsIds.includes(p.id));
             setFilteredParts(parts);
 
@@ -52,7 +50,7 @@ const TestPracticePage = () => {
             if (foundTest.time) {
                 totalSeconds = foundTest.time * 60;
             } else {
-                totalSeconds = 120 * 60;
+                totalSeconds = 120 * 60; 
             }
             setTimeLeft(totalSeconds);
         }
@@ -66,7 +64,7 @@ const TestPracticePage = () => {
             }, 1000);
             return () => clearInterval(timerId);
         } else if (timeLeft === 0 && !isSubmitted && testData) {
-            handleSubmit();
+            handleSubmit(); 
         }
     }, [timeLeft, isSubmitted, testData]);
 
@@ -94,7 +92,6 @@ const TestPracticePage = () => {
 
     const handleSubmit = () => {
         setIsSubmitted(true);
-        setShowResultModal(true);
         let totalCorrect = 0;
         let totalQuestions = 0;
         const partResults = [];
@@ -145,7 +142,7 @@ const TestPracticePage = () => {
     return (
         // 1. THÊM pt-28 (padding top ~ 112px) ĐỂ ĐẨY TRANG XUỐNG DƯỚI NAVBAR CHÍNH
         <div className="min-h-screen bg-slate-50 font-sans pb-20 pt-28">
-
+            
             {/* --- HEADER (STICKY) --- */}
             {/* 2. SỬA top-0 THÀNH top-20 ĐỂ HEADER DÍNH BÊN DƯỚI NAVBAR CHÍNH KHI SCROLL */}
             <header className="sticky top-20 z-40 bg-white shadow-sm border-b border-gray-200 transition-all rounded-2xl mx-4 mt-4">
@@ -166,8 +163,8 @@ const TestPracticePage = () => {
                                 key={part.id}
                                 onClick={() => setCurrentPartIndex(index)}
                                 className={`px-4 py-1.5 rounded-md text-xs font-bold whitespace-nowrap transition-all
-                                    ${currentPartIndex === index
-                                        ? 'bg-white text-emerald-600 shadow-sm'
+                                    ${currentPartIndex === index 
+                                        ? 'bg-white text-emerald-600 shadow-sm' 
                                         : 'text-gray-500 hover:bg-gray-200 hover:text-gray-700'
                                     }
                                 `}
@@ -182,7 +179,7 @@ const TestPracticePage = () => {
                             <FaClock className="animate-pulse" />
                             <span>{formatTime(timeLeft)}</span>
                         </div>
-                        <button
+                        <button 
                             onClick={handleSubmit}
                             disabled={isSubmitted}
                             className={`hidden md:block px-6 py-2 rounded-full font-bold text-white transition-all shadow-lg
@@ -196,7 +193,7 @@ const TestPracticePage = () => {
             </header>
 
             <div className="container mx-auto px-4 mt-6 flex flex-col lg:flex-row gap-6">
-
+                
                 {/* --- LEFT CONTENT --- */}
                 <div className="flex-1 space-y-6">
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px]">
@@ -212,19 +209,19 @@ const TestPracticePage = () => {
 
                         <div className="p-6 space-y-8">
                             {currentPart.groups && currentPart.groups.map((group) => (
-                                <GroupQuestionBlock
-                                    key={group.id}
-                                    group={group}
-                                    type={currentPart.type}
+                                <GroupQuestionBlock 
+                                    key={group.id} 
+                                    group={group} 
+                                    type={currentPart.type} 
                                     userAnswers={userAnswers}
                                     onSelect={handleSelectAnswer}
                                     isSubmitted={isSubmitted}
                                 />
                             ))}
                             {currentPart.questions && currentPart.questions.map((question) => (
-                                <SingleQuestionBlock
-                                    key={question.id}
-                                    question={question}
+                                <SingleQuestionBlock 
+                                    key={question.id} 
+                                    question={question} 
                                     type={currentPart.type}
                                     userAnswers={userAnswers}
                                     onSelect={handleSelectAnswer}
@@ -235,12 +232,12 @@ const TestPracticePage = () => {
                     </div>
 
                     <div className="flex justify-between items-center pt-4">
-                        <button
+                        <button 
                             onClick={handlePrevPart}
                             disabled={currentPartIndex === 0}
                             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all
-                                ${currentPartIndex === 0
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                ${currentPartIndex === 0 
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                                     : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm'
                                 }
                             `}
@@ -249,14 +246,14 @@ const TestPracticePage = () => {
                         </button>
 
                         {currentPartIndex < filteredParts.length - 1 ? (
-                            <button
+                            <button 
                                 onClick={handleNextPart}
                                 className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all"
                             >
                                 Tiếp theo <FaChevronRight />
                             </button>
                         ) : (
-                            <button
+                            <button 
                                 onClick={handleSubmit}
                                 disabled={isSubmitted}
                                 className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-200 transition-all"
@@ -276,7 +273,7 @@ const TestPracticePage = () => {
                                 <span>Phiếu trả lời</span>
                                 <span className="text-xs font-normal text-gray-500">{Object.keys(userAnswers).length} đã làm</span>
                             </div>
-
+                            
                             <div className="p-3 overflow-y-auto custom-scrollbar flex-1">
                                 {filteredParts.map((part, pIndex) => (
                                     <div key={part.id} className="mb-4">
@@ -285,12 +282,12 @@ const TestPracticePage = () => {
                                         </h4>
                                         {/* 4. THU GỌN GRID: gap-1 và giảm size button */}
                                         <div className="grid grid-cols-5 gap-1">
-                                            {(part.groups
-                                                ? part.groups.flatMap(g => g.questions)
+                                            {(part.groups 
+                                                ? part.groups.flatMap(g => g.questions) 
                                                 : part.questions
                                             ).map((q) => {
                                                 const isAnswered = !!userAnswers[q.id];
-                                                const displayNum = q.id.replace(/\D/g, '');  // chổ này về sau có thể thay bằng thứ tự của câu hỏi nà
+                                                const displayNum = q.id.replace(/\D/g, ''); 
                                                 const isActivePart = pIndex === currentPartIndex;
 
                                                 return (
@@ -298,8 +295,8 @@ const TestPracticePage = () => {
                                                         key={q.id}
                                                         onClick={() => scrollToQuestion(q.id, pIndex)}
                                                         className={`h-7 w-full rounded text-[10px] font-bold transition-all border
-                                                            ${isAnswered
-                                                                ? 'bg-emerald-500 text-white border-emerald-500'
+                                                            ${isAnswered 
+                                                                ? 'bg-emerald-500 text-white border-emerald-500' 
                                                                 : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-400'
                                                             }
                                                             ${isActivePart && !isAnswered ? 'ring-1 ring-emerald-400 bg-emerald-50' : ''}
@@ -319,7 +316,7 @@ const TestPracticePage = () => {
             </div>
 
             {/* Modal Kết Quả (Giữ nguyên) */}
-            {showResultModal && result && (
+            {isSubmitted && result && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-scaleUp">
                         <div className="bg-emerald-600 p-8 text-center text-white">
@@ -342,17 +339,9 @@ const TestPracticePage = () => {
                                 ))}
                             </div>
                         </div>
-                        <div className="p-6 bg-gray-50 border-t border-gray-100 flex flex-col gap-3">
-                            <div className="flex gap-3">
-                                <button onClick={() => navigate('/testPractice')} className="flex-1 py-3 rounded-xl font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-100">Thoát</button>
-                                <button onClick={() => navigate(0)} className="flex-1 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200">Làm lại</button>
-                            </div>
-                            <button
-                                onClick={() => setShowResultModal(false)}
-                                className="w-full py-3 rounded-xl font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all"
-                            >
-                                Xem đáp án chi tiết
-                            </button>
+                        <div className="p-6 bg-gray-50 border-t border-gray-100 flex gap-3">
+                            <button onClick={() => navigate('/testPractice')} className="flex-1 py-3 rounded-xl font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-100">Thoát</button>
+                            <button onClick={() => navigate(0)} className="flex-1 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200">Làm lại</button>
                         </div>
                     </div>
                 </div>
@@ -361,7 +350,7 @@ const TestPracticePage = () => {
     );
 };
 
-
+// ... (Giữ nguyên các component con SingleQuestionBlock và GroupQuestionBlock như cũ) ...
 const SingleQuestionBlock = ({ question, type, userAnswers, onSelect, isSubmitted }) => {
     const optionsLabel = ['A', 'B', 'C', 'D'];
     return (
@@ -378,8 +367,8 @@ const SingleQuestionBlock = ({ question, type, userAnswers, onSelect, isSubmitte
                             const isSelected = userAnswers[question.id] === label;
                             let resultClass = "";
                             if (isSubmitted) {
-                                if (question.correctAnswer === label) resultClass = "bg-green-100 border-green-500 text-green-700";
-                                else if (isSelected && question.correctAnswer !== label) resultClass = "bg-red-50 border-red-500 text-red-700";
+                                if (question.correctAnswer === label) resultClass = "bg-green-100 border-green-500 text-green-700"; 
+                                else if (isSelected && question.correctAnswer !== label) resultClass = "bg-red-50 border-red-500 text-red-700"; 
                             }
                             return (
                                 <label key={idx} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all hover:bg-gray-50 ${isSelected && !isSubmitted ? 'bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500' : 'border-gray-200'} ${resultClass}`}>
@@ -402,7 +391,7 @@ const GroupQuestionBlock = ({ group, type, userAnswers, onSelect, isSubmitted })
             <div className="lg:w-1/2 bg-gray-50/50 p-5 rounded-xl border border-gray-200 h-fit">
                 {group.audio && <div className="mb-4"><div className="flex items-center gap-2 mb-2 text-sm font-bold text-gray-500 uppercase tracking-wide"><FaPlay size={10} /> Audio đoạn hội thoại</div><audio controls className="w-full h-10 rounded-lg"><source src={group.audio} type="audio/mpeg" /></audio></div>}
                 {group.passageContent && <div className="prose prose-sm text-gray-700 bg-white p-4 rounded-lg shadow-sm border border-gray-100">{group.passageTitle && <h4 className="font-bold mb-2">{group.passageTitle}</h4>}<div dangerouslySetInnerHTML={{ __html: group.passageContent }}></div></div>}
-                {isSubmitted && group.script && <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 text-xs rounded border border-yellow-200 whitespace-pre-line"><strong>Transcript:</strong><br />{group.script}</div>}
+                {isSubmitted && group.script && <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 text-xs rounded border border-yellow-200 whitespace-pre-line"><strong>Transcript:</strong><br/>{group.script}</div>}
             </div>
             <div className="lg:w-1/2 space-y-8">
                 {group.questions.map((question) => <SingleQuestionBlock key={question.id} question={question} type={type} userAnswers={userAnswers} onSelect={onSelect} isSubmitted={isSubmitted} />)}

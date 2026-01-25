@@ -1,3 +1,12 @@
+import IeltsBasic from '../assets/IeltsBasic.png'
+import ToeicBasic from '../assets/ToeicBasic.png'
+import ToeicAdvanced from '../assets/ToeicAdvanced.png'
+import IeltsTestSet from '../assets/IeltsTestSet.jpg'
+import ToeicTestSet from '../assets/ToeicTestSet.jpg'
+import part1_1 from '../assets/part1_1.jpg'
+import part1_2 from '../assets/part1_2.jpg'
+
+
 export const navLinks = [{
     name: "Khóa học",
     href: "/courses",
@@ -17,21 +26,21 @@ export const navLinks = [{
 },
 {
     name: "Luyện đề",
-    href: "/testPractice",
+    href: "/tests",
     dropdown: [{
         name: "TOEIC",
-        href: "/testPractice"
+        href: "/tests"
     },
     {
         name: "Luyện đề nâng cao", // Đổi tên để tránh trùng lặp dễ nhìn hơn
-        href: "/testPractice",
+        href: "/tests",
         dropdown: [{
             name: "TOEIC",
-            href: "/testPractice"
+            href: "/tests"
         },
         {
             name: "IELTS",
-            href: "/testPractice"
+            href: "/tests"
         },
         ],
     },
@@ -75,7 +84,7 @@ export const courses = [{
     rating: 4.5,
     reviewCount: "16,325",
     students: 120,
-    image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/614786882_2632756040432705_8535312098585471585_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeFiUI8Tyoi3zZ7nkK7uv2Apqr_r2eqFO22qv-vZ6oU7bcB7iwz3DfWfwvryhpSXJdb8GFZ57OlvbFwK4E2BrOcj&_nc_ohc=O2RJQxrDZusQ7kNvwH88Wya&_nc_oc=AdkWEcgs76zRy8mCFf6KN1FSmMVkDY-6OZcbpAeTjdptq7x07yxeK42UXQa8bSQPX6s&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=abinq4ju-7TdJ0SGgbgy8g&oh=00_Afr_k1C6gdOiM90m6mTLQB6gAByeppvpELj6pbrvzy-6SA&oe=696F7DBB", // Thay ảnh thật sau
+    image: ToeicBasic, // Thay ảnh thật sau
     tutor: "Ms. Hoa",
     avatarGV: "https://i.pravatar.cc/150?img=1",
     tag: "TOEIC",
@@ -138,7 +147,7 @@ export const courses = [{
     rating: 4.8,
     reviewCount: "8,450",
     students: 85,
-    image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/614045228_2632756207099355_5276660425071840258_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeExmGrAVfnq7TIY2UrFLiJXjfLKEZxcx4yN8soRnFzHjM7sdAHzwFobXN1sCaiss-Pf6qXzWsxNcdjLP0g2lAsD&_nc_ohc=lhFry8nFoGIQ7kNvwEKIkaq&_nc_oc=AdlhVBC4u2-qVSqDVTv2UOPtR9SkMKnDBIniP0EVCQ9w9laCqUkx-bUrekSvAfiZDbI&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=Y-pWySP24kcgskGLG32TmQ&oh=00_Afq2oaO2g7qoeu8xgvFS_ANX0tnPb6xkFuvFiVzKeyxB7A&oe=696F6CB1",
+    image: ToeicAdvanced,
     tutor: "Mr. Jack",
     avatarGV: "https://i.pravatar.cc/150?img=5",
     tag: "TOEIC",
@@ -158,7 +167,7 @@ export const courses = [{
     rating: 4.9,
     reviewCount: "12,100",
     students: 200,
-    image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/614908279_2632756120432697_2974025794158688791_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeHO4gOhNZ7TasHfvuwqN5_0GlU6DgL-QqwaVToOAv5CrK_lMF7L5ztAPa4gfryiEXszldW--qO078EnhXGFzm8y&_nc_ohc=qRzKuntQ1vQQ7kNvwE3skGK&_nc_oc=Adm9RMXrc7IR3NnfqRFp4zg0oSP9ihlAgvNTMp2vtSU8_tMGH9mz0Q1E3X5FU3seT4E&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=G6Koh02Pu0nUtRPPbYyteg&oh=00_AfpnKCWX625-SlIgSpUQkeR36AFlJnm1oO77b4FS8YbuqA&oe=696F7536",
+    image: IeltsBasic,
     tutor: "Ms. Lan",
     avatarGV: "https://i.pravatar.cc/150?img=3",
     tag: "IELTS",
@@ -288,7 +297,7 @@ export const testSets = [
     // --- TOEIC ---
     {
         id: 1,
-        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/615684832_2637666403275002_6151656838858651882_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeFXaSzx4wBnSekofig17CgRKN8eFgMf4roo3x4WAx_iuiacx4KYwCviym3ts93BVHC66WTV2trC5CXiomRhdcrn&_nc_ohc=CsVXNWczSNMQ7kNvwE0vi3d&_nc_oc=AdlcR6Imn-ETbdV5X2H3tooxMCr14Ovg_fENtUigzoXJtYGpwBrXp7yfkkqbB-GCbiY&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=EowHgpP1aRsf7mRUR_4IHg&oh=00_AfoXR_jwFIxG-WQq3h2oUMN7nINLWrIAyn9vbeVknkq4PA&oe=696FD0E9",
+        image: ToeicTestSet,
         tag: "TOEIC",
         title: "ETS 2024",
         description: "Bộ đề độc quyền mới nhất từ IIG, được cập nhật sát với xu hướng ra đề thi thật năm 2024. Đây là tài liệu chuẩn mực giúp bạn làm quen với nhịp độ và độ khó thực tế của bài thi.",
@@ -313,7 +322,7 @@ export const testSets = [
                     type: "listening",
                     questions: [{
                         id: "q1",
-                        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/615589605_2640044289703880_6790642332305010434_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=127cfc&_nc_ohc=IYM_7kN4XTgQ7kNvwGxbncW&_nc_oc=AdkXINLJqjAYh31PV15chjVIC3gh_noyk9rE1AH-hSqPqA9e9Q4AzOysGEMlMsRMk6E&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=8vv8UZst6LyfNIxO0taudw&oh=00_Afp5Ge5nM00Bgtem-opT9Kpov9SUmlJ8FNK9mKtOT5WZnw&oe=69737A68",
+                        image: part1_1,
                         audio: "https://example.com/audio/q1.mp3",
                         options: [
                             "He is looking at the monitor.",
@@ -325,7 +334,7 @@ export const testSets = [
                     },
                     {
                         id: "q2",
-                        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/616828048_2640044306370545_922878851786561556_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=127cfc&_nc_ohc=OEU7ccaOmIYQ7kNvwFayGiQ&_nc_oc=Adlq_ZhjyRXgnZVFLgyNBHwJW2Kq8g_GJqfA6i-96LWotuphX3TEkLwN0-IQdgeSzwA&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=oRHJTHhcEAr68dc-1ImRrw&oh=00_AfrGanxPNfOyjkX7QA9_MHtc97otItXcfif2XQvN-Z61aw&oe=697374ED",
+                        image: part1_2,
                         audio: "https://example.com/audio/q2.mp3",
                         options: [
                             "She is pouring coffee into a cup.",
@@ -748,7 +757,7 @@ export const testSets = [
     }, // Đóng object id: 1
     {
         id: 2,
-        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/615684832_2637666403275002_6151656838858651882_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeFXaSzx4wBnSekofig17CgRKN8eFgMf4roo3x4WAx_iuiacx4KYwCviym3ts93BVHC66WTV2trC5CXiomRhdcrn&_nc_ohc=CsVXNWczSNMQ7kNvwE0vi3d&_nc_oc=AdlcR6Imn-ETbdV5X2H3tooxMCr14Ovg_fENtUigzoXJtYGpwBrXp7yfkkqbB-GCbiY&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=EowHgpP1aRsf7mRUR_4IHg&oh=00_AfoXR_jwFIxG-WQq3h2oUMN7nINLWrIAyn9vbeVknkq4PA&oe=696FD0E9",
+        image: ToeicTestSet,
         tag: "TOEIC",
         title: "Hacker TOEIC 3",
         description: "Được mệnh danh là bộ đề 'khắc nghiệt' với độ khó cao hơn đề thi thật, giúp bạn rèn luyện tâm lý thép. Lựa chọn hoàn hảo cho các bạn muốn chinh phục mốc điểm 900+.",
@@ -756,7 +765,7 @@ export const testSets = [
     },
     {
         id: 3,
-        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/615684832_2637666403275002_6151656838858651882_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeFXaSzx4wBnSekofig17CgRKN8eFgMf4roo3x4WAx_iuiacx4KYwCviym3ts93BVHC66WTV2trC5CXiomRhdcrn&_nc_ohc=CsVXNWczSNMQ7kNvwE0vi3d&_nc_oc=AdlcR6Imn-ETbdV5X2H3tooxMCr14Ovg_fENtUigzoXJtYGpwBrXp7yfkkqbB-GCbiY&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=EowHgpP1aRsf7mRUR_4IHg&oh=00_AfoXR_jwFIxG-WQq3h2oUMN7nINLWrIAyn9vbeVknkq4PA&oe=696FD0E9",
+        image: ToeicTestSet,
         tag: "TOEIC",
         title: "YBM TOEIC Vol.3",
         description: "Sở hữu giọng đọc giống đến 99% so với đề thi thật tại IIG, giúp bạn không bị bỡ ngỡ trong phòng thi. Cực kỳ phù hợp để luyện kỹ năng nghe chuyên sâu và tránh các bẫy âm thanh.",
@@ -766,7 +775,7 @@ export const testSets = [
     // --- IELTS ---
     {
         id: 4,
-        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/616172523_2637666399941669_5416493300576885571_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeHk6oraPyrs4bPz_xETbhw2HFw_ZcTDuyQcXD9lxMO7JDDENnvVSA4GWTXYrabmYmliVoDpPlCnLbQNBVP0nJzd&_nc_ohc=be1UKsM2N7YQ7kNvwFB4gWR&_nc_oc=AdlA2yMdxeZFc3Cj4tB0IpSgtoOTwsJSGwwaMcrgiwlciIXWdukYWzr5HkIfGMA7YAc&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=yVssFuCGZM_Wl9PM_qMB7g&oh=00_AfpvPwyIp9BmMwQ-pQzWKSw_3KXGp7mvpmYLoVKda4Knmg&oe=696FF482",
+        image: IeltsTestSet,
         tag: "IELTS",
         title: "Cambridge IELTS 18",
         description: "Tài liệu kinh điển 'gối đầu giường' cho dân IELTS, phản ánh chính xác xu hướng ra đề mới nhất. Giúp bạn đánh giá năng lực thực tế trước khi bước vào kỳ thi chính thức.",
@@ -774,7 +783,7 @@ export const testSets = [
     },
     {
         id: 5,
-        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/616172523_2637666399941669_5416493300576885571_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeHk6oraPyrs4bPz_xETbhw2HFw_ZcTDuyQcXD9lxMO7JDDENnvVSA4GWTXYrabmYmliVoDpPlCnLbQNBVP0nJzd&_nc_ohc=be1UKsM2N7YQ7kNvwFB4gWR&_nc_oc=AdlA2yMdxeZFc3Cj4tB0IpSgtoOTwsJSGwwaMcrgiwlciIXWdukYWzr5HkIfGMA7YAc&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=yVssFuCGZM_Wl9PM_qMB7g&oh=00_AfpvPwyIp9BmMwQ-pQzWKSw_3KXGp7mvpmYLoVKda4Knmg&oe=696FF482",
+         image: IeltsTestSet,
         tag: "IELTS",
         title: "IELTS Trainer 2",
         description: "Cung cấp 6 bài test trọn vẹn kèm theo hướng dẫn giải thích chi tiết và các mẹo làm bài độc quyền từ chuyên gia. Đóng vai trò như huấn luyện viên riêng giúp bạn bứt phá điểm số.",
@@ -782,7 +791,7 @@ export const testSets = [
     },
     {
         id: 6,
-        image: "https://scontent.fsgn19-1.fna.fbcdn.net/v/t39.30808-6/616172523_2637666399941669_5416493300576885571_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeHk6oraPyrs4bPz_xETbhw2HFw_ZcTDuyQcXD9lxMO7JDDENnvVSA4GWTXYrabmYmliVoDpPlCnLbQNBVP0nJzd&_nc_ohc=be1UKsM2N7YQ7kNvwFB4gWR&_nc_oc=AdlA2yMdxeZFc3Cj4tB0IpSgtoOTwsJSGwwaMcrgiwlciIXWdukYWzr5HkIfGMA7YAc&_nc_zt=23&_nc_ht=scontent.fsgn19-1.fna&_nc_gid=yVssFuCGZM_Wl9PM_qMB7g&oh=00_AfpvPwyIp9BmMwQ-pQzWKSw_3KXGp7mvpmYLoVKda4Knmg&oe=696FF482",
+        image: IeltsTestSet,
         tag: "IELTS",
         title: "Mindset for IELTS 3",
         description: "Sự kết hợp hoàn hảo giữa giáo trình học thuật và luyện đề, thiết kế chuyên biệt cho người học hướng tới band điểm cao. Phát triển tư duy ngôn ngữ Academic một cách bài bản.",

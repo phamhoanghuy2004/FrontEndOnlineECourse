@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {  FaTimes, FaPaperPlane, FaRobot  } from "react-icons/fa";
-import { useChat } from '../../context/ChatContext';
+import { useChat } from '../../hooks/useChat';
 
 const ChatWidget = () => {
     const { isOpen, toggleChat, closeChat } = useChat();

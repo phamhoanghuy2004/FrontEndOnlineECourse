@@ -11,6 +11,8 @@ import TestPracticePage from './page/customer/TestPracticePage';
 import TestDetailPage from "./page/customer/TestDetailPage";
 import TestPage from "./page/customer/TestPage";
 import ConsulationPage from "./page/customer/ConsulationPage";
+import BlogPage from "./page/customer/BlogPage";
+import BlogDetail from "./page/customer/BlogDetail";
 import ScrollToTop from "./components/common/ScrollToTop";
 import ChatWidget from "./components/common/ChatWidget";
 import { ChatProvider } from "./context/ChatContext";
@@ -33,6 +35,8 @@ function App() {
             <Route path="/testDetail" element={<TestDetailPage />} />
             <Route path="/testPage" element={<TestPage />} />
             <Route path="/consultation" element={<ConsulationPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:id" element={<BlogDetail />} />
           </Routes>
           <Footer />
           <ChatWidget />

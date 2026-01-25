@@ -12,7 +12,7 @@ import LoginPage from "./page/auth/LoginPage";
 import RegisterPage from "./page/auth/RegisterPage";
 
 // Student - Guest Pages
-import HomePage from "./page/student/guest/homePage";
+import HomePage from "./page/student/guest/HomePage";
 import CoursePage from "./page/student/guest/CoursePage";
 import CourseDetailPage from "./page/student/guest/CourseDetailPage";
 import BlogPage from "./page/student/guest/BlogPage"; 

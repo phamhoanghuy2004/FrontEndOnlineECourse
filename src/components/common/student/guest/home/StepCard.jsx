@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
+import { hoverSpring } from '../../../../../constants/motionVariants';
 
 const StepCard = ({ step, variants }) => {
     return (
         <motion.div
             variants={variants}
-            whileHover={{ y: -10 }}
+            whileHover={hoverSpring}
             className="bg-primary p-8 rounded-3xl text-white shadow-xl shadow-primary/30 flex flex-col justify-between h-full relative overflow-hidden group"
         >
             {/* Decoration Circle Blur */}

@@ -1,20 +1,18 @@
 import { motion } from 'framer-motion';
 import { FaMedal } from "react-icons/fa"; 
+import { hoverSpring, floatY } from '../../../../../constants/motionVariants';
+
 const StudentCard = ({ data }) => {
     return (
         <motion.div
-            whileHover={{ y: -5 }}
+            whileHover={hoverSpring}
             className="relative bg-white rounded-xl shadow-md p-4 w-[280px] h-full mx-3 border border-gray-100 flex flex-col items-center text-center overflow-visible"
         >
             {/* --- 2. HUY CHƯƠNG VÀNG --- */}
             <motion.div 
                 className="absolute -top-3 left-4 z-9999" 
-                animate={{ y: [0, -8, 0] }} 
-                transition={{ 
-                    duration: 2, 
-                    repeat: Infinity, 
-                    ease: "easeInOut" 
-                }}
+                animate={floatY.animate} 
+                transition={floatY.transition}
             >
                 {/* Icon Medal màu vàng + đổ bóng */}
                 <div className="bg-white rounded-full p-1 shadow-md">

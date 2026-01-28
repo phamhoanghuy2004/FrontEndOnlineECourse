@@ -1,10 +1,11 @@
-const InputField = ({ 
-    label, 
-    icon: Icon, 
-    type, 
-    placeholder, 
-    value, 
-    onChange, 
+const InputField = ({
+    label,
+    icon: Icon,
+    type,
+    placeholder,
+    value,
+    name,
+    onChange,
     size = "normal", // Mặc định là normal (Register), truyền "compact" cho Login
     required = false // Mặc định không hiện sao
 }) => {
@@ -21,6 +22,7 @@ const InputField = ({
             <div className="relative group">
                 <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs group-focus-within:text-emerald-500 transition-colors" />
                 <input
+                    name={name}
                     type={type}
                     value={value}
                     onChange={onChange}

@@ -1,8 +1,13 @@
 import { FaStar } from "react-icons/fa";
+import { motion } from 'framer-motion';
+import { hoverSpring } from "../../../../../constants/motionVariants";
 
 // Component con: Thẻ Review đơn lẻ
 const ReviewCard = ({ data }) => (
-  <div className="w-[350px] bg-white p-6 rounded-xl shadow-md mx-3 flex flex-col justify-center h-full border border-green-100/50">
+  <motion.div
+    whileHover={hoverSpring}
+    className="w-[350px] bg-white p-6 rounded-xl shadow-md mx-3 flex flex-col justify-center h-full border border-green-100/50"
+  >
     {/* Header: Avatar + Tên */}
     <div className="flex items-center gap-3 mb-4">
       <img
@@ -22,7 +27,7 @@ const ReviewCard = ({ data }) => (
     <div className="flex text-yellow-400 text-sm gap-1">
       {[...Array(5)].map((_, i) => <FaStar key={i} />)}
     </div>
-  </div>
+  </motion.div>
 );
 
 export default ReviewCard;

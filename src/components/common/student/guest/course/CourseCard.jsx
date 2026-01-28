@@ -2,14 +2,13 @@ import { FaStar } from "react-icons/fa";
 import { FiArrowUpRight } from "react-icons/fi";
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { hoverSpring } from "../../../../../constants/motionVariants";
 
 const CourseCard = ({ data }) => {
     return (
         <motion.div
             // 3. Hiệu ứng hover: Bay lên 10px
-            whileHover={{ y: -10 }}
-            // 4. Cấu hình độ nảy (spring) để tạo cảm giác "tưng"
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            whileHover={hoverSpring}
             className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-2xl transition-shadow duration-300 overflow-hidden cursor-pointer h-full flex flex-col relative"
         >
             <Link to={`/courses/${data.id}`} className="absolute inset-0 z-10"></Link>

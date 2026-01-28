@@ -1,20 +1,20 @@
 import CommonMarquee from '../../../../common/CommonMarquee';
 import StudentCard from '../../../../common/student/guest/course/StudentCard';
 import { topStudents } from '../../../../../data/mockData'
+import SectionHeader from '../../../../common/SectionHeader';
 
 const TopStudentsSection = () => {
     return (
         <section className="py-20 bg-[#4ADE80] overflow-hidden">
 
             {/* Header */}
-            <div className="container mx-auto px-6 mb-14 text-center md:text-left">
-                <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
-                    1000+ Học viên đạt <br /> thành tích xuất sắc
-                </h2>
-                <p className="text-white/90 text-lg md:text-xl max-w-2xl">
-                    Tự hào đồng hành cùng các bạn trên con đường chinh phục ngoại ngữ với những điểm số ấn tượng.
-                </p>
-            </div>
+            <SectionHeader
+                title="1000+ Học viên đạt thành tích xuất sắc"
+                description="Tự hào đồng hành cùng các bạn trên con đường chinh phục ngoại ngữ với những điểm số ấn tượng."
+                align="left"
+                titleClassName='text-white'
+                descriptionClassName='text-white'
+            />
 
             {/* 3. Marquee Area */}
             <div className="flex flex-col gap-8">

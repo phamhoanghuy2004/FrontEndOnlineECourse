@@ -1,59 +1,28 @@
 import { motion } from 'framer-motion';
+import TextReveal from './TextReveal';
 
-// --- ANIMATION VARIANTS (Đã tách ra khỏi file chính) ---
-const titleContainerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.1,
-            delayChildren: 0.2,
-        },
-    },
-};
+// 1. Import bộ animation chuẩn (Đã gộp)
+import { fadeInUp, zoomIn } from '../../constants/motionVariants'; 
 
-const wordVariants = {
-    hidden: { opacity: 0, y: 20, filter: 'blur(10px)' },
-    visible: {
-        opacity: 1,
-        y: 0,
-        filter: 'blur(0px)',
-        transition: {
-            type: "spring",
-            damping: 12,
-            stiffness: 100,
-        },
-    },
-};
-
-const descVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: {
-            delay: 1.2,
-            duration: 0.8,
-            ease: "easeOut"
-        },
-    },
-};
-
-const SectionHeader = ({ badge, title, description, align = "center", titleClassName = "" }) => {
-    // Tách chuỗi title thành mảng các từ ngay trong component
-    const titleWords = title ? title.split(" ") : [];
-
+const SectionHeader = ({ 
+    badge, 
+    title, 
+    description, 
+    align = "center", 
+    titleClassName = "",
+    descriptionClassName = ""
+}) => {
     return (
         <div className={`mb-12 px-4 ${align === "center" ? "text-center" : "text-left"}`}>
 
-            {/* 1. Badge Animation */}
+            {/* 1. Badge: Dùng zoomIn  */}
             {badge && (
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
+                    variants={zoomIn}
+                    initial={() => zoomIn.hidden(0.8)} // <--- Bắt đầu hơi nhỏ (0.8)
+                    whileInView="visible"
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                    className="inline-block"
+                    className="inline-block mb-3"
                 >
                     <span className="text-primary font-bold uppercase text-sm tracking-wider bg-green-50 px-3 py-1 rounded-full">
                         {badge}
@@ -61,35 +30,22 @@ const SectionHeader = ({ badge, title, description, align = "center", titleClass
                 </motion.div>
             )}
 
-            {/* 2. Title Animation */}
+            {/* 2. Title: Component TextReveal đã tự xử lý animation bên trong */}
             {title && (
-                <motion.h2
-                    variants={titleContainerVariants}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, amount: 0.5 }}
-                    className="text-3xl md:text-4xl font-bold mt-3 text-gray-900 leading-snug ${titleClassName}"
-                >
-                    {titleWords.map((word, index) => (
-                        <motion.span
-                            key={index}
-                            variants={wordVariants}
-                            className="inline-block mr-2"
-                        >
-                            {word}
-                        </motion.span>
-                    ))}
-                </motion.h2>
+                <h2 className={`text-3xl md:text-4xl font-extrabold text-gray-900 leading-snug ${titleClassName}`}>
+                    <TextReveal text={title} />
+                </h2>
             )}
 
-            {/* 3. Description Animation */}
+            {/* 3. Description: Dùng fadeInUp với Delay tùy chỉnh */}
             {description && (
                 <motion.p
-                    variants={descVariants}
+                    variants={fadeInUp}
+                    custom={0.5} // <--- Delay 0.4s (để chờ Tiêu đề chạy xong 1 chút rồi mới hiện)
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true }}
-                    className={`text-gray-500 mt-4 max-w-3xl text-base md:text-lg leading-relaxed ${align === "center" ? "mx-auto" : ""}`}
+                    className={`text-gray-500 mt-4 max-w-3xl text-base md:text-lg leading-relaxed ${align === "center" ? "mx-auto" : ""} ${descriptionClassName}`}
                 >
                     {description}
                 </motion.p>

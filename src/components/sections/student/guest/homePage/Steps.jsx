@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { steps } from '../../../../../data/mockData';
 import SectionHeader from '../../../../common/SectionHeader';
 import StepsGrid from '../../../../common/student/guest/home/StepsGrid';
@@ -20,8 +19,8 @@ const Steps = () => {
                     badge="Thấu hiểu nhu cầu người học"
                     title="Thiết kế lộ trình riêng biệt, tối ưu theo năng lực của chính bạn."
                     description="Chúng tôi phân tích sâu kiến thức của bạn để xây dựng kế hoạch học tập độc nhất, giúp tiết kiệm thời gian và tối đa hóa kết quả."
-                    titleClassName="max-w-3xl mx-auto"
-                />
+                    titleClassName="max-w-6xl mx-auto"
+                />  
 
                 {/* 2. STEPS GRID (Đã tách riêng) */}
                 <StepsGrid data={steps} />

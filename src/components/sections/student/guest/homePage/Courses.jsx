@@ -1,13 +1,20 @@
 import { courses } from '../../../../../data/mockData';
 import SectionHeader from '../../../../common/SectionHeader';
-import { Link } from 'react-router-dom';
 import CommonCarousel from '../../../../common/CommonCarousel';
+import { useNavigate } from 'react-router-dom';
 import CourseCard from '../../../../common/student/guest/course/CourseCard';
+import Button from '../../../../common/Button';
 
 
 const Courses = () => {
     // Nhân đôi data để demo slide
-    const sliderData = [...courses, ...courses];
+    const sliderData = courses;
+    const navigate = useNavigate();
+
+    const handleNavigateToCourses = () => {
+        console.log("Đang chuyển hướng đến danh sách khóa học...");
+        navigate('/courses');
+    };
 
     return (
         <section id="courses" className="py-20 bg-white">
@@ -21,19 +28,20 @@ const Courses = () => {
                 />
 
                 {/* --- COMMON CAROUSEL --- */}
-                <CommonCarousel 
-                    data={sliderData} 
-                    CardComponent={CourseCard} 
+                <CommonCarousel
+                    data={sliderData}
+                    CardComponent={CourseCard}
                 />
 
-                {/* Button Khám phá tất cả */}
-                <div className="mt-8 text-center">
-                    <Link
-                        to="/courses"
-                        className="inline-block px-8 py-3 rounded-full border border-gray-300 font-bold text-gray-700 hover:border-primary hover:text-primary hover:bg-green-50 transition-all duration-300 transform hover:-translate-y-1"
+                {/* Button khám phá tất cả */}
+                <div className="mt-8 flex justify-center">
+                    <Button
+                        variant="outline"
+                        onClick={handleNavigateToCourses}
+                        className="border-gray-300 text-gray-700 hover:border-primary hover:text-primary hover:bg-green-50"
                     >
                         Khám phá tất cả
-                    </Link>
+                    </Button>
                 </div>
 
             </div>

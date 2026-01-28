@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { BsChatDotsFill } from "react-icons/bs";
 import AccordionItem from '../../../../common/student/guest/course/AccordionItem'
 import { useChat } from '../../../../../hooks/useChat';
+import Button from '../../../../common/Button';
+import SectionHeader from '../../../../common/SectionHeader';
 
 // Mock Data câu hỏi
 const faqData = [
@@ -52,16 +54,14 @@ const FAQSection = () => {
                     
                     {/* --- CỘT TRÁI: Tiêu đề & CTA (Chiếm 4/12 cột) --- */}
                     <div className="lg:col-span-5 lg:sticky lg:top-24">
-                        <span className="text-primary font-bold uppercase tracking-wider text-sm bg-green-100 px-3 py-1 rounded-full inline-block mb-4">
-                            Hỗ trợ 24/7
-                        </span>
-                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 leading-tight">
-                            Giải đáp thắc mắc <br/> cùng <span className="text-primary">ECHILL</span>
-                        </h2>
-                        <p className="text-gray-500 mb-8 text-lg">
-                            Bạn còn những băn khoăn chưa được giải đáp? Đừng ngần ngại liên hệ ngay với đội ngũ tư vấn của chúng tôi.
-                        </p>
 
+                        <SectionHeader 
+                            badge="Hỗ trợ 24/7"
+                            title="Giải đáp thắc mắc cùng ECHILL"
+                            description=" Bạn còn những băn khoăn chưa được giải đáp? Đừng ngần ngại liên hệ ngay với đội ngũ tư vấn của chúng tôi."
+                            align="left"
+                        />
+                        
                         {/* Button Chat Custom */}
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 inline-block">
                             <div className="flex items-center gap-4 mb-4">
@@ -73,10 +73,11 @@ const FAQSection = () => {
                                     <p className="font-bold text-gray-900">Chat với tư vấn viên</p>
                                 </div>
                             </div>
-                            <button onClick={openChat} className="w-full bg-primary text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-primary/30 hover:bg-green-600 hover:-translate-y-1 transition-all duration-300">
+                            <Button onClick={openChat} variant='outline' >
                                 Trao đổi trực tiếp
-                            </button>
+                            </Button>
                         </div>
+
                     </div>
 
                     {/* --- CỘT PHẢI: Accordion List (Chiếm 7/12 cột) --- */}

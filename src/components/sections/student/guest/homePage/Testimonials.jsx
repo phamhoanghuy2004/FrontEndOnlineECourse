@@ -1,5 +1,6 @@
 import ReviewCard from '../../../../common/student/guest/home/ReviewCard';
 import CommonMarquee from '../../../../common/CommonMarquee';
+import SectionHeader from '../../../../common/SectionHeader';
 
 // 1. Mock Data: Chia làm 2 hàng (Row 1 & Row 2)
 const row1 = [
@@ -19,14 +20,15 @@ const row2 = [
 const Testimonials = () => {
   return (
     <section className="py-20 bg-primary text-white overflow-hidden">
-      <div className="container mx-auto px-6 mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">
-          Học viên nói gì <br /> về chúng tôi?
-        </h2>
-        <p className="text-white/80 max-w-lg">
-          Hơn 5000+ học viên đã tin tưởng và đạt được kết quả mong muốn. Hãy xem họ nói gì về trải nghiệm học tập tại EduSkill.
-        </p>
-      </div>
+      
+      {/* Header */}
+      <SectionHeader
+        title="Học viên nói gì về chúng tôi?"
+        description=" Hơn 5000+ học viên đã tin tưởng và đạt được kết quả mong muốn. Hãy xem họ nói gì về trải nghiệm học tập tại EduSkill."
+        align="left"
+        titleClassName='text-white'
+        descriptionClassName='text-white'
+      />
 
       {/* --- MARQUEE AREA --- */}
       <div className="flex flex-col gap-6"> {/* Khoảng cách giữa 2 hàng */}

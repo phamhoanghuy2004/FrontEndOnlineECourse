@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme{
-  --color-primary: #34D399;  /* Màu xanh ngọc chủ đạo */
+  --color-primary: #34D399;  
   --color-primary-dark: #059669;
   --color-dark: #1F2937;
-  --font-sans: "Inter", sans-serif; /* Bạn có thể thay bằng font khác nếu muốn */
+  --font-sans: "Inter", sans-serif; 
 }
 
 /* Base styles */

@@ -1,15 +1,15 @@
 import { FaTwitter, FaLinkedinIn } from "react-icons/fa";
 import { motion } from 'framer-motion';
+import { hoverSpring } from "../../../../../constants/motionVariants";
 
 const InstructorCard = ({ data }) => {
     return (
         <motion.div
-            whileHover={{ y: -15 }} 
-            transition={{ type: "spring", stiffness: 500, damping: 25, mass: 0.5 }}
-            className="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 group text-center border border-gray-100 h-full flex flex-col items-center"
+            whileHover={hoverSpring}
+            className="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl transition-shadow duration-300 group text-center border border-gray-100 h-full flex flex-col items-center"
         >
             {/* Avatar Image */}
-            <div className="relative mb-6"> 
+            <div className="relative mb-6">
                 <div className="w-24 h-24 rounded-full p-1 border-2 border-dashed border-primary/30 group-hover:border-primary transition-colors duration-300">
                     <img
                         src={data.image}

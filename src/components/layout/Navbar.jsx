@@ -3,9 +3,11 @@ import { navLinks } from "../../data/mockData";
 import LOGO from "../../assets/LOGO.png";
 import { FaChevronDown } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
+    const { user } = useAuth();
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -15,7 +17,7 @@ const Navbar = () => {
 
     return (
         <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled
-            ? "bg-white/30 backdrop-blur-md shadow-sm py-0" 
+            ? "bg-white/30 backdrop-blur-md shadow-sm py-0"
             : "bg-transparent py-4"
             }`}>
             <div className="container mx-auto px-6 flex justify-between items-center h-full">
@@ -57,20 +59,60 @@ const Navbar = () => {
                         </li>
                     ))}
                 </ul>
-                {/* Login - Register Buttons */}
+
+                {/* --- RIGHT SIDE: AUTH BUTTONS OR USER PROFILE --- */}
                 <div className="hidden md:flex items-center gap-4">
-                    <Link
-                        to="/register"
-                        className="text-gray-600 font-semibold hover:text-primary transition-colors px-4 py-2"
-                    >
-                        Đăng ký
-                    </Link>
-                    <Link
-                        to="/login"
-                        className="bg-primary text-white px-6 py-2 rounded-full font-semibold hover:bg-primary-dark transition-all transform hover:scale-105 shadow-lg shadow-primary/30"
-                    >
-                        Đăng nhập
-                    </Link>
+                    {user ? (
+                        /* ================== TRƯỜNG HỢP ĐÃ ĐĂNG NHẬP ================== */
+                        <div className="flex items-center gap-4">
+
+                            {/* Check Role: Nếu là Student thì hiện nút Học ngay */}
+                            {user.role === 'LEARNER' && (
+                                <Link
+                                    to={`/learner/${user.id}`} // Link đến trang dashboard của student
+                                    className="bg-primary text-white px-5 py-2 rounded-full font-semibold shadow-md hover:bg-green-600 hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                                >
+                                    Học ngay
+                                </Link>
+                            )}
+
+                            {/* User Avatar Link (Có thể link tới trang profile) */}
+                            <Link
+                                to={user.role === 'LEARNER' ? `/learner/${user.id}/profile` : "/"}
+                                className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-100 shadow-sm cursor-pointer hover:border-primary transition-colors"
+                                title={user.name}
+                            >
+                                {user.avatar ? (
+                                    <img
+                                        src={user.avatar}
+                                        alt={user.name}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    // Fallback nếu không có avatar
+                                    <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
+                                        <FaUserCircle size={24} />
+                                    </div>
+                                )}
+                            </Link>
+                        </div>
+                    ) : (
+                        /* ================== TRƯỜNG HỢP KHÁCH (GUEST) ================== */
+                        <>
+                            <Link
+                                to="/register"
+                                className="text-gray-600 font-semibold hover:text-primary transition-colors px-4 py-2"
+                            >
+                                Đăng ký
+                            </Link>
+                            <Link
+                                to="/login"
+                                className="bg-primary text-white px-6 py-2 rounded-full font-semibold hover:bg-primary-dark transition-all transform hover:scale-105 shadow-lg shadow-primary/30"
+                            >
+                                Đăng nhập
+                            </Link>
+                        </>
+                    )}
                 </div>
             </div>
         </nav>

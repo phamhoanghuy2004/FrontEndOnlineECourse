@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaFileAlt, FaClipboardCheck, FaLock, FaUnlock, FaClock } from "react-icons/fa";
 
-const CourseContent = ({ course }) => {
+const CourseContent = ({ course, isRegistered }) => {
     // If no lessons, return null or a message
     if (!course.lessons || course.lessons.length === 0) return null;
 
@@ -84,13 +84,15 @@ const CourseContent = ({ course }) => {
                 ))}
             </div>
 
-            {/* CTA for locked content */}
-            <div className="mt-8 text-center p-6 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                <p className="text-gray-600 mb-3">Đăng ký khóa học để mở khóa toàn bộ {course.lessons.length} bài học</p>
-                <button className="bg-white border border-gray-200 text-gray-700 px-6 py-2 rounded-full font-bold shadow-sm hover:bg-gray-50 transition-all">
-                    Xem chi tiết lộ trình
-                </button>
-            </div>
+            {/* 2. CTA for locked content - CHỈ HIỂN THỊ KHI KHÔNG CÓ USER */}
+            {!isRegistered && (
+                <div className="mt-8 text-center p-6 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                    <p className="text-gray-600 mb-3">Đăng ký khóa học để mở khóa toàn bộ {course.lessons.length} bài học</p>
+                    <button className="bg-white border border-gray-200 text-gray-700 px-6 py-2 rounded-full font-bold shadow-sm hover:bg-gray-50 transition-all">
+                        Xem chi tiết lộ trình
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

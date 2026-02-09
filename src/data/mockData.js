@@ -1092,3 +1092,26 @@ export const blogs = [{
         author: "Admin"
     }
 ];
+
+export const MOCK_USERS = [
+  {
+    id: 1,
+    username: "student",
+    password: "123", // Trong thực tế password sẽ được mã hóa
+    fullName: "Nguyễn Văn A",
+    role: "STUDENT",
+    avatar: "https://i.pravatar.cc/150?img=3",
+    email: "student@echill.com",
+    role: "LEARNER"
+  },
+  {
+    id: 2,
+    username: "admin",
+    password: "123",
+    fullName: "Admin Echill",
+    role: "ADMIN",
+    avatar: "https://i.pravatar.cc/150?img=12",
+    email: "admin@echill.com",
+    role: "ADMIN"
+  }
+];

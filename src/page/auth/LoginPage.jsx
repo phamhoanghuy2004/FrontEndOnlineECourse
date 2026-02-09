@@ -1,17 +1,51 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaUser, FaGoogle } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import InputField from '../../components/common/InputField';
 import PasswordField from '../../components/common/PasswordField';
+import { useAuth } from '../../hooks/useAuth';
 
 const LoginPage = () => {
+  const { login, loading, error: authError, setError } = useAuth();
+  const navigate = useNavigate();
   const [loginData, setLoginData] = useState({ username: '', password: '' });
+  const [localError, setLocalError] = useState(''); // State lỗi nội bộ để reset khi user nhập lại
 
-  const handleSubmit = (e) => {
+
+  // Clear lỗi khi user bắt đầu nhập liệu lại
+  useEffect(() => {
+    if (authError || localError) {
+      setLocalError('');
+      setError('');
+    }
+  }, [loginData.username, loginData.password]); 
+
+  // Xu ly logic dang nhap
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Đăng nhập thành công!');
+
+    // Validate cơ bản
+    if (!loginData.username || !loginData.password) {
+      setLocalError("Vui lòng nhập đầy đủ thông tin");
+      return;
+    }
+
+    // 3. Gọi hàm Login từ Context
+    const success = await login(loginData.username, loginData.password);
+
+    if (success) {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      if (currentUser?.role === 'LEARNER') {
+        navigate('/');
+      }
+    } else if (currentUser?.role === 'ADMIN') {
+      navigate('/admin');
+    } else {
+      navigate('/'); // Mặc định về trang chủ
+    }
   };
+
 
   return (
     // Container: pt-12 (đẩy lên cao hơn xíu), font-sans
@@ -46,6 +80,17 @@ const LoginPage = () => {
               <p className="text-[11px] text-slate-500 font-medium">Đăng nhập để tiếp tục học tập</p>
             </div>
 
+            {/* HIỂN THỊ LỖI (NẾU CÓ) */}
+            {(authError || localError) && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="bg-red-50 border border-red-200 text-red-600 text-xs font-bold px-4 py-2 rounded-lg mb-4 text-center"
+              >
+                {localError || authError}
+              </motion.div>
+            )}
+
             {/* --- FORM --- */}
             <div className="space-y-4"> {/* Giảm khoảng cách giữa các phần tử */}
 
@@ -79,10 +124,13 @@ const LoginPage = () => {
               {/* Login Button: Giảm py-3 */}
               <button
                 onClick={handleSubmit}
+                disabled={loading}
                 className="group relative w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/30 hover:shadow-emerald-600/40 transition-all transform hover:-translate-y-0.5 active:scale-[0.98] overflow-hidden"
               >
-                <span className="relative z-10">Đăng Nhập</span>
-                <div className="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:left-[100%] transition-all duration-700"></div>
+                <span className="relative z-10">
+                  {loading ? "Đang xử lý..." : "Đăng Nhập"}
+                </span>
+                {!loading && <div className="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:left-[100%] transition-all duration-700"></div>}
               </button>
 
               {/* Divider */}

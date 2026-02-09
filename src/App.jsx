@@ -6,6 +6,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 // --- Layouts ---
 import GuestLayout from "./components/layout/GuestLayout";   // Layout cho khách
 import LearnerLayout from "./components/layout/LearnerLayout"; // Layout cho học viên
+import TeacherLayout from "./components/layout/TeacherLayout"; // Layout cho giáo viên
 
 // --- Common Components ---
 import ScrollToTop from "./components/common/ScrollToTop";
@@ -34,6 +35,15 @@ import LearnerCoursesPage from "./page/student/learner/LearnerCoursesPage";
 import LearnerProgressPage from "./page/student/learner/LearnerProgressPage";
 import VirtualSpeakingPage from "./page/student/learner/VirtualSpeakingPage";
 import LearnerChatPage from "./page/student/learner/LearnerChatPage";
+
+// --- Teacher Pages ---
+import TeacherDashboard from "./page/teacher/TeacherDashboard";
+import CourseManagementPage from "./page/teacher/CourseManagementPage";
+import CourseEditorPage from "./page/teacher/CourseEditorPage";
+import StudentManagementPage from "./page/teacher/StudentManagementPage";
+import RevenuePage from "./page/teacher/RevenuePage";
+import TeacherBlogPage from "./page/teacher/TeacherBlogPage";
+import BlogEditorPage from "./page/teacher/BlogEditorPage";
 
 function App() {
   return (
@@ -85,6 +95,24 @@ function App() {
               <Route path="virtualSpeaking" element={<VirtualSpeakingPage />} />
               <Route path="chat" element={<LearnerChatPage />} />
             </Route>
+
+          {/* =========================================================
+              GROUP 3: TEACHER ROUTES
+              Sử dụng TeacherLayout
+              Truy cập qua: /teacher/...
+          ========================================================= */}
+          <Route path="/teacher" element={<TeacherLayout />}>
+            <Route index element={<TeacherDashboard />} />
+            <Route path="courses" element={<CourseManagementPage />} />
+            <Route path="courses/new" element={<CourseEditorPage />} />
+            <Route path="courses/:id" element={<CourseEditorPage />} />
+            <Route path="courses/:id/edit" element={<CourseEditorPage />} />
+            <Route path="students" element={<StudentManagementPage />} />
+            <Route path="revenue" element={<RevenuePage />} />
+            <Route path="blog" element={<TeacherBlogPage />} />
+            <Route path="blog/new" element={<BlogEditorPage />} />
+            <Route path="blog/:id/edit" element={<BlogEditorPage />} />
+          </Route>
 
 
             {/* Fallback: Nếu nhập sai đường dẫn thì về trang chủ */}

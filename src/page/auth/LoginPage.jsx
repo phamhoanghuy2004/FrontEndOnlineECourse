@@ -5,9 +5,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import InputField from '../../components/common/InputField';
 import PasswordField from '../../components/common/PasswordField';
 import { useAuth } from '../../hooks/useAuth';
+import { GoogleLogin } from '@react-oauth/google';
 
 const LoginPage = () => {
-  const { login, loading, error: authError, setError } = useAuth();
+  const { login, loginWithGoogle, loading, error: authError, setError } = useAuth();
   const navigate = useNavigate();
   const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [localError, setLocalError] = useState(''); // State lỗi nội bộ để reset khi user nhập lại
@@ -36,7 +37,7 @@ const LoginPage = () => {
 
     if (success) {
       const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-      if (currentUser?.role === 'LEARNER') {
+      if (currentUser?.role === 'STUDENT') {
         navigate('/');
       }
     } else if (currentUser?.role === 'ADMIN') {
@@ -44,6 +45,22 @@ const LoginPage = () => {
     } else {
       navigate('/'); // Mặc định về trang chủ
     }
+  };
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const result = await loginWithGoogle(credentialResponse.credential);
+    if (result.success) {
+      if (result.isFirstTime) {
+        navigate('/complete-profile');
+      } else {
+        navigate('/');
+      }
+    } else {
+      setLocalError("Đăng nhập Google thất bại! rồi");
+    }
+  };
+
+  const handleGoogleError = () => {
+    setLocalError("Đăng nhập Google thất bại!");
   };
 
 
@@ -143,14 +160,16 @@ const LoginPage = () => {
                 </div>
               </div>
 
-              {/* Google Login: Giảm py-2.5 */}
-              <button
-                type="button"
-                className="w-full bg-white border border-slate-200 text-slate-700 py-2.5 rounded-xl font-bold text-sm hover:border-emerald-500 hover:text-emerald-600 hover:shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
-              >
-                <FaGoogle className="text-base text-emerald-500" />
-                Đăng nhập bằng Google
-              </button>
+              <div className="w-full">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  text="signin_with"
+                  shape="rectangular"
+                  width={318}
+                  theme="outline"
+                />
+              </div>
 
               {/* Register Link */}
               <p className="text-center text-xs text-slate-500 mt-4">

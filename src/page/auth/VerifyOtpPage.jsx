@@ -1,16 +1,16 @@
-import { useState, useEffect, useRef, useContext } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FaShieldAlt, FaEnvelopeOpenText } from 'react-icons/fa';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Button from '../../components/common/Button';
 import authApi from '../../api/authApi';
-import { AuthContext } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 const VerifyOtpPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const { setUser } = useContext(AuthContext);
+    const { fetchStudentProfile } = useAuth();
 
     const email = location.state?.email || "";
 
@@ -112,6 +112,7 @@ const VerifyOtpPage = () => {
         }
 
         setIsLoading(true);
+
         try {
             const payload = { email, otpCode };
             // 1. Gửi OTP xuống Backend để xác thực
@@ -124,21 +125,12 @@ const VerifyOtpPage = () => {
                 // Phải lưu trước để file AxiosClient có thể lấy gắn vào Header Authorization (Bearer token)
                 localStorage.setItem('token', token);
 
-                try {
-                    // 3. Gọi API lấy thông tin Profile mới nhất
-                    const profileRes = await authApi.getMyProfile();
-
-                    // 4. Set vào Context và LocalStorage (Giống hệt cách làm trong hàm login)
-                    setUser(profileRes.data);
-                    localStorage.setItem("currentUser", JSON.stringify(profileRes.data));
-
-                    alert('Xác thực thành công! Chào mừng đến với Echill.');
-                    navigate('/'); // Chuyển thẳng vào Home, lúc này hệ thống đã nhận diện được User!
-                } catch (profileError) {
-                    // Nếu lỗi khi lấy profile (ít khi xảy ra), có thể đá về trang login
-                    setGlobalError("Không thể tải thông tin tài khoản. Vui lòng đăng nhập lại.");
-                    localStorage.removeItem('token');
-                    setIsError(true);
+                const response = await fetchStudentProfile();
+                if (response.success) {
+                    navigate('/');
+                }
+                else {
+                    setGlobalError(response.error || "Xác thực thành công nhưng không thể lấy thông tin");
                 }
             }
         } catch (error) {
@@ -155,6 +147,7 @@ const VerifyOtpPage = () => {
         if (!canResend || isLoading) return;
 
         setIsLoading(true);
+
         try {
             await authApi.resendOtp(email); // Đóng gói object theo chuẩn DTO Backend
 

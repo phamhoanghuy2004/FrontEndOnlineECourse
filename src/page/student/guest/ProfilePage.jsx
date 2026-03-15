@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
-// 1. Import thêm useNavigate
 import { useNavigate } from "react-router-dom";
-// 2. Import thêm icon FaSignOutAlt
-import { 
-    FaUserEdit, FaCamera, FaCoins, FaHistory, FaBullseye, 
-    FaSave, FaTimes, FaEnvelope, FaPhone, FaBirthdayCake, FaSignOutAlt 
+import {
+    FaUserEdit, FaCamera, FaCoins, FaHistory, FaBullseye,
+    FaSave, FaTimes, FaEnvelope, FaBirthdayCake, FaSignOutAlt,
+    FaMapMarkerAlt, FaBriefcase // 💥 Import thêm 2 icon mới
 } from "react-icons/fa";
-import { useAuth } from "../../../hooks/useAuth"; 
+import { useAuth } from "../../../hooks/useAuth";
 
 const MOCK_TRANSACTIONS = [
     { id: 1, date: "2023-10-25", desc: "Nạp xu qua Momo", amount: 500, type: "deposit", status: "Success" },
@@ -16,32 +15,33 @@ const MOCK_TRANSACTIONS = [
 ];
 
 const ProfilePage = () => {
-    // 3. Lấy hàm logout từ useAuth
-    const { user, logout } = useAuth(); 
-    const navigate = useNavigate(); // Hook để chuyển trang
-    
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
     const [activeTab, setActiveTab] = useState("info");
     const [isEditing, setIsEditing] = useState(false);
     const [previewAvatar, setPreviewAvatar] = useState(null);
 
+    // 💥 Cập nhật state formData
     const [formData, setFormData] = useState({
-        fullName: "", 
+        fullName: "",
         email: "",
-        phone: "",
+        address: "", // Thay phone thành address
         dob: "",
-        bio: "",
+        jobTitle: "", // Thay bio thành jobTitle
         targetScore: 0,
         avatar: "",
     });
 
+    // 💥 Cập nhật useEffect map data
     useEffect(() => {
         if (user) {
             setFormData({
-                fullName: user.fullName || "", 
+                fullName: user.fullName || "",
                 email: user.email || "",
-                phone: user.phone || "Chưa cập nhật",
+                address: user.address || "Chưa cập nhật",
                 dob: user.dob || "2000-01-01",
-                bio: user.bio || "Học viên tích cực tại EduSkill",
+                jobTitle: user.jobTitle || "Chưa cập nhật",
                 targetScore: user.targetScore || 6.5,
                 avatar: user.avatar || "https://via.placeholder.com/150",
             });
@@ -68,14 +68,15 @@ const ProfilePage = () => {
         alert("Cập nhật thông tin thành công!");
     };
 
+    // 💥 Cập nhật hàm handleCancel
     const handleCancel = () => {
         if (user) {
-            setFormData({ 
-                ...formData, 
-                fullName: user.fullName, 
-                phone: user.phone, 
-                bio: user.bio,
-                dob: user.dob, 
+            setFormData({
+                ...formData,
+                fullName: user.fullName,
+                address: user.address,
+                jobTitle: user.jobTitle,
+                dob: user.dob,
                 targetScore: user.targetScore
             });
             setPreviewAvatar(user.avatar);
@@ -83,38 +84,35 @@ const ProfilePage = () => {
         setIsEditing(false);
     };
 
-    // 4. Hàm xử lý đăng xuất
     const handleLogout = () => {
-        // Gọi hàm logout từ context (xóa token, user info...)
         logout();
-        // Chuyển hướng về trang chủ hoặc trang login
-        navigate("/"); 
+        navigate("/");
     };
 
     return (
         <div className="bg-gray-50 min-h-screen pt-24 pb-12 font-sans">
             <div className="container mx-auto px-6">
-                
+
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-800">Hồ sơ cá nhân</h1>
                     <p className="text-gray-500">Quản lý thông tin và theo dõi quá trình học tập của bạn.</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    
+
                     {/* --- LEFT COLUMN --- */}
                     <div className="lg:col-span-1 space-y-6">
-                        
+
                         {/* 1. Profile Card */}
                         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-green-400 to-primary opacity-20"></div>
-                            
+
                             <div className="relative w-32 h-32 mb-4 mt-6 group">
                                 <div className="w-full h-full rounded-full overflow-hidden border-4 border-white shadow-lg">
-                                    <img 
-                                        src={previewAvatar || "https://via.placeholder.com/150"} 
-                                        alt="Avatar" 
-                                        className="w-full h-full object-cover" 
+                                    <img
+                                        src={previewAvatar || "https://via.placeholder.com/150"}
+                                        alt="Avatar"
+                                        className="w-full h-full object-cover"
                                     />
                                 </div>
                                 {isEditing && (
@@ -126,12 +124,12 @@ const ProfilePage = () => {
                             </div>
 
                             <h2 className="text-2xl font-bold text-gray-800">{formData.fullName}</h2>
-                            <span className="text-gray-500 text-sm mb-4">Học viên</span>
+                            <span className="text-gray-500 text-sm mb-4">{formData.jobTitle !== "Chưa cập nhật" ? formData.jobTitle : "Học viên"}</span>
 
                             <div className="grid grid-cols-2 gap-4 w-full mt-4 pt-4 border-t border-gray-100">
                                 <div className="text-center">
                                     <div className="flex items-center justify-center gap-1 text-yellow-500 font-bold text-xl">
-                                        <FaCoins /> {user?.coins || 0}
+                                        <FaCoins /> {user?.currentCoin || 0} {/* Đổi thành currentCoin theo Backend */}
                                     </div>
                                     <span className="text-xs text-gray-400 uppercase font-semibold">Xu hiện có</span>
                                 </div>
@@ -150,11 +148,11 @@ const ProfilePage = () => {
                                 <FaBullseye className="text-red-500" /> Đặt lại mục tiêu điểm số
                             </h3>
                             <div className="flex gap-2">
-                                <input 
-                                    type="number" 
+                                <input
+                                    type="number"
                                     name="targetScore"
                                     value={formData.targetScore}
-                                    onChange={handleChange} 
+                                    onChange={handleChange}
                                     disabled={!isEditing}
                                     className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-primary disabled:opacity-60"
                                     placeholder="Ví dụ: 7.0"
@@ -169,7 +167,7 @@ const ProfilePage = () => {
                         </div>
 
                         {/* 3. LOGOUT BUTTON */}
-                        <button 
+                        <button
                             onClick={handleLogout}
                             className="w-full bg-white text-red-500 font-bold py-4 rounded-3xl flex items-center justify-center gap-2 hover:bg-red-50 hover:shadow-md transition-all border border-red-100 group"
                         >
@@ -214,9 +212,9 @@ const ProfilePage = () => {
                                     {/* Full Name Input */}
                                     <div className="col-span-2 md:col-span-1">
                                         <label className="block text-gray-600 text-sm font-semibold mb-2">Họ và tên</label>
-                                        <input 
-                                            type="text" 
-                                            name="fullName" 
+                                        <input
+                                            type="text"
+                                            name="fullName"
                                             value={formData.fullName}
                                             onChange={handleChange}
                                             disabled={!isEditing}
@@ -232,14 +230,15 @@ const ProfilePage = () => {
                                         </div>
                                     </div>
 
+                                    {/* 💥 ADDRESS Input (Đã đổi từ Phone) */}
                                     <div className="col-span-2 md:col-span-1">
-                                        <label className="block text-gray-600 text-sm font-semibold mb-2">Số điện thoại</label>
+                                        <label className="block text-gray-600 text-sm font-semibold mb-2">Địa chỉ</label>
                                         <div className="relative">
-                                            <FaPhone className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
-                                            <input 
-                                                type="text" 
-                                                name="phone"
-                                                value={formData.phone}
+                                            <FaMapMarkerAlt className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                name="address"
+                                                value={formData.address}
                                                 onChange={handleChange}
                                                 disabled={!isEditing}
                                                 className={`w-full pl-10 pr-4 py-3 rounded-xl border ${isEditing ? 'border-gray-300 bg-white focus:border-primary' : 'border-transparent bg-gray-50 text-gray-500'}`}
@@ -251,8 +250,8 @@ const ProfilePage = () => {
                                         <label className="block text-gray-600 text-sm font-semibold mb-2">Ngày sinh</label>
                                         <div className="relative">
                                             <FaBirthdayCake className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
-                                            <input 
-                                                type="date" 
+                                            <input
+                                                type="date"
                                                 name="dob"
                                                 value={formData.dob}
                                                 onChange={handleChange}
@@ -262,16 +261,21 @@ const ProfilePage = () => {
                                         </div>
                                     </div>
 
+                                    {/* 💥 JOB TITLE Input (Đã đổi từ Bio Textarea) */}
                                     <div className="col-span-2">
-                                        <label className="block text-gray-600 text-sm font-semibold mb-2">Giới thiệu bản thân</label>
-                                        <textarea 
-                                            name="bio"
-                                            rows="4"
-                                            value={formData.bio}
-                                            onChange={handleChange}
-                                            disabled={!isEditing}
-                                            className={`w-full px-4 py-3 rounded-xl border ${isEditing ? 'border-gray-300 bg-white focus:border-primary' : 'border-transparent bg-gray-50 text-gray-500'}`}
-                                        ></textarea>
+                                        <label className="block text-gray-600 text-sm font-semibold mb-2">Nghề nghiệp</label>
+                                        <div className="relative">
+                                            <FaBriefcase className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                name="jobTitle"
+                                                value={formData.jobTitle}
+                                                onChange={handleChange}
+                                                disabled={!isEditing}
+                                                className={`w-full pl-10 pr-4 py-3 rounded-xl border ${isEditing ? 'border-gray-300 bg-white focus:border-primary' : 'border-transparent bg-gray-50 text-gray-500'}`}
+                                                placeholder="Học sinh, Sinh viên, Kỹ sư..."
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>

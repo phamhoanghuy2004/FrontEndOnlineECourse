@@ -15,6 +15,7 @@ import ScrollToTop from "./components/common/ScrollToTop";
 import LoginPage from "./page/auth/LoginPage";
 import RegisterPage from "./page/auth/RegisterPage";
 import VerifyOtpPage from "./page/auth/VerifyOtpPage";
+import CompleteProfilePage from "./page/auth/CompleteProfilePage";
 
 // --- Guest Pages ---
 import HomePage from "./page/student/guest/HomePage";
@@ -74,6 +75,7 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/verify-otp" element={<VerifyOtpPage />} />
               
+              <Route path="/complete-profile" element={<CompleteProfilePage />} />
               <Route path="/learner/:id/profile" element={
                 <ProtectedRoute>
                   <ProfilePage />

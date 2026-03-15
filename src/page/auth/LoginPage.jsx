@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaUser, FaGoogle } from 'react-icons/fa';
+import { FaUser } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import InputField from '../../components/common/InputField';
 import PasswordField from '../../components/common/PasswordField';
 import { useAuth } from '../../hooks/useAuth';
+import { GoogleLogin } from '@react-oauth/google';
 
 // ==========================================
 // 1. TÁCH HÀM VALIDATION RA KHỎI COMPONENT
@@ -30,20 +31,28 @@ const validateLogin = (data) => {
 // 2. MAIN COMPONENT
 // ==========================================
 const LoginPage = () => {
-  const { login, loading, error: authError, setError } = useAuth();
+  const { login, loginWithGoogle, loading, error: authError, setError } = useAuth();
   const navigate = useNavigate();
 
   const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [errors, setErrors] = useState({});
 
-  
+  // Reset lỗi API khi trang vừa load xong để tránh "lỗi ma" từ phiên trước
+  useEffect(() => {
+    if (setError) setError('');
+  }, [setError]);
+
   const handleInputChange = (field, value) => {
     setLoginData({ ...loginData, [field]: value });
+
     // Xóa chữ đỏ ở ô input khi user bắt đầu gõ
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: null }));
     }
-    setError('');
+    // Xóa thông báo lỗi API chung khi user gõ lại
+    if (authError && setError) {
+      setError('');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -59,7 +68,7 @@ const LoginPage = () => {
 
     setErrors({});
 
-    // 2. Gọi logic login từ Context (Đã có sẵn Try...Catch trong Context)
+    // 2. Gọi logic login từ Context
     const success = await login(loginData.username, loginData.password);
 
     // 3. Xử lý điều hướng khi thành công
@@ -71,7 +80,26 @@ const LoginPage = () => {
         navigate('/');
       }
     }
-    // Nếu thất bại, AuthContext sẽ tự lo việc set biến authError để hiển thị
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const result = await loginWithGoogle(credentialResponse.credential);
+
+    if (result.success) {
+      if (result.isFirstTime) {
+        navigate('/complete-profile');
+      } else {
+        navigate('/');
+      }
+    }
+    // 💥 NẾU THẤT BẠI: KHÔNG CẦN LÀM GÌ CẢ!
+    // Vì hàm loginWithGoogle đã gọi setError() rồi, UI sẽ tự động hiện cái lỗi đó lên form.
+    // Xóa cái cục else setLocalError kia đi để không bị ghi đè lỗi.
+  };
+
+  const handleGoogleError = () => {
+    // 💥 Đã gom về dùng chung setError
+    setError("Đăng nhập Google bị hủy hoặc thất bại!");
   };
 
   return (
@@ -174,14 +202,21 @@ const LoginPage = () => {
                 </div>
               </div>
 
-              {/* Google Login */}
-              <button
-                type="button"
-                className="w-full bg-white border border-slate-200 text-slate-700 py-2.5 rounded-xl font-bold text-sm hover:border-emerald-500 hover:text-emerald-600 hover:shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+              {/* Google Login Component */}
+              <div 
+                className={`w-full flex justify-center mt-2 overflow-hidden transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}
               >
-                <FaGoogle className="text-base text-emerald-500" />
-                Đăng nhập bằng Google
-              </button>
+                <div className="max-w-full overflow-x-auto overflow-y-hidden no-scrollbar">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    text="signin_with"
+                    shape="rectangular"
+                    width={318} // Vẫn giữ 318, nhưng lỡ màn hình nhỏ hơn 318 thì div bọc ngoài sẽ che đi phần tràn
+                    theme="outline"
+                  />
+                </div>
+              </div>
 
               {/* Register Link */}
               <p className="text-center text-xs text-slate-500 mt-4 pt-2">

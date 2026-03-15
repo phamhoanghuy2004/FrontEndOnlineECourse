@@ -36,19 +36,14 @@ const LoginPage = () => {
   const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [errors, setErrors] = useState({});
 
-  // Clear lỗi API khi user bắt đầu nhập liệu lại
-  useEffect(() => {
-    if (authError && setError) {
-      setError('');
-    }
-  }, [loginData.username, loginData.password]);
-
+  
   const handleInputChange = (field, value) => {
     setLoginData({ ...loginData, [field]: value });
     // Xóa chữ đỏ ở ô input khi user bắt đầu gõ
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: null }));
     }
+    setError('');
   };
 
   const handleSubmit = async (e) => {

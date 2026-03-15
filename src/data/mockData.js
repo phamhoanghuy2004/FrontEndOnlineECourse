@@ -1099,19 +1099,17 @@ export const MOCK_USERS = [
     username: "student",
     password: "123", // Trong thực tế password sẽ được mã hóa
     fullName: "Nguyễn Văn A",
-    role: "STUDENT",
     avatar: "https://i.pravatar.cc/150?img=3",
     email: "student@echill.com",
-    role: "STUDENT"
+    roles: ["STUDENT"]
   },
   {
     id: 2,
     username: "admin",
     password: "123",
     fullName: "Admin Echill",
-    role: "ADMIN",
     avatar: "https://i.pravatar.cc/150?img=12",
     email: "admin@echill.com",
-    role: "ADMIN"
+    roles: ["ADMIN"]
   }
 ];

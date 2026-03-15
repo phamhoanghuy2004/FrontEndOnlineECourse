@@ -14,6 +14,7 @@ import ScrollToTop from "./components/common/ScrollToTop";
 // --- Auth Pages (Độc lập) ---
 import LoginPage from "./page/auth/LoginPage";
 import RegisterPage from "./page/auth/RegisterPage";
+import VerifyOtpPage from "./page/auth/VerifyOtpPage";
 import CompleteProfilePage from "./page/auth/CompleteProfilePage";
 
 // --- Guest Pages ---
@@ -72,6 +73,8 @@ function App() {
 
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/verify-otp" element={<VerifyOtpPage />} />
+              
               <Route path="/complete-profile" element={<CompleteProfilePage />} />
               <Route path="/learner/:id/profile" element={
                 <ProtectedRoute>

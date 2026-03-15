@@ -1,56 +1,48 @@
-import { MOCK_USERS } from "../data/mockData";
+import {
+  MOCK_USERS
+} from "../data/mockData";
+import axiosClient from "./axiosClient";
 
-const API_BASE_URL = "http://localhost:8080";
 
+
+// 1. LOGIN GOOGLE
 export const googleLoginApi = async (credential) => {
-  const response = await fetch(`${API_BASE_URL}/auth/google-login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ credential }),
-  });
-  
-  const data = await response.json();
-  if (!response.ok || data.code !== 1000) {
-    throw new Error(data.message || "Lỗi đăng nhập Google");
-  }
-  return data.data; // AuthenticationResponse
-};
-
-export const completeProfileApi = async (token, profileData) => {
-  const response = await fetch(`${API_BASE_URL}/users/complete-profile`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(profileData),
+  // Rút gọn hoàn toàn việc set headers và stringify body
+  const response = await axiosClient.post('/auth/google-login', {
+    credential
   });
 
-  const data = await response.json();
-  if (!response.ok || data.code !== 1000) {
-    throw new Error(data.message || "Lỗi cập nhật hồ sơ");
+  // axiosClient đã trả về thẳng cục JSON của Spring Boot (gồm code, message, data)
+  if (response.code !== 1000) {
+    throw new Error(response.message || "Lỗi đăng nhập Google");
   }
-  return data;
+
+  return response.data; // Trả về AuthenticationResponse
 };
 
-export const getMyInfoApi = async (token) => {
-  const response = await fetch(`${API_BASE_URL}/users/my-info`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    }
-  });
+// 2. CẬP NHẬT HỒ SƠ (ĐÃ BỎ THAM SỐ TOKEN)
+export const completeProfileApi = async (profileData) => {
+  // Gửi API cực nhàn, Interceptor tự nhét Token vào rồi!
+  const response = await axiosClient.put('/students/complete-profile', profileData);
 
-  const data = await response.json();
-  if (!response.ok || data.code !== 1000) {
-    throw new Error(data.message || "Không thể lấy thông tin người dùng");
+  if (response.code !== 1000) {
+    throw new Error(response.message || "Lỗi cập nhật hồ sơ");
   }
-  return data.data; // UserResponse
+
+  return response; // Code cũ của bạn trả về toàn bộ response
 };
 
+// 3. LẤY THÔNG TIN CÁ NHÂN (ĐÃ BỎ THAM SỐ TOKEN)
+export const getMyInfoApi = async () => {
+  // Chỉ cần 1 dòng gọi GET
+  const response = await axiosClient.get('/users/my-info');
+
+  if (response.code !== 1000) {
+    throw new Error(response.message || "Không thể lấy thông tin người dùng");
+  }
+
+  return response.data; // Trả về UserResponse
+};
 
 export const mockLoginApi = (username, password) => {
   return new Promise((resolve, reject) => {
@@ -61,16 +53,19 @@ export const mockLoginApi = (username, password) => {
 
       if (user) {
         // Trả về thông tin user (loại bỏ password cho bảo mật giả)
-        const { password, ...userInfo } = user; 
+        const {
+          password,
+          ...userInfo
+        } = user;
         resolve({
-            success: true,
-            data: userInfo,
-            token: "fake-jwt-token-123456" // Giả lập token
+          success: true,
+          data: userInfo,
+          token: "fake-jwt-token-123456" // Giả lập token
         });
       } else {
         reject({
-            success: false,
-            message: "Tên đăng nhập hoặc mật khẩu không đúng!"
+          success: false,
+          message: "Tên đăng nhập hoặc mật khẩu không đúng!"
         });
       }
     }, 1000); // Giả lập độ trễ mạng 1 giây

@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { navLinks } from "../../data/mockData";
 import LOGO from "../../assets/LOGO.png";
-import { FaChevronDown } from "react-icons/fa";
+import { FaChevronDown, FaUserCircle } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { FaUserCircle } from "react-icons/fa";
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
@@ -16,6 +15,15 @@ const Navbar = () => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
+    // 💥 KIỂM TRA ROLE BẰNG MẢNG: 
+    // Vì Backend lưu là "STUDENT" nhưng Frontend bạn dùng link "LEARNER", 
+    // tôi check cả 2 cho an toàn tuyệt đối.
+    const isStudent = user?.roles?.includes('STUDENT') || user?.roles?.includes('LEARNER');
+
+    // 💥 ĐỒNG BỘ DỮ LIỆU TỪ BACKEND DTO
+    const userAvatar = user?.avatarUrl || user?.avatar; 
+    const userName = user?.fullName || user?.name || user?.username;
+
     return (
         <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled
             ? "bg-white/30 backdrop-blur-md shadow-sm py-0"
@@ -23,13 +31,14 @@ const Navbar = () => {
             }`}>
             <div className="container mx-auto px-6 flex justify-between items-center h-full">
                 {/* LOGO AREA */}
-                <a href="/" className="flex items-center h-18">
+                <Link to="/" className="flex items-center h-18">
                     <img
                         src={LOGO}
                         alt="EduSkill Logo"
                         className="w-auto h-full object-contain"
                     />
-                </a>
+                </Link>
+
                 {/* Menu Option */}
                 <ul className="hidden md:flex gap-8 font-medium text-gray-600 items-center">
                     {navLinks.map((link) => (
@@ -41,6 +50,7 @@ const Navbar = () => {
                                 {link.name}
                                 {link.dropdown && <FaChevronDown className="text-xs transition-transform group-hover:rotate-180" />}
                             </Link>
+                            
                             {/* DROPDOWN AREA */}
                             {link.dropdown && (
                                 <div className="absolute top-full left-0 pt-4 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:-translate-y-2 translate-y-0 z-50">
@@ -67,30 +77,30 @@ const Navbar = () => {
                         /* ================== TRƯỜNG HỢP ĐÃ ĐĂNG NHẬP ================== */
                         <div className="flex items-center gap-4">
 
-                            {/* Check Role: Nếu là Student thì hiện nút Học ngay */}
-                            {user.role === 'STUDENT' && (
+                            {/* 💥 Áp dụng logic kiểm tra Role mới */}
+                            {isStudent && (
                                 <Link
-                                    to={`/learner/dashboad`} // Link đến trang dashboard của student
+                                    to={`/learner/${user.id}`} 
                                     className="bg-primary text-white px-5 py-2 rounded-full font-semibold shadow-md hover:bg-green-600 hover:shadow-lg transition-all transform hover:-translate-y-0.5"
                                 >
                                     Học ngay
                                 </Link>
                             )}
 
-                            {/* User Avatar Link (Có thể link tới trang profile) */}
+                            {/* User Avatar Link */}
                             <Link
-                                to={user.role === 'STUDENT' ? `/learner/dashboad/profile` : "/"}
+                                to={isStudent ? `/learner/${user.id}/profile` : "/"}
                                 className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-100 shadow-sm cursor-pointer hover:border-primary transition-colors"
-                                title={user.name}
+                                title={userName}
                             >
-                                {user.avatar ? (
+                                {/* 💥 Lấy đúng trường avatarUrl từ Backend */}
+                                {userAvatar ? (
                                     <img
-                                        src={user.avatar}
-                                        alt={user.name}
+                                        src={userAvatar}
+                                        alt={userName}
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    // Fallback nếu không có avatar
                                     <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
                                         <FaUserCircle size={24} />
                                     </div>

@@ -1,5 +1,6 @@
 import React, { createContext, useState } from "react";
-import { mockLoginApi, googleLoginApi, getMyInfoApi } from "../api/userApi";
+import { mockLoginApi, googleLoginApi } from "../api/userApi";
+import authApi from "../api/authApi";
 
 
 // Tao context
@@ -42,43 +43,60 @@ export const AuthProvider = ({ children }) => {
         setError(null);
         try {
             const response = await googleLoginApi(credential);
-            // response: { token, authenticated, isFirstTime }
-            // Lưu token
-            localStorage.setItem("token", response.token);
-            
-            // Fetch thông tin user thật từ server
-            const userInfo = await getMyInfoApi(response.token);
-            
-            // Map roles thành role dạng chuỗi cho frontend dễ dùng
-            if (userInfo.roles && userInfo.roles.length > 0) {
-                userInfo.role = userInfo.roles[0].name; // VD: "STUDENT"
+
+            if (response.authenticated) {
+                localStorage.setItem("token", response.token);
+
+                // 1. Kéo thông tin user
+                const profileResult = await fetchStudentProfile();
+
+                // 2. 💥 MỞ VỎ BỌC ĐỂ LẤY DATA THẬT
+                if (profileResult.success) {
+                    const userData = profileResult.data;
+
+                    // 3. Check thiếu thông tin từ userData thật
+                    const needsCompletion = !userData.address || !userData.dob || !userData.jobTitle;
+
+                    // Ưu tiên cờ isFirstTime từ Backend, nếu không có thì xài needsCompletion
+                    const isFirst = response.isFirstTime ?? response.firstTime ?? needsCompletion;
+
+                    return { success: true, isFirstTime: isFirst };
+                }
             }
 
-            // Gán default giá trị avatar và name nếu không có
-            if (!userInfo.avatarUrl && userInfo.avatar) {
-               userInfo.avatarUrl = userInfo.avatar;
-            } else if (userInfo.avatarUrl) {
-               userInfo.avatar = userInfo.avatarUrl; // Navbar dùng chữ `avatar`
-            }
-            if (userInfo.fullName && !userInfo.name) {
-                userInfo.name = userInfo.fullName;
-            }
+            // Nếu không rơi vào if trên (không auth được hoặc không kéo được profile)
+            return { success: false };
 
-            setUser(userInfo);
-            localStorage.setItem("currentUser", JSON.stringify(userInfo));
-            
-            // Buộc chuyển hướng nếu profile còn thiếu thông tin
-            const needsCompletion = !userInfo.address || !userInfo.dob || !userInfo.jobTitle;
-            const isFirst = response.isFirstTime ?? response.firstTime ?? needsCompletion;
-            
-            return { success: true, isFirstTime: isFirst };
         } catch (error) {
-            setError(error.message);
+            setError(error.message || "Lỗi xác thực Google");
             return { success: false };
         } finally {
             setLoading(false);
         }
-    }
+    };
+
+    // 💥 MỚI: Hàm fetch lại profile từ Backend
+    const fetchStudentProfile = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            // Không cần truyền token vì interceptor của axiosClient sẽ tự động lấy từ localStorage
+            const response = await authApi.getMyProfile();
+
+            // Giả định response trả về chính là object data (nhờ interceptor)
+            const profileData = response.data || response;
+
+            setUser(profileData);
+            localStorage.setItem("currentUser", JSON.stringify(profileData));
+
+            return { success: true, data: profileData };
+        } catch (error) {
+            setError(error.message || error || "Không thể đồng bộ thông tin người dùng");
+            return { success: false, error };
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Hàm Đăng Xuất
     const logout = () => {
@@ -87,15 +105,17 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem("token");
     };
 
-    const value = { 
-        user, 
-        loading, 
-        error, 
+    const value = {
+        user,
+        loading,
+        error,
         setError,
         login,
         loginWithGoogle,
-        logout, 
-        isAuthenticated: !!user
+        logout,
+        isAuthenticated: !!user,
+        setUser,
+        fetchStudentProfile
     };
 
     return <AuthContext.Provider value={value}> {children} </AuthContext.Provider>

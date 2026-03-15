@@ -4,6 +4,7 @@ import LOGO from "../../assets/LOGO.png";
 import { FaChevronDown } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { FaUserCircle } from "react-icons/fa";
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
@@ -67,9 +68,9 @@ const Navbar = () => {
                         <div className="flex items-center gap-4">
 
                             {/* Check Role: Nếu là Student thì hiện nút Học ngay */}
-                            {user.role === 'LEARNER' && (
+                            {user.role === 'STUDENT' && (
                                 <Link
-                                    to={`/learner/${user.id}`} // Link đến trang dashboard của student
+                                    to={`/learner/dashboad`} // Link đến trang dashboard của student
                                     className="bg-primary text-white px-5 py-2 rounded-full font-semibold shadow-md hover:bg-green-600 hover:shadow-lg transition-all transform hover:-translate-y-0.5"
                                 >
                                     Học ngay
@@ -78,7 +79,7 @@ const Navbar = () => {
 
                             {/* User Avatar Link (Có thể link tới trang profile) */}
                             <Link
-                                to={user.role === 'LEARNER' ? `/learner/${user.id}/profile` : "/"}
+                                to={user.role === 'STUDENT' ? `/learner/dashboad/profile` : "/"}
                                 className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-100 shadow-sm cursor-pointer hover:border-primary transition-colors"
                                 title={user.name}
                             >

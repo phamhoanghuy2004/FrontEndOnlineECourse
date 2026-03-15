@@ -1102,7 +1102,7 @@ export const MOCK_USERS = [
     role: "STUDENT",
     avatar: "https://i.pravatar.cc/150?img=3",
     email: "student@echill.com",
-    role: "LEARNER"
+    role: "STUDENT"
   },
   {
     id: 2,

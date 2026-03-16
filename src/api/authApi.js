@@ -1,19 +1,25 @@
 import axiosClient from "./axiosClient";
 
 const authApi = {
-    // 1. Đăng ký
+    // 1. Đăng nhập bằng username/password
+    login: (data) => {
+        const url = '/auth/login';
+        return axiosClient.post(url, data);
+    },
+
+    // 2. Đăng ký
     register: (data) => {
         const url = '/auth/register';
         return axiosClient.post(url, data);
     },
 
-    // 2. Xác thực OTP
+    // 3. Xác thực OTP
     verifyOtp: (data) => {
         const url = '/auth/verify-register-otp';
         return axiosClient.post(url, data);
     },
 
-    // 3. Gửi lại OTP
+    // 4. Gửi lại OTP
     resendOtp: (email) => {
         const url = '/auth/resend-register-otp';
         return axiosClient.post(url, {

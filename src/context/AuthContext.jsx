@@ -1,7 +1,24 @@
 import React, { createContext, useState } from "react";
-import { mockLoginApi, googleLoginApi } from "../api/userApi";
+import { googleLoginApi, getMyInfoApi } from "../api/userApi";
 import authApi from "../api/authApi";
 
+const getRolesFromToken = (token) => {
+    try {
+        const payloadBase64 = token.split('.')[1];
+        const decoded = JSON.parse(atob(payloadBase64));
+        const scope = decoded.scope || '';
+        // Lọc ra những claim bắt đầu bằng "ROLE_" và bỏ prefix
+        return scope.split(' ').filter(s => s.startsWith('ROLE_')).map(s => s.replace('ROLE_', ''));
+    } catch {
+        return [];
+    }
+};
+
+const resolveRedirectPath = (roles) => {
+    if (roles.includes('ADMIN'))   return '/admin';
+    if (roles.includes('TEACHER')) return '/teacher';
+    return '/';
+};
 
 // Tao context
 export const AuthContext = createContext();
@@ -16,22 +33,37 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Ham dang nhap
     const login = async (username, password) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await mockLoginApi(username, password);
-            setUser(response.data);
+            //axiosClient trả về ApiResponse { code, message, data }
+            const apiResponse = await authApi.login({ username, password });
+            const authData = apiResponse.data; // AuthenticationResponse { authenticated, token }
 
-            // set vao localStorage de khong bi mat di khi F5
-            localStorage.setItem("currentUser", JSON.stringify(response.data));
-            localStorage.setItem("token", response.token);
-            return true;
+            if (!authData?.authenticated) {
+                throw new Error("Đăng nhập thất bại.");
+            }
+
+            const token = authData.token;
+
+            localStorage.setItem("token", token);
+
+            const profileData = await getMyInfoApi();
+            setUser(profileData);
+            localStorage.setItem("currentUser", JSON.stringify(profileData));
+
+            const roles = getRolesFromToken(token);
+            const redirectPath = resolveRedirectPath(roles);
+
+            return { success: true, redirectPath };
         }
-        catch (error) {
-            setError(error.message);
-            return false;
+        catch (err) {
+            // axiosClient ném ra string message từ backend
+            const msg = typeof err === 'string' ? err
+                      : err?.message || "Đăng nhập thất bại. Vui lòng thử lại.";
+            setError(msg);
+            return { success: false };
         }
         finally {
             setLoading(false);
@@ -120,3 +152,4 @@ export const AuthProvider = ({ children }) => {
 
     return <AuthContext.Provider value={value}> {children} </AuthContext.Provider>
 }
+

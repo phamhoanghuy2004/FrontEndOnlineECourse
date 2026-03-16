@@ -35,7 +35,7 @@ export const completeProfileApi = async (profileData) => {
 // 3. LẤY THÔNG TIN CÁ NHÂN (ĐÃ BỎ THAM SỐ TOKEN)
 export const getMyInfoApi = async () => {
   // Chỉ cần 1 dòng gọi GET
-  const response = await axiosClient.get('/users/my-info');
+  const response = await axiosClient.get('/students/my-profile');
 
   if (response.code !== 1000) {
     throw new Error(response.message || "Không thể lấy thông tin người dùng");

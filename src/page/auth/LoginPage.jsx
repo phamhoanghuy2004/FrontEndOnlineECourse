@@ -68,17 +68,12 @@ const LoginPage = () => {
 
     setErrors({});
 
-    // 2. Gọi logic login từ Context
-    const success = await login(loginData.username, loginData.password);
+    // 2. Gọi API thật qua Context — trả về { success, redirectPath }
+    const result = await login(loginData.username, loginData.password);
 
-    // 3. Xử lý điều hướng khi thành công
-    if (success) {
-      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-      if (currentUser?.roles?.includes('ADMIN')) {
-        navigate('/admin');
-      } else {
-        navigate('/');
-      }
+    // 3. Chuyển hướng theo role từ JWT (ADMIN→/admin, TEACHER→/teacher, STUDENT→/)
+    if (result?.success) {
+      navigate(result.redirectPath || '/');
     }
   };
 

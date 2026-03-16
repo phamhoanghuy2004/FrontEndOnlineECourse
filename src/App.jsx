@@ -29,6 +29,7 @@ import TestDetailPage from "./page/student/guest/TestDetailPage";
 import LevelTestPage from "./page/student/guest/LevelTestPage";
 import TestPracticePage from "./page/student/guest/TestPracticePage";
 import ProfilePage from "./page/student/guest/ProfilePage";
+import ForgotPasswordPage from "./page/auth/ForgotPasswordPage";
 
 
 // --- Learner Pages ---
@@ -74,6 +75,7 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/verify-otp" element={<VerifyOtpPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               
               <Route path="/complete-profile" element={<CompleteProfilePage />} />
               <Route path="/learner/:id/profile" element={

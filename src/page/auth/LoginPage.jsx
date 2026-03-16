@@ -175,7 +175,7 @@ const LoginPage = () => {
 
               {/* Forgot Password */}
               <div className="text-right pb-3">
-                <button type="button" className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline transition-colors">
+                <button type="button" onClick={() => navigate('/forgot-password')} className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline transition-colors">
                   Quên mật khẩu?
                 </button>
               </div>

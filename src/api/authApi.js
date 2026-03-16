@@ -9,18 +9,26 @@ const authApi = {
 
     // 2. Xác thực OTP
     verifyOtp: (data) => {
-        const url = '/auth/verify-otp';
+        const url = '/auth/verify-register-otp';
         return axiosClient.post(url, data);
     },
 
     // 3. Gửi lại OTP
     resendOtp: (email) => {
-        const url = '/auth/resend-otp';
-        return axiosClient.post(url, { email }); // Bọc email vào object khớp với ResendOtpRequest
+        const url = '/auth/resend-register-otp';
+        return axiosClient.post(url, {
+            email
+        }); // Bọc email vào object khớp với ResendOtpRequest
     },
 
-    getMyProfile: () => {
-        return axiosClient.get('/students/my-profile');
+    forgotPassword: (data) => {
+        const url = '/auth/forgot-password';
+        return axiosClient.post(url, data);
+    },
+
+    resetPassword: (data) => {
+        const url = '/auth/reset-password';
+        return axiosClient.post(url, data);
     },
 };
 

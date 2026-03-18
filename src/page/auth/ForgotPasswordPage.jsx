@@ -44,23 +44,29 @@ const validateResetStep = (data) => {
 const ForgotPasswordPage = () => {
     const navigate = useNavigate();
 
-    const [step, setStep] = useState(1);
-    const [isLoading, setIsLoading] = useState(false);
-    const [globalError, setGlobalError] = useState("");
-    const [errors, setErrors] = useState({});
+    // 💥 MÓC DATA TỪ SESSION STORAGE (Bao F5 không mất)
+    const [savedData] = useState(() => {
+        const saved = sessionStorage.getItem("forgotPasswordData");
+        return saved ? JSON.parse(saved) : null;
+    });
 
-    // 💥 MỚI: State cho bộ đếm ngược OTP
-    const [timer, setTimer] = useState(60);
-    const [canResend, setCanResend] = useState(false);
-
+    // 💥 KHỞI TẠO STATE TỪ DỮ LIỆU ĐÃ LƯU
+    const [step, setStep] = useState(savedData ? savedData.step : 1);
     const [formData, setFormData] = useState({
-        email: '',
+        email: savedData ? savedData.email : '',
         otpCode: '',
         newPassword: '',
         confirmPassword: ''
     });
 
-    // 💥 MỚI: Hook đếm ngược thời gian (chỉ chạy khi ở bước 2)
+    const [isLoading, setIsLoading] = useState(false);
+    const [globalError, setGlobalError] = useState("");
+    const [errors, setErrors] = useState({});
+
+    const [timer, setTimer] = useState(60);
+    const [canResend, setCanResend] = useState(false);
+
+    // Hook đếm ngược thời gian (chỉ chạy khi ở bước 2)
     useEffect(() => {
         let interval;
         if (step === 2 && timer > 0) {
@@ -92,18 +98,25 @@ const ForgotPasswordPage = () => {
 
         try {
             await authApi.forgotPassword({ email: formData.email });
+            
+            // 💥 LƯU VÀO SESSION STORAGE KHI QUA BƯỚC 2
             setStep(2);
-            // 💥 MỚI: Reset lại timer phòng trường hợp user back lại bước 1 rồi bấm tiếp
+            sessionStorage.setItem("forgotPasswordData", JSON.stringify({ 
+                step: 2, 
+                email: formData.email 
+            }));
+
             setTimer(60);
             setCanResend(false);
         } catch (error) {
-            setGlobalError(error || "Tài khoản không tồn tại hoặc chưa kích hoạt.");
+            // 💥 FIX: Đã chuẩn hóa dùng error.message
+            setGlobalError(error.message || "Tài khoản không tồn tại hoặc chưa kích hoạt.");
         } finally {
             setIsLoading(false);
         }
     };
 
-    // 💥 MỚI: HÀM GỬI LẠI OTP
+    // HÀM GỬI LẠI OTP
     const handleResendOTP = async () => {
         if (!canResend || isLoading) return;
 
@@ -111,18 +124,15 @@ const ForgotPasswordPage = () => {
         setGlobalError("");
 
         try {
-            // Tái sử dụng lại chính api forgotPassword
             await authApi.forgotPassword({ email: formData.email });
             alert('Đã gửi lại mã OTP. Vui lòng kiểm tra email!');
 
-            // Reset lại đồng hồ đếm ngược
             setTimer(60);
             setCanResend(false);
-
-            // Xóa OTP cũ trên UI cho user nhập lại
             setFormData(prev => ({ ...prev, otpCode: '' }));
         } catch (error) {
-            setGlobalError(error || "Gửi lại mã thất bại. Vui lòng thử lại sau!");
+            // 💥 FIX: Đã chuẩn hóa dùng error.message
+            setGlobalError(error.message || "Gửi lại mã thất bại. Vui lòng thử lại sau!");
         } finally {
             setIsLoading(false);
         }
@@ -149,13 +159,22 @@ const ForgotPasswordPage = () => {
             };
             await authApi.resetPassword(payload);
 
+            // 💥 ĐỔI XONG THÌ DỌN RÁC
+            sessionStorage.removeItem("forgotPasswordData");
+
             alert("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
             navigate('/login');
         } catch (error) {
-            setGlobalError(error || "Mã OTP không chính xác hoặc đã hết hạn.");
+            // 💥 FIX: Đã chuẩn hóa dùng error.message
+            setGlobalError(error.message || "Mã OTP không chính xác hoặc đã hết hạn.");
         } finally {
             setIsLoading(false);
         }
+    };
+
+    // 💥 DỌN RÁC NẾU NGƯỜI DÙNG BẤM "QUAY LẠI ĐĂNG NHẬP" GIỮA CHỪNG
+    const handleCancel = () => {
+        sessionStorage.removeItem("forgotPasswordData");
     };
 
     return (
@@ -255,7 +274,7 @@ const ForgotPasswordPage = () => {
                                         {errors.confirmPassword && <p className="absolute bottom-0 left-1 text-red-500 text-[10px] leading-none">{errors.confirmPassword}</p>}
                                     </div>
 
-                                    {/* 💥 MỚI: Phần Gửi lại mã (Resend OTP) */}
+                                    {/* Phần Gửi lại mã (Resend OTP) */}
                                     <div className="text-right text-[11px] mb-3 -mt-1">
                                         <span className="text-slate-500">Chưa nhận được mã? </span>
                                         {canResend ? (
@@ -286,7 +305,11 @@ const ForgotPasswordPage = () => {
 
                         {/* Quay lại Đăng nhập */}
                         <div className="mt-5 text-center">
-                            <Link to="/login" className="inline-flex items-center text-xs font-bold text-slate-400 hover:text-orange-600 transition-colors">
+                            <Link 
+                                to="/login" 
+                                onClick={handleCancel} 
+                                className="inline-flex items-center text-xs font-bold text-slate-400 hover:text-orange-600 transition-colors"
+                            >
                                 <FaArrowLeft className="mr-1.5" /> Quay lại Đăng nhập
                             </Link>
                         </div>

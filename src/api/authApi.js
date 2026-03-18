@@ -20,18 +20,19 @@ const authApi = {
     },
 
     // 4. Gửi lại OTP
-    resendOtp: (email) => {
+    resendOtp: (data) => {
         const url = '/auth/resend-register-otp';
-        return axiosClient.post(url, {
-            email
-        }); // Bọc email vào object khớp với ResendOtpRequest
+        return axiosClient.post(url, data); 
     },
 
+    // 5. Yêu cầu quên mật khẩu
     forgotPassword: (data) => {
         const url = '/auth/forgot-password';
         return axiosClient.post(url, data);
     },
 
+
+    // 6. Đặt lại mật khẩu
     resetPassword: (data) => {
         const url = '/auth/reset-password';
         return axiosClient.post(url, data);

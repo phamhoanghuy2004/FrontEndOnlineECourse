@@ -1,140 +1,154 @@
 import React, { createContext, useState } from "react";
-import { googleLoginApi, getMyInfoApi } from "../api/userApi";
+import { useNavigate } from "react-router-dom";
+import userApi from "../api/userApi";
 import authApi from "../api/authApi";
 
+
+
+export const AuthContext = createContext();
+
+// ===== Helpers =====
 const getRolesFromToken = (token) => {
     try {
         const payloadBase64 = token.split('.')[1];
         const decoded = JSON.parse(atob(payloadBase64));
         const scope = decoded.scope || '';
-        // Lọc ra những claim bắt đầu bằng "ROLE_" và bỏ prefix
         return scope.split(' ').filter(s => s.startsWith('ROLE_')).map(s => s.replace('ROLE_', ''));
     } catch {
         return [];
     }
 };
 
-const resolveRedirectPath = (roles) => {
-    if (roles.includes('ADMIN'))   return '/admin';
+const resolveRedirectPath = (roles, isFirstTime) => {
+    if (isFirstTime){
+        return '/complete-profile';
+    }
+    if (roles.includes('ADMIN')) return '/admin';
     if (roles.includes('TEACHER')) return '/teacher';
     return '/';
 };
 
-// Tao context
-export const AuthContext = createContext();
 
-// Tao Provider
+
+// ===== Provider =====
 export const AuthProvider = ({ children }) => {
+    const navigate = useNavigate();
+
     const [user, setUser] = useState(() => {
         const savedUser = localStorage.getItem("currentUser");
         return savedUser ? JSON.parse(savedUser) : null;
-    }); // lam nhu nay de khong bi mat di user khi F5 lai
+    });
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+
+    const fetchUserProfile = async (roles) => {
+        try {
+            let response;
+
+            if (roles.includes('ADMIN')) {
+                response = await userApi.getAdminInfoApi(); 
+            } 
+            else if (roles.includes('TEACHER')) {
+                response = await userApi.getTeacherInfoApi(); 
+            } 
+            else {
+                response = await userApi.getStudentInfoApi(); 
+            }
+
+            const currentUser = response.data ?? null;
+
+            setUser(currentUser);
+            localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
+        } catch (err) {
+            setError(err.message || "Không thể lấy thông tin người dùng");
+            throw err;
+        }
+    };
+
     const login = async (username, password) => {
         setLoading(true);
         setError(null);
+
         try {
-            //axiosClient trả về ApiResponse { code, message, data }
             const apiResponse = await authApi.login({ username, password });
-            const authData = apiResponse.data; // AuthenticationResponse { authenticated, token }
+            const authData = apiResponse.data;
 
             if (!authData?.authenticated) {
-                throw new Error("Đăng nhập thất bại.");
+                setError("Đăng nhập thất bại");
+                return;
             }
 
-            const token = authData.token;
+            localStorage.setItem("token", authData.token);
+            const roles = getRolesFromToken(authData.token);
 
-            localStorage.setItem("token", token);
+            await fetchUserProfile(roles);
+        
+            const redirectPath = resolveRedirectPath(roles, authData.isFirstTime);
 
-            const profileData = await getMyInfoApi();
-            setUser(profileData);
-            localStorage.setItem("currentUser", JSON.stringify(profileData));
+            navigate(redirectPath);
 
-            const roles = getRolesFromToken(token);
-            const redirectPath = resolveRedirectPath(roles);
-
-            return { success: true, redirectPath };
         }
         catch (err) {
-            // axiosClient ném ra string message từ backend
-            const msg = typeof err === 'string' ? err
-                      : err?.message || "Đăng nhập thất bại. Vui lòng thử lại.";
-            setError(msg);
-            return { success: false };
+            if (err.code === 1038 && err.data?.email) {
+
+                const verifyData = {
+                    email: err.data?.email,
+                    isFromLogin: true
+                }
+                sessionStorage.setItem("verifyData", JSON.stringify(verifyData));
+ 
+                navigate('/verify-otp');
+                return;
+            }
+            setError(err.message || "Đăng nhập thất bại");
         }
         finally {
             setLoading(false);
         }
     }
 
-    const loginWithGoogle = async (credential) => {
+    const loginWithGoogle = async (credential, role) => {
+
         setLoading(true);
         setError(null);
+
         try {
-            const response = await googleLoginApi(credential);
+            const response = await userApi.googleLoginApi({credential, role});
+            const authData = response.data;
 
-            if (response.authenticated) {
-                localStorage.setItem("token", response.token);
-
-                // 1. Kéo thông tin user
-                const profileResult = await fetchStudentProfile();
-
-                // 2. 💥 MỞ VỎ BỌC ĐỂ LẤY DATA THẬT
-                if (profileResult.success) {
-                    const userData = profileResult.data;
-
-                    // 3. Check thiếu thông tin từ userData thật
-                    const needsCompletion = !userData.address || !userData.dob || !userData.jobTitle;
-
-                    // Ưu tiên cờ isFirstTime từ Backend, nếu không có thì xài needsCompletion
-                    const isFirst = response.isFirstTime ?? response.firstTime ?? needsCompletion;
-
-                    return { success: true, isFirstTime: isFirst };
-                }
+            if (!authData?.authenticated) {
+                setError("Đăng nhập thất bại");
+                return;
             }
 
-            // Nếu không rơi vào if trên (không auth được hoặc không kéo được profile)
-            return { success: false };
 
-        } catch (error) {
-            setError(error.message || "Lỗi xác thực Google");
-            return { success: false };
+            localStorage.setItem("token", authData.token);
+            const roles = getRolesFromToken(authData.token);
+
+            await fetchUserProfile(roles);
+        
+            const redirectPath = resolveRedirectPath(roles, authData.isFirstTime);
+
+            navigate(redirectPath);
+
+
+        } catch (err) {
+            setError(err.message || "Lỗi xác thực Google");
         } finally {
             setLoading(false);
         }
     };
 
-    // 💥 MỚI: Hàm fetch lại profile từ Backend
-    const fetchStudentProfile = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            // Không cần truyền token vì interceptor của axiosClient sẽ tự động lấy từ localStorage
-            const response = await authApi.getMyProfile();
-
-            // Giả định response trả về chính là object data (nhờ interceptor)
-            const profileData = response.data || response;
-
-            setUser(profileData);
-            localStorage.setItem("currentUser", JSON.stringify(profileData));
-
-            return { success: true, data: profileData };
-        } catch (error) {
-            setError(error.message || error || "Không thể đồng bộ thông tin người dùng");
-            return { success: false, error };
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Hàm Đăng Xuất
     const logout = () => {
         setUser(null);
+        setError(null); 
         localStorage.removeItem("currentUser");
         localStorage.removeItem("token");
+        sessionStorage.removeItem("verifyData"); 
+        navigate('/login'); 
     };
 
     const value = {
@@ -147,9 +161,8 @@ export const AuthProvider = ({ children }) => {
         logout,
         isAuthenticated: !!user,
         setUser,
-        fetchStudentProfile
+        fetchUserProfile
     };
 
     return <AuthContext.Provider value={value}> {children} </AuthContext.Provider>
 }
-

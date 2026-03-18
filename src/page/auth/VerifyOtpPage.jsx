@@ -1,35 +1,90 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FaShieldAlt, FaEnvelopeOpenText } from 'react-icons/fa';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // Bỏ useLocation
 import Button from '../../components/common/Button';
 import authApi from '../../api/authApi';
 import { useAuth } from '../../hooks/useAuth';
 
+// ===== Helpers 
+const getRolesFromToken = (token) => {
+    try {
+        const payloadBase64 = token.split('.')[1];
+        const decoded = JSON.parse(atob(payloadBase64));
+        const scope = decoded.scope || '';
+        return scope.split(' ').filter(s => s.startsWith('ROLE_')).map(s => s.replace('ROLE_', ''));
+    } catch {
+        return [];
+    }
+};
+
+const resolveRedirectPath = (roles, isFirstTime) => {
+    if (isFirstTime){
+        return '/complete-profile';
+    }
+    if (roles.includes('ADMIN')) return '/admin';
+    if (roles.includes('TEACHER')) return '/teacher';
+    return '/';
+};
+// ==============================================================================================
+
 const VerifyOtpPage = () => {
     const navigate = useNavigate();
-    const location = useLocation();
+    
+    // 💥 1. Lấy hàm fetchUserProfile mới nhất từ Context
+    const { fetchUserProfile } = useAuth();
 
-    const { fetchStudentProfile } = useAuth();
+    // 💥 2. LẤY DATA TỪ SESSION STORAGE (Bao F5 không mất)
+    const [verifyInfo] = useState(() => {
+        const saved = sessionStorage.getItem("verifyData");
+        return saved ? JSON.parse(saved) : { email: "", isFromLogin: false };
+    });
 
-    const email = location.state?.email || "";
+    const email = verifyInfo.email;
+    const fromLogin = verifyInfo.isFromLogin;
 
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [timer, setTimer] = useState(60);
     const [canResend, setCanResend] = useState(false);
-    const [isLoading, setIsLoading] = useState(false); // Thêm loading chống spam
+    const [isLoading, setIsLoading] = useState(false);
     const inputRefs = useRef([]);
 
-    // State quản lý lỗi hiển thị
+    const hasAutoSent = useRef(false);
+
     const [globalError, setGlobalError] = useState("");
     const [isError, setIsError] = useState(false);
 
+    // Kích người dùng ra ngoài nếu không có email
     useEffect(() => {
         if (!email) {
             navigate('/register');
         }
     }, [email, navigate]);
 
+    // TỰ ĐỘNG GỬI OTP NẾU TỪ TRANG LOGIN QUA
+    useEffect(() => {
+        if (fromLogin && email && !hasAutoSent.current) {
+            hasAutoSent.current = true; // Sập chốt
+
+            const autoSendOtp = async () => {
+                setIsLoading(true);
+                try {
+                    await authApi.resendOtp({ email });
+                    setGlobalError("Mã xác thực mới vừa được gửi đến email của bạn.");
+                    setTimer(60);
+                } catch (error) {
+                    // 💥 CHỈ CẦN GỌI error.message VÌ AXIOS INTERCEPTOR ĐÃ CHUẨN HÓA
+                    setGlobalError(error.message || "Hệ thống đang gửi mã, vui lòng kiểm tra email.");
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            autoSendOtp();
+        }
+    }, [fromLogin, email]);
+
+    // Đếm ngược 60s
     useEffect(() => {
         let interval;
         if (timer > 0) {
@@ -42,40 +97,33 @@ const VerifyOtpPage = () => {
         return () => clearInterval(interval);
     }, [timer]);
 
-    // 💥 FIX LỖI NHẬP LIỆU OTP
+    // XỬ LÝ NHẬP LIỆU OTP
     const handleChange = (e, index) => {
         const value = e.target.value;
-        // Chỉ cho phép nhập số (Chặn cả dấu cách)
         if (/[^0-9]/.test(value)) return;
 
         const newOtp = [...otp];
-        // Luôn lấy ký tự cuối cùng vừa gõ (Cắt đứt chuỗi cũ nếu bị kẹt bộ gõ)
         const digit = value.slice(-1);
         newOtp[index] = digit;
         setOtp(newOtp);
 
-        // Xóa lỗi khi gõ lại
         setGlobalError("");
         setIsError(false);
 
-        // Tự động nhảy sang ô tiếp theo nếu có nhập dữ liệu
         if (digit && index < 5) {
             inputRefs.current[index + 1].focus();
         }
     };
 
-    // 💥 XỬ LÝ NÚT XÓA (BACKSPACE) MƯỢT MÀ
     const handleKeyDown = (e, index) => {
         if (e.key === 'Backspace') {
-            e.preventDefault(); // Chặn hành vi xóa mặc định của trình duyệt
+            e.preventDefault(); 
             const newOtp = [...otp];
 
-            // Nếu ô hiện tại đang có số -> Xóa số đó
             if (otp[index]) {
                 newOtp[index] = '';
                 setOtp(newOtp);
             }
-            // Nếu ô hiện tại đã trống -> Lùi về ô trước và xóa luôn số ở ô đó
             else if (index > 0) {
                 newOtp[index - 1] = '';
                 setOtp(newOtp);
@@ -84,7 +132,6 @@ const VerifyOtpPage = () => {
         }
     };
 
-    // 💥 TÍNH NĂNG MỚI: PASTE (DÁN) 6 SỐ CÙNG LÚC
     const handlePaste = (e) => {
         e.preventDefault();
         const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6).split('');
@@ -96,7 +143,6 @@ const VerifyOtpPage = () => {
         });
         setOtp(newOtp);
 
-        // Đưa con trỏ tới ô cuối cùng được điền
         const nextIndex = Math.min(pastedData.length, 5);
         inputRefs.current[nextIndex].focus();
     };
@@ -115,29 +161,32 @@ const VerifyOtpPage = () => {
 
         try {
             const payload = { email, otpCode };
-            // 1. Gửi OTP xuống Backend để xác thực
             const response = await authApi.verifyOtp(payload);
 
-            const { token, authenticated } = response.data;
+            const { token, authenticated, isFirstTime } = response.data;
 
             if (authenticated) {
-                // 2. Lưu token vào LocalStorage TRƯỚC (Rất quan trọng)
-                // Phải lưu trước để file AxiosClient có thể lấy gắn vào Header Authorization (Bearer token)
                 localStorage.setItem('token', token);
+                
+                // 💥 3. XÓA RÁC TRONG SESSION STORAGE KHI ĐÃ XONG VIỆC
+                sessionStorage.removeItem("verifyData");
 
-                const response = await fetchStudentProfile();
-                if (response.success) {
-                    navigate('/');
-                }
-                else {
-                    setGlobalError(response.error || "Xác thực thành công nhưng không thể lấy thông tin");
+                // 💥 4. GỌI HÀM PROFILE CÓ KÈM ROLES VÀ BẺ LÁI ĐÚNG TRANG
+                const roles = getRolesFromToken(token);
+                
+                try {
+                    await fetchUserProfile(roles);
+                    const redirectPath = resolveRedirectPath(roles, isFirstTime);
+                    navigate(redirectPath);
+                } catch (profileError) {
+                    setGlobalError(profileError.message || "Xác thực thành công nhưng không thể lấy thông tin");
                 }
             }
         } catch (error) {
-            setGlobalError(error || "Mã xác thực không chính xác hoặc đã hết hạn!");
+            setGlobalError(error.message || "Mã xác thực không chính xác hoặc đã hết hạn!");
             setIsError(true);
             setOtp(['', '', '', '', '', '']);
-            inputRefs.current[0].focus();
+            if (inputRefs.current[0]) inputRefs.current[0].focus();
         } finally {
             setIsLoading(false);
         }
@@ -149,7 +198,7 @@ const VerifyOtpPage = () => {
         setIsLoading(true);
 
         try {
-            await authApi.resendOtp(email); // Đóng gói object theo chuẩn DTO Backend
+            await authApi.resendOtp({ email }); 
 
             alert('Đã gửi lại mã OTP. Vui lòng kiểm tra email!');
             setTimer(60);
@@ -157,10 +206,10 @@ const VerifyOtpPage = () => {
             setOtp(['', '', '', '', '', '']);
             setGlobalError("");
             setIsError(false);
-            inputRefs.current[0].focus();
+            if (inputRefs.current[0]) inputRefs.current[0].focus();
 
         } catch (error) {
-            setGlobalError(error || "Gửi lại mã thất bại. Vui lòng thử lại sau!");
+            setGlobalError(error.message || "Gửi lại mã thất bại. Vui lòng thử lại sau!");
         } finally {
             setIsLoading(false);
         }
@@ -189,7 +238,6 @@ const VerifyOtpPage = () => {
                             </span>
                         </p>
 
-                        {/* 💥 GIẢI PHÁP STATIC LAYOUT (KHUNG TĨNH 32px) CHỐNG PHÌNH FORM */}
                         <div className="h-8 mb-3 flex items-center justify-center w-full">
                             {globalError && (
                                 <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-[11px] text-red-500 bg-red-50 py-1.5 px-3 rounded-lg border border-red-100 font-medium w-full text-center">
@@ -206,11 +254,11 @@ const VerifyOtpPage = () => {
                                         ref={(el) => (inputRefs.current[index] = el)}
                                         type="text"
                                         inputMode="numeric"
-                                        maxLength={2} // Cho phép 2 để hứng số mới, sau đó bị cắt lại bằng slice(-1)
+                                        maxLength={2} 
                                         value={digit}
                                         onChange={(e) => handleChange(e, index)}
                                         onKeyDown={(e) => handleKeyDown(e, index)}
-                                        onPaste={handlePaste} // Gọi hàm Paste
+                                        onPaste={handlePaste} 
                                         disabled={isLoading}
                                         className={`w-12 h-14 text-center text-2xl font-bold rounded-xl outline-none transition-all shadow-sm border
                                         ${isError

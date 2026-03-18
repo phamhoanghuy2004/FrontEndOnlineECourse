@@ -4,9 +4,9 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 // --- Layouts ---
-import GuestLayout from "./components/layout/GuestLayout";   // Layout cho khách
-import LearnerLayout from "./components/layout/LearnerLayout"; // Layout cho học viên
-import TeacherLayout from "./components/layout/TeacherLayout"; // Layout cho giáo viên
+import GuestLayout from "./components/layout/GuestLayout";   
+import LearnerLayout from "./components/layout/LearnerLayout"; 
+import TeacherLayout from "./components/layout/TeacherLayout"; 
 
 // --- Common Components ---
 import ScrollToTop from "./components/common/ScrollToTop";
@@ -31,7 +31,6 @@ import TestPracticePage from "./page/student/guest/TestPracticePage";
 import ProfilePage from "./page/student/guest/ProfilePage";
 import ForgotPasswordPage from "./page/auth/ForgotPasswordPage";
 
-
 // --- Learner Pages ---
 import LearnerHomePage from "./page/student/learner/LearnerHomePage";
 import LearnerCoursesPage from "./page/student/learner/LearnerCoursesPage";
@@ -50,9 +49,10 @@ import BlogEditorPage from "./page/teacher/BlogEditorPage";
 
 function App() {
   return (
-    <AuthProvider>
-      <ChatProvider>
-        <Router>
+    // 💥 FIX: ĐƯA <Router> RA NGOÀI CÙNG ĐỂ BAO BỌC TẤT CẢ CÁC PROVIDER
+    <Router>
+      <AuthProvider>
+        <ChatProvider>
           <ScrollToTop />
 
           <Routes>
@@ -85,7 +85,6 @@ function App() {
               } />
             </Route>
 
-
             {/* =========================================================
               GROUP 2: LEARNER ROUTES
               Sử dụng LearnerLayout (Sidebar + Header Dashboard)
@@ -103,32 +102,35 @@ function App() {
               <Route path="chat" element={<LearnerChatPage />} />
             </Route>
 
-          {/* =========================================================
+            {/* =========================================================
               GROUP 3: TEACHER ROUTES
               Sử dụng TeacherLayout
               Truy cập qua: /teacher/...
-          ========================================================= */}
-          <Route path="/teacher" element={<TeacherLayout />}>
-            <Route index element={<TeacherDashboard />} />
-            <Route path="courses" element={<CourseManagementPage />} />
-            <Route path="courses/new" element={<CourseEditorPage />} />
-            <Route path="courses/:id" element={<CourseEditorPage />} />
-            <Route path="courses/:id/edit" element={<CourseEditorPage />} />
-            <Route path="students" element={<StudentManagementPage />} />
-            <Route path="revenue" element={<RevenuePage />} />
-            <Route path="blog" element={<TeacherBlogPage />} />
-            <Route path="blog/new" element={<BlogEditorPage />} />
-            <Route path="blog/:id/edit" element={<BlogEditorPage />} />
-          </Route>
-
+            ========================================================= */}
+            <Route path="/teacher" element={
+              <ProtectedRoute>
+                <TeacherLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<TeacherDashboard />} />
+              <Route path="courses" element={<CourseManagementPage />} />
+              <Route path="courses/new" element={<CourseEditorPage />} />
+              <Route path="courses/:id" element={<CourseEditorPage />} />
+              <Route path="courses/:id/edit" element={<CourseEditorPage />} />
+              <Route path="students" element={<StudentManagementPage />} />
+              <Route path="revenue" element={<RevenuePage />} />
+              <Route path="blog" element={<TeacherBlogPage />} />
+              <Route path="blog/new" element={<BlogEditorPage />} />
+              <Route path="blog/:id/edit" element={<BlogEditorPage />} />
+            </Route>
 
             {/* Fallback: Nếu nhập sai đường dẫn thì về trang chủ */}
             <Route path="*" element={<Navigate to="/" replace />} />
 
           </Routes>
-        </Router>
-      </ChatProvider>
-    </AuthProvider>
+        </ChatProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

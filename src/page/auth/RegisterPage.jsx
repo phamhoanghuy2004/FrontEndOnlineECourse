@@ -12,34 +12,27 @@ import authApi from '../../api/authApi';
 const validateRegistration = (data, agreeTerms) => {
   const errors = {};
 
-  // Full Name
   if (!data.fullName.trim()) errors.fullName = "Họ và tên không được để trống";
   else if (data.fullName.length > 100) errors.fullName = "Họ và tên không vượt quá 100 ký tự";
 
-  // Username
   if (!data.username.trim()) errors.username = "Tên đăng nhập không được để trống";
   else if (data.username.length > 50) errors.username = "Tên đăng nhập không vượt quá 50 ký tự";
 
-  // Email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!data.email.trim()) errors.email = "Email không được để trống";
   else if (!emailRegex.test(data.email)) errors.email = "Email không đúng định dạng";
   else if (data.email.length > 255) errors.email = "Email không vượt quá 255 ký tự";
 
-  // Password (Regex: Ít nhất 1 hoa, 1 thường, 1 số)
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
   if (!data.password.trim()) errors.password = "Mật khẩu không được để trống";
   else if (data.password.length < 6 || data.password.length > 50) errors.password = "Mật khẩu phải từ 6 - 50 ký tự";
   else if (!passwordRegex.test(data.password)) errors.password = "Mật khẩu phải có ít nhất 1 chữ hoa, 1 chữ thường và 1 số";
 
-  // Job Title
   if (!data.jobTitle.trim()) errors.jobTitle = "Công việc không được để trống";
   else if (data.jobTitle.length > 100) errors.jobTitle = "Công việc không vượt quá 100 ký tự";
 
-  // Address
   if (data.address && data.address.length > 255) errors.address = "Địa chỉ không vượt quá 255 ký tự";
 
-  // Date of Birth (Phải trong quá khứ và >= 16 tuổi)
   if (data.dob) {
     const dobDate = new Date(data.dob);
     const today = new Date();
@@ -54,7 +47,6 @@ const validateRegistration = (data, agreeTerms) => {
     else if (age < 16) errors.dob = "Bạn phải đủ 16 tuổi để đăng ký";
   }
 
-  // Checkbox
   if (!agreeTerms) errors.terms = "Vui lòng đồng ý với điều khoản sử dụng!";
 
   return {
@@ -71,17 +63,18 @@ const RegisterPage = () => {
 
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Trạng thái loading
+  const [isLoading, setIsLoading] = useState(false);
 
-  // State lưu dữ liệu (Key đồng bộ 100% với DTO Backend)
+  // 💥 Đã thêm trường role vào state
   const [registerData, setRegisterData] = useState({
     fullName: '',
     username: '',
     email: '',
     password: '',
-    dob: '',       // Đổi birthDate -> dob
+    dob: '',
     address: '',
-    jobTitle: '',  // Đổi job -> jobTitle
+    jobTitle: '',
+    role: 'STUDENT', // Mặc định là Học viên
     avatar: null
   });
 
@@ -100,7 +93,6 @@ const RegisterPage = () => {
 
   const handleInputChange = (field, value) => {
     setRegisterData({ ...registerData, [field]: value });
-    // Xóa lỗi của trường đó khi user bắt đầu gõ lại
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: null }));
     }
@@ -110,7 +102,6 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 1. Kiểm tra validation
     const { isValid, errors: validationErrors } = validateRegistration(registerData, agreeTerms);
 
     if (!isValid) {
@@ -120,34 +111,33 @@ const RegisterPage = () => {
       return;
     }
 
-    // 2. Xóa lỗi & Hiển thị Loading
     setErrors({});
     setGlobalError("");
     setIsLoading(true);
 
     try {
-      // Vì key đã khớp với DTO, chỉ cần loại bỏ trường avatar (file) 
-      // AvatarUrl tạm để null chờ upload sau nếu backend yêu cầu String
       const { avatar, ...payload } = registerData;
       payload.avatarUrl = null;
 
       await authApi.register(payload);
 
-      // Thành công -> Chuyển hướng
-      navigate('/verify-otp', {
-        state: { email: registerData.email }
-      });
+      const verifyData = {
+          email: registerData.email,
+          isFromLogin: false 
+      };
+      sessionStorage.setItem("verifyData", JSON.stringify(verifyData));
+
+      navigate('/verify-otp');
 
     } catch (error) {
-      setGlobalError(`Đăng ký thất bại: ${error}`);
+      setGlobalError(`Đăng ký thất bại: ${error.message || "Có lỗi xảy ra"}`);
     } finally {
-      setIsLoading(false); // Tắt loading dù thành công hay thất bại
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="h-screen w-full bg-[#f0fdf4] flex items-center justify-center overflow-hidden font-sans relative pt-12">
-      {/* Background Decor */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl opacity-60"></div>
         <div className="absolute top-[20%] right-[-5%] w-[400px] h-[400px] bg-blue-200/30 rounded-full blur-3xl opacity-60"></div>
@@ -156,12 +146,10 @@ const RegisterPage = () => {
       <div className="w-full max-w-2xl px-4 relative z-10">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: "easeOut" }}>
 
-          {/* BỎ TÍNH NĂNG CUỘN - GỌT LẠI PADDING */}
           <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl shadow-emerald-900/10 border border-white/50 p-5 md:px-7 md:py-5">
 
             <div className="text-center mb-1">
               <div className="relative inline-block">
-                {/* Thu nhỏ Avatar tối đa để tiết kiệm không gian (w-14, h-14) */}
                 <div className="relative w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-400 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30 overflow-hidden border-2 border-white">
                   {avatarPreview ? (
                     <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
@@ -176,8 +164,7 @@ const RegisterPage = () => {
               </div>
               <h2 className="text-lg font-extrabold text-slate-800 tracking-tight mt-1">Tạo Tài Khoản</h2>
 
-              {/* Chừa sẵn không gian tĩnh cho Global Error (h-6) để form không bị giật */}
-              <div className="h-6 mt-1">
+              <div className="h-6 mt-1 flex justify-center items-center">
                 {globalError && (
                   <div className="text-[11px] text-red-500 bg-red-50 py-1 px-3 rounded text-center border border-red-100 font-medium inline-block">
                     {globalError}
@@ -186,7 +173,6 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* gap-y-1 cực nhỏ, khoảng trống lỗi được xử lý bằng pb-[14px] ở mỗi field */}
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 mt-1">
 
               <div className="relative pb-[14px]">
@@ -251,8 +237,10 @@ const RegisterPage = () => {
                 {errors.address && <p className="absolute bottom-0 left-1 text-red-500 text-[10px] leading-none whitespace-nowrap">{errors.address}</p>}
               </div>
 
-              {/* Checkbox */}
-              <div className="md:col-span-2 relative pb-1">
+              {/* 💥 Checkbox & Role (Cùng một hàng ngang) */}
+              <div className="md:col-span-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-3 pt-1 border-t border-slate-100 mt-1">
+
+                {/* Cụm Điều khoản */}
                 <label className="flex items-center gap-2 cursor-pointer group w-max">
                   <div className="relative flex items-center">
                     <input
@@ -271,11 +259,45 @@ const RegisterPage = () => {
                     </span>
                   </div>
                   <span className="text-[11px] text-slate-500 group-hover:text-slate-700 transition-colors select-none">
-                    Tôi đồng ý với <a href="#" className="text-emerald-600 font-bold hover:underline">Điều khoản sử dụng</a>
+                    Tôi đồng ý với <a href="#" className="text-emerald-600 font-bold hover:underline">Điều khoản</a>
                   </span>
                 </label>
+
+                {/* Cụm Chọn Role */}
+                <div className="flex items-center gap-4">
+                  <span className="text-[11px] font-bold text-slate-600">Đăng ký làm:</span>
+                  <label className="flex items-center gap-1.5 cursor-pointer group">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="STUDENT"
+                      checked={registerData.role === 'STUDENT'}
+                      onChange={(e) => handleInputChange('role', e.target.value)}
+                      className="cursor-pointer accent-emerald-500 w-3.5 h-3.5"
+                    />
+                    <span className={`text-[11px] font-medium transition-colors ${registerData.role === 'STUDENT' ? 'text-emerald-600 font-bold' : 'text-slate-500 group-hover:text-emerald-500'}`}>
+                      Học viên
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-1.5 cursor-pointer group">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="TEACHER"
+                      checked={registerData.role === 'TEACHER'}
+                      onChange={(e) => handleInputChange('role', e.target.value)}
+                      className="cursor-pointer accent-emerald-500 w-3.5 h-3.5"
+                    />
+                    <span className={`text-[11px] font-medium transition-colors ${registerData.role === 'TEACHER' ? 'text-emerald-600 font-bold' : 'text-slate-500 group-hover:text-emerald-500'}`}>
+                      Giáo viên
+                    </span>
+                  </label>
+                </div>
+
               </div>
 
+              {/* Nút Đăng Ký */}
               <div className="md:col-span-2 mt-1">
                 <button
                   type="submit"

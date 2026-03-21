@@ -23,7 +23,25 @@ const userApi = {
 
   getTeacherInfoApi: () => {
     return axiosClient.get('/teachers/my-profile');
-  }
+  },
+
+  createStudyGoal: (data) => {
+    return axiosClient.post('/students/study-goals', data)
+  },
+
+  updateStudyGoal: (data, id) => {
+    return axiosClient.put(`/students/study-goals/${id}`, data)
+  },
+
+  updateUser: (formData) => {
+    const url = '/users';
+    return axiosClient.put(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+
 }
 
 export default userApi;

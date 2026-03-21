@@ -37,6 +37,7 @@ import LearnerCoursesPage from "./page/student/learner/LearnerCoursesPage";
 import LearnerProgressPage from "./page/student/learner/LearnerProgressPage";
 import VirtualSpeakingPage from "./page/student/learner/VirtualSpeakingPage";
 import LearnerChatPage from "./page/student/learner/LearnerChatPage";
+import StudyGoalPage from "./page/student/learner/StudyGoalPage";
 
 // --- Teacher Pages ---
 import TeacherDashboard from "./page/teacher/TeacherDashboard";
@@ -76,8 +77,13 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/verify-otp" element={<VerifyOtpPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              
-              <Route path="/complete-profile" element={<CompleteProfilePage />} />
+            
+              <Route path="/complete-profile" element={
+                <ProtectedRoute>
+                  <CompleteProfilePage />
+                </ProtectedRoute>
+              } />
+
               <Route path="/learner/:id/profile" element={
                 <ProtectedRoute>
                   <ProfilePage />
@@ -100,6 +106,7 @@ function App() {
               <Route path="progresss" element={<LearnerProgressPage />} />
               <Route path="virtualSpeaking" element={<VirtualSpeakingPage />} />
               <Route path="chat" element={<LearnerChatPage />} />
+              <Route path="study-goal" element={<StudyGoalPage />} />
             </Route>
 
             {/* =========================================================

@@ -80,11 +80,27 @@ const RegisterPage = () => {
 
   const [errors, setErrors] = useState({});
   const [globalError, setGlobalError] = useState("");
+  const MAX_SIZE = 2 * 1024 * 1024;
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // 💥 1. Kiểm tra định dạng (Chỉ cho phép ảnh)
+      if (!file.type.startsWith('image/')) {
+        setGlobalError("Chỉ chấp nhận file định dạng hình ảnh (JPG, PNG...)");
+        e.target.value = null; // Reset lại ô input
+        return;
+      }
+
+      if (file.size > MAX_SIZE) {
+        setGlobalError("Kích thước ảnh quá lớn. Vui lòng chọn ảnh dưới 2MB.");
+        e.target.value = null; // Reset lại ô input
+        return;
+      }
+
+      setGlobalError("");
       setRegisterData({ ...registerData, avatar: file });
+
       const reader = new FileReader();
       reader.onloadend = () => setAvatarPreview(reader.result);
       reader.readAsDataURL(file);
@@ -116,10 +132,21 @@ const RegisterPage = () => {
     setIsLoading(true);
 
     try {
-      const { avatar, ...payload } = registerData;
-      payload.avatarUrl = null;
+      // 💥 ĐÓNG GÓI FORMDATA GỬI LÊN BACKEND
+      const formData = new FormData();
 
-      await authApi.register(payload);
+      const { avatar, ...payload } = registerData;
+
+      // 2. Chuyển cục text thành JSON và ép kiểu thành Blob để Spring Boot hiểu
+      const dataBlob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+      formData.append("data", dataBlob);
+
+      // 3. Đính kèm File ảnh (nếu user có chọn)
+      if (avatar) {
+        formData.append("avatar", avatar);
+      }
+
+      await authApi.register(formData);
 
       const verifyData = {
           email: registerData.email,

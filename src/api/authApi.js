@@ -8,9 +8,13 @@ const authApi = {
     },
 
     // 2. Đăng ký
-    register: (data) => {
+    register: (formData) => {
         const url = '/auth/register';
-        return axiosClient.post(url, data);
+        return axiosClient.post(url, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        }); 
     },
 
     // 3. Xác thực OTP

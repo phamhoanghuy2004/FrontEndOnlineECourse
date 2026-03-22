@@ -2,46 +2,91 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import InputField from '../../components/common/InputField';
 import Button from '../../components/common/Button';
-import { FaSave, FaArrowLeft, FaImage, FaAlignLeft, FaCloudUploadAlt } from 'react-icons/fa';
+import { FaSave, FaArrowLeft, FaCloudUploadAlt, FaAlignLeft } from 'react-icons/fa';
+import blogApi from '../../api/blogApi';
+import { useAuth } from '../../hooks/useAuth';
 
 const BlogEditorPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const isEditing = !!id;
+    const { user } = useAuth(); // or from context
 
     const [formData, setFormData] = useState({
         title: '',
         thumbnail: '',
         content: ''
     });
+    const [imageFile, setImageFile] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (isEditing) {
-            // Mock fetch
-            setFormData({
-                title: '5 Mẹo luyện thi TOEIC hiệu quả',
-                thumbnail: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80',
-                content: 'Nội dung bài viết mẫu...'
-            });
+            const fetchBlog = async () => {
+                try {
+                    console.log("Fetching blog with ID:", id);
+                    const res = await blogApi.getById(id);
+                    console.log("API Response:", res);
+                    
+                    const blogData = res.data; 
+                    if (blogData) {
+                        setFormData({
+                            title: blogData.title || '',
+                            thumbnail: blogData.imageUrl || '',
+                            content: blogData.content || ''
+                        });
+                        console.log("Form data set:", blogData);
+                    } else {
+                        console.warn("No data found in API response for blog ID:", id);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch blog:", error);
+                }
+            };
+            fetchBlog();
         }
     }, [id, isEditing]);
 
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Create fake local URL
+            setImageFile(file);
             const url = URL.createObjectURL(file);
             setFormData(prev => ({ ...prev, thumbnail: url }));
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Mock submit
-        setTimeout(() => {
+        setIsLoading(true);
+        try {
+            const currentUser = user || JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser || !currentUser.id) {
+                alert("Vui lòng đăng nhập lại để thực hiện.");
+                return;
+            }
+
+            const data = new FormData();
+            data.append("title", formData.title);
+            data.append("content", formData.content);
+            data.append("userId", currentUser.id);
+            if (imageFile) {
+                data.append("file", imageFile);
+            }
+
+            if (isEditing) {
+                await blogApi.update(id, data);
+            } else {
+                await blogApi.create(data);
+            }
             alert(isEditing ? 'Cập nhật bài viết thành công!' : 'Đăng bài viết thành công!');
             navigate('/teacher/blog');
-        }, 500);
+        } catch (error) {
+            console.error("Failed to save blog", error);
+            alert("Có lỗi xảy ra, vui lòng thử lại!");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -67,8 +112,8 @@ const BlogEditorPage = () => {
                     <Button type="button" variant="secondary" onClick={() => navigate('/teacher/blog')}>
                         Hủy bỏ
                     </Button>
-                    <Button type="submit" className="!bg-emerald-600 !shadow-emerald-500/30 hover:!bg-emerald-700">
-                        <FaSave /> {isEditing ? 'Cập nhật' : 'Đăng bài'}
+                    <Button type="submit" disabled={isLoading} className="!bg-emerald-600 !shadow-emerald-500/30 hover:!bg-emerald-700 disabled:opacity-50">
+                        <FaSave /> {isLoading ? 'Đang xử lý...' : (isEditing ? 'Cập nhật' : 'Đăng bài')}
                     </Button>
                 </div>
             </div>
@@ -94,6 +139,7 @@ const BlogEditorPage = () => {
                                 placeholder="Viết nội dung bài viết ở đây (Hỗ trợ Markdown)..."
                                 value={formData.content}
                                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                                required
                             />
                         </div>
                     </div>

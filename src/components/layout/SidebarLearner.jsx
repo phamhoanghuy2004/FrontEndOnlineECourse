@@ -1,4 +1,4 @@
-import { FaHome, FaBookOpen, FaDumbbell, FaChartLine, FaMicrophone, FaComments } from 'react-icons/fa';
+import { FaHome, FaBookOpen, FaDumbbell, FaChartLine, FaMicrophone, FaComments, FaBullseye  } from 'react-icons/fa';
 import SidebarLink from '../common/SidebarLink';
 import LOGO from '../../assets/LOGO.png'
 import { useAuth } from '../../hooks/useAuth';
@@ -8,6 +8,7 @@ const menuItems = [
   { path: '/learner/:id/courses', label: 'Khóa học', icon: FaBookOpen },
   { path: '/tests', label: 'Luyện đề', icon: FaDumbbell },
   { path: '/learner/:id/progresss', label: 'Tiến độ học', icon: FaChartLine },
+  { path: '/learner/:id/study-goal', label: 'Theo dõi mục tiêu', icon: FaBullseye },
   { path: '/learner/:id/virtualSpeaking', label: 'Phòng nói ảo', icon: FaMicrophone },
   { path: '/learner/:id/chat', label: 'Chat trực tiếp', icon: FaComments },
 ];

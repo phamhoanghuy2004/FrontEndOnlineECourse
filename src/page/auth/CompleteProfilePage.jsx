@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaMapMarkerAlt, FaCalendarAlt, FaBriefcase, FaUserCheck } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -53,12 +53,44 @@ const validateProfile = (data) => {
 // ==========================================
 const CompleteProfilePage = () => {
     const navigate = useNavigate();
-    const { setUser } = useAuth(); 
+    const { user, setUser } = useAuth(); 
 
     const [profileData, setProfileData] = useState({ address: '', dob: '', jobTitle: '' });
     const [errors, setErrors] = useState({});
     const [globalError, setGlobalError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    // 💥 CHẶN NGƯỜI DÙNG QUAY LẠI TRANG NÀY NẾU ĐÃ CẬP NHẬT ĐỦ THÔNG TIN
+    useEffect(() => {
+        const checkProfileCompleteness = () => {
+            // Lấy user từ localStorage để đảm bảo dữ liệu mới nhất nếu context chưa kịp cập nhật
+            const currentUser = user || JSON.parse(localStorage.getItem("currentUser"));
+            
+            if (currentUser) {
+                const isProfileComplete = 
+                    currentUser.address && currentUser.address.trim() !== '' &&
+                    currentUser.jobTitle && currentUser.jobTitle.trim() !== '' &&
+                    currentUser.dob;
+
+                if (isProfileComplete) {
+                    // Nếu thông tin đã đầy đủ, xác định role và chuyển hướng
+                    const token = localStorage.getItem('token');
+                    if(token) {
+                         const roles = getRolesFromToken(token);
+                         const redirectPath = resolveRedirectPath(roles);
+                         navigate(redirectPath, { replace: true }); // Dùng replace để ngăn back lại
+                    } else {
+                        navigate('/login', { replace: true })
+                    }
+                }
+            } else {
+                 // Nếu không có thông tin user (chưa đăng nhập), chuyển về trang login
+                 navigate('/login', { replace: true });
+            }
+        };
+
+        checkProfileCompleteness();
+    }, [user, navigate]);
 
     const handleInputChange = (field, value) => {
         setProfileData({ ...profileData, [field]: value });
@@ -136,7 +168,7 @@ const CompleteProfilePage = () => {
                                     <FaUserCheck className="text-white text-2xl drop-shadow-sm" />
                                 </div>
                             </div>
-                            <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight mt-2">Hoàn Tất Hồ Sơ</h2>
+                            <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight mt-2">Hoàn Tất Thông Tin</h2>
                             <p className="text-sm text-slate-500 font-medium mt-1">Cập nhật thông tin để có trải nghiệm tốt nhất</p>
                         </div>
 

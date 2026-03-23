@@ -17,7 +17,7 @@ const LessonList = ({ lessons, onChange }) => {
         const newLesson = {
             id: Date.now(), // Mock ID
             title: 'Bài học mới',
-            isPublic: false,
+            isPreview: false,
             videoUrl: '',
             documentUrl: '',
             test: null
@@ -78,7 +78,7 @@ const LessonList = ({ lessons, onChange }) => {
                                     {index + 1}
                                 </span>
                                 <span className="font-bold text-slate-700 text-sm">{lesson.title}</span>
-                                {lesson.isPublic && (
+                                {lesson.isPreview && (
                                     <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">Học thử</span>
                                 )}
                             </div>
@@ -116,13 +116,27 @@ const LessonList = ({ lessons, onChange }) => {
                                         <label className="flex items-center gap-2 cursor-pointer select-none">
                                             <input
                                                 type="checkbox"
-                                                checked={lesson.isPublic}
-                                                onChange={(e) => handleUpdateLesson(lesson.id, 'isPublic', e.target.checked)}
+                                                checked={lesson.isPreview || false}
+                                                onChange={(e) => handleUpdateLesson(lesson.id, 'isPreview', e.target.checked)}
                                                 className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
                                             />
                                             <span className="text-sm font-medium text-slate-700">Cho phép học thử</span>
                                         </label>
                                     </div>
+                                </div>
+
+                                {/* Content/Description */}
+                                <div>
+                                    <label className="text-[11px] font-bold text-slate-700 ml-1 uppercase tracking-wide block mb-1">
+                                        Nội dung / Mô tả bài học
+                                    </label>
+                                    <textarea
+                                        value={lesson.content || ''}
+                                        onChange={(e) => handleUpdateLesson(lesson.id, 'content', e.target.value)}
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none text-slate-700 text-sm resize-none"
+                                        rows="3"
+                                        placeholder="Mô tả ngắn gọn nội dung bài học..."
+                                    ></textarea>
                                 </div>
 
                                 {/* Resources */}

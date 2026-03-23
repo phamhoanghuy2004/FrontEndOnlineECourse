@@ -39,16 +39,16 @@ const CourseTable = ({ courses, onDelete }) => {
                                 <tr key={course.id} className="hover:bg-slate-50 transition-colors group">
                                     <td className="p-4">
                                         <div className="flex items-center gap-3">
-                                            <img src={course.image} alt={course.title} className="w-16 h-10 object-cover rounded-md shadow-sm border border-slate-100" />
+                                            <img src={course.imageUrl || course.image} alt={course.name || course.title} className="w-16 h-10 object-cover rounded-md shadow-sm border border-slate-100" />
                                             <div>
-                                                <h4 className="font-bold text-slate-800 text-sm line-clamp-1 group-hover:text-emerald-600 transition-colors">{course.title}</h4>
+                                                <h4 className="font-bold text-slate-800 text-sm line-clamp-1 group-hover:text-emerald-600 transition-colors">{course.name || course.title}</h4>
                                                 <span className="text-xs text-slate-400">{course.lessons?.length || 0} bài học</span>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="p-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-bold border ${course.level === 'BASIC' ? 'bg-green-100 text-green-700 border-green-200' :
-                                            course.level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
+                                        <span className={`px-2 py-1 rounded-full text-xs font-bold border ${course.level === 'BEGINNER' || course.level === 'BASIC' ? 'bg-green-100 text-green-700 border-green-200' :
+                                            course.level === 'INTERMEDIATE' || course.level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
                                                 'bg-red-100 text-red-700 border-red-200'
                                             }`}>
                                             {course.level}

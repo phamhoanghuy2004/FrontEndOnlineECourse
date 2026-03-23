@@ -1,26 +1,56 @@
-import { useState, useEffect } from 'react';
-import InputField from '../InputField';
-import SelectField from '../SelectField';
-import LessonList from './LessonList';
-import Button from '../Button';
 import { FaSave, FaImage, FaLayerGroup, FaTags, FaAlignLeft, FaDollarSign, FaArrowLeft, FaCloudUploadAlt, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+
+import Button from '../../common/Button';
+import InputField from '../../common/InputField';
+import SelectField from '../../common/SelectField';
+import LessonList from './LessonList';
+import categoryApi from '../../../api/categoryApi';
 
 const CourseForm = ({ initialData, onSubmit, isEditing }) => {
     const navigate = useNavigate();
+    const [categories, setCategories] = useState([]);
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState('');
     const [formData, setFormData] = useState({
-        title: '',
+        name: '',
         description: '',
-        level: 'BASIC',
+        level: 'BEGINNER',
         price: '',
-        image: '',
-        category: 'TOEIC',
+        originalPrice: '',
+        categoryId: '',
         lessons: []
     });
 
     useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await categoryApi.getAll();
+                setCategories(response.data || []);
+                // If it's a new course and we have categories, select the first one by default
+                if (!isEditing && response.data?.length > 0) {
+                    setFormData(prev => ({ ...prev, categoryId: response.data[0].id }));
+                }
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        };
+        fetchCategories();
+    }, [isEditing]);
+
+    useEffect(() => {
         if (initialData) {
-            setFormData(initialData);
+            setFormData({
+                name: initialData.name || initialData.title || '',
+                description: initialData.description || '',
+                level: initialData.level || 'BEGINNER',
+                price: initialData.price || '',
+                originalPrice: initialData.originalPrice || '',
+                categoryId: initialData.categoryId || (initialData.category?.id) || '',
+                lessons: initialData.lessons || []
+            });
+            setImagePreview(initialData.imageUrl || initialData.image || '');
         }
     }, [initialData]);
 
@@ -36,15 +66,15 @@ const CourseForm = ({ initialData, onSubmit, isEditing }) => {
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Create fake local URL
+            setImageFile(file);
             const url = URL.createObjectURL(file);
-            setFormData(prev => ({ ...prev, image: url }));
+            setImagePreview(url);
         }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit(formData);
+        onSubmit(formData, imageFile);
     };
 
     return (
@@ -75,7 +105,7 @@ const CourseForm = ({ initialData, onSubmit, isEditing }) => {
                         Hủy bỏ
                     </Button>
                     <Button type="submit" className="!bg-emerald-600 !shadow-emerald-500/30 hover:!bg-emerald-700">
-                        <FaSave /> {isEditing ? 'Lưu thay đổi' : 'Tạo khóa học'}
+                        <FaSave /> {isEditing ? 'Lưu thay đổi' : 'Tạo khóa học & Tiếp tục'}
                     </Button>
                 </div>
             </div>
@@ -88,8 +118,8 @@ const CourseForm = ({ initialData, onSubmit, isEditing }) => {
 
                         <InputField
                             label="Tên khóa học"
-                            name="title"
-                            value={formData.title}
+                            name="name"
+                            value={formData.name}
                             onChange={handleChange}
                             placeholder="VD: TOEIC Basic 450+"
                             icon={FaLayerGroup}
@@ -104,34 +134,45 @@ const CourseForm = ({ initialData, onSubmit, isEditing }) => {
                                 onChange={handleChange}
                                 icon={FaTags}
                                 options={[
-                                    { value: 'BASIC', label: 'Basic (Mới bắt đầu)' },
-                                    { value: 'MEDIUM', label: 'Medium (Trung bình)' },
-                                    { value: 'ADVANCE', label: 'Advanced (Nâng cao)' }
+                                    { value: 'BEGINNER', label: 'Beginner (Mới bắt đầu)' },
+                                    { value: 'INTERMEDIATE', label: 'Intermediate (Trung bình)' },
+                                    { value: 'ADVANCED', label: 'Advanced (Nâng cao)' }
                                 ]}
                             />
                             <SelectField
                                 label="Danh mục"
-                                name="category"
-                                value={formData.category}
+                                name="categoryId"
+                                value={formData.categoryId}
                                 onChange={handleChange}
                                 icon={FaLayerGroup}
-                                options={[
-                                    { value: 'TOEIC', label: 'TOEIC' },
-                                    { value: 'IELTS', label: 'IELTS' }
-                                ]}
+                                options={categories.map(cat => ({
+                                    value: cat.id,
+                                    label: cat.name
+                                }))}
                             />
                         </div>
 
-                        <InputField
-                            label="Học phí (VNĐ)"
-                            name="price"
-                            type="number"
-                            value={formData.price}
-                            onChange={handleChange}
-                            placeholder="VD: 500000"
-                            icon={FaDollarSign}
-                            required
-                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <InputField
+                                label="Giá bán (VNĐ)"
+                                name="price"
+                                type="number"
+                                value={formData.price}
+                                onChange={handleChange}
+                                placeholder="VD: 500000"
+                                icon={FaDollarSign}
+                                required
+                            />
+                            <InputField
+                                label="Giá gốc (VNĐ)"
+                                name="originalPrice"
+                                type="number"
+                                value={formData.originalPrice}
+                                onChange={handleChange}
+                                placeholder="VD: 1000000"
+                                icon={FaDollarSign}
+                            />
+                        </div>
 
                         <div>
                             <label className="text-[11px] font-bold text-slate-700 ml-1 uppercase tracking-wide block mb-1">
@@ -152,9 +193,21 @@ const CourseForm = ({ initialData, onSubmit, isEditing }) => {
                     </div>
 
                     {/* Lesson Management */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                        <LessonList lessons={formData.lessons} onChange={handleLessonsChange} />
-                    </div>
+                    {isEditing ? (
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                            <LessonList lessons={formData.lessons} onChange={handleLessonsChange} />
+                        </div>
+                    ) : (
+                        <div className="bg-slate-50 p-8 rounded-2xl border-2 border-dashed border-slate-200 text-center space-y-2">
+                            <div className="w-12 h-12 bg-slate-200 text-slate-400 rounded-full flex items-center justify-center mx-auto text-xl">
+                                <FaLayerGroup />
+                            </div>
+                            <h4 className="font-bold text-slate-700">Quản lý bài giảng</h4>
+                            <p className="text-sm text-slate-500 max-w-xs mx-auto">
+                                Bạn có thể thêm và quản lý các bài giảng sau khi đã tạo thông tin cơ bản cho khóa học.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Column 2: Media & Settings */}
@@ -175,17 +228,20 @@ const CourseForm = ({ initialData, onSubmit, isEditing }) => {
                                     <FaCloudUploadAlt />
                                 </div>
                                 <p className="font-bold text-slate-700 text-sm">Nhấn để tải ảnh lên</p>
-                                <p className="text-xs text-slate-400">PNG, JPG, GIF (Max 5MB)</p>
+                                <p className="text-xs text-slate-400">PNG, JPG, GIF (Max 2MB)</p>
                             </div>
                         </div>
 
                         {/* Image Preview */}
-                        {formData.image && (
+                        {imagePreview && (
                             <div className="mt-4 aspect-video bg-slate-100 rounded-xl overflow-hidden border border-slate-200 flex items-center justify-center relative group">
-                                <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                                 <Button
                                     type="button"
-                                    onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                                    onClick={() => {
+                                        setImagePreview('');
+                                        setImageFile(null);
+                                    }}
                                     className="!absolute !top-2 !right-2 !bg-red-500 !text-white !p-1.5 !rounded-full !opacity-0 group-hover:!opacity-100 !shadow-sm !w-8 !h-8"
                                     title="Xóa ảnh"
                                 >

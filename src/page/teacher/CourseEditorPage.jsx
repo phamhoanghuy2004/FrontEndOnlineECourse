@@ -1,7 +1,7 @@
-import { useParams, useNavigate } from 'react-router-dom';
 import CourseForm from '../../components/common/teacher/CourseForm';
-import { courses as mockCourses } from '../../data/mockData';
 import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from "react-router-dom";
+import courseApi from '../../api/courseApi';
 
 const CourseEditorPage = () => {
     const { id } = useParams();
@@ -12,29 +12,47 @@ const CourseEditorPage = () => {
 
     useEffect(() => {
         if (isEditing) {
-            // Mock API call to fetch course details
-            const course = mockCourses.find(c => c.id === parseInt(id));
-            if (course) {
-                setInitialData(course);
-            } else {
-                // Handle not found
-                alert('Không tìm thấy khóa học!');
-                navigate('/teacher/courses');
-            }
+            const fetchCourse = async () => {
+                try {
+                    const response = await courseApi.getById(id);
+                    setInitialData(response.data);
+                } catch (error) {
+                    console.error('Error fetching course:', error);
+                    alert('Không tìm thấy khóa học!');
+                    navigate('/teacher/courses');
+                }
+            };
+            fetchCourse();
         }
     }, [id, isEditing, navigate]);
 
-    const handleSubmit = (data) => {
-        // Mock API Submit
-        console.log('Submitting Course Data:', data);
+    const handleSubmit = async (formData, imageFile) => {
+        try {
+            const data = new FormData();
+            
+            // Append all fields from formData
+            Object.keys(formData).forEach(key => {
+                if (key === 'lessons') return; // Lessons are handled separately or later
+                data.append(key, formData[key]);
+            });
 
-        // Simulate API delay
-        const loading = true; // In real app use state
+            // Append file if exists
+            if (imageFile) {
+                data.append('file', imageFile);
+            }
 
-        setTimeout(() => {
-            alert(isEditing ? 'Cập nhật khóa học thành công!' : 'Tạo khóa học mới thành công!');
+            if (isEditing) {
+                await courseApi.update(id, data);
+                alert('Cập nhật khóa học thành công!');
+            } else {
+                await courseApi.create(data);
+                alert('Tạo khóa học mới thành công!');
+            }
             navigate('/teacher/courses');
-        }, 500);
+        } catch (error) {
+            console.error('Error saving course:', error);
+            alert('Có lỗi xảy ra khi lưu khóa học!');
+        }
     };
 
     return (

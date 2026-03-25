@@ -28,7 +28,6 @@ const CourseForm = ({ initialData, onSubmit, isEditing }) => {
             try {
                 const response = await categoryApi.getAll();
                 setCategories(response.data || []);
-                // If it's a new course and we have categories, select the first one by default
                 if (!isEditing && response.data?.length > 0) {
                     setFormData(prev => ({ ...prev, categoryId: response.data[0].id }));
                 }
@@ -80,7 +79,7 @@ const CourseForm = ({ initialData, onSubmit, isEditing }) => {
     return (
         <form onSubmit={handleSubmit} className="space-y-8">
 
-            {/* Action Bar */}
+            {/* Action Bar - Đã dọn dẹp nút Hủy và Lưu ở đây */}
             <div className="flex items-center justify-between sticky top-0 bg-[#f8fafc]/80 backdrop-blur-md py-4 z-10 border-b border-slate-200/50">
                 <div className="flex items-center gap-4">
                     <Button
@@ -99,14 +98,6 @@ const CourseForm = ({ initialData, onSubmit, isEditing }) => {
                             {isEditing ? `ID: ${initialData?.id}` : 'Điền thông tin khóa học bên dưới'}
                         </p>
                     </div>
-                </div>
-                <div className="flex gap-3">
-                    <Button type="button" variant="secondary" onClick={() => navigate('/teacher/courses')}>
-                        Hủy bỏ
-                    </Button>
-                    <Button type="submit" className="!bg-emerald-600 !shadow-emerald-500/30 hover:!bg-emerald-700">
-                        <FaSave /> {isEditing ? 'Lưu thay đổi' : 'Tạo khóa học & Tiếp tục'}
-                    </Button>
                 </div>
             </div>
 
@@ -190,12 +181,19 @@ const CourseForm = ({ initialData, onSubmit, isEditing }) => {
                                 />
                             </div>
                         </div>
+
+                        {/* 💥 NÚT LƯU ĐƯỢC CHUYỂN XUỐNG ĐÂY */}
+                        <div className="pt-4 mt-2 border-t border-slate-100 flex justify-end">
+                            <Button type="submit" className="!bg-emerald-600 !shadow-emerald-500/30 hover:!bg-emerald-700 !px-6">
+                                <FaSave /> {isEditing ? 'Lưu thay đổi khóa học' : 'Tạo khóa học & Tiếp tục'}
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Lesson Management */}
                     {isEditing ? (
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                            <LessonList lessons={formData.lessons} onChange={handleLessonsChange} />
+                            <LessonList lessons={formData.lessons} onChange={handleLessonsChange} courseId={initialData?.id} />
                         </div>
                     ) : (
                         <div className="bg-slate-50 p-8 rounded-2xl border-2 border-dashed border-slate-200 text-center space-y-2">

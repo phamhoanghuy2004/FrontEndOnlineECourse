@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
     FaTrash, FaVideo, FaFileAlt, FaClipboardList, FaPlus,
     FaChevronDown, FaChevronUp, FaUpload, FaSave, FaSpinner,
-    FaSortNumericDown
+    FaSortNumericDown, FaFilePdf, FaFileWord, FaDownload
 } from 'react-icons/fa';
 import Hls from 'hls.js'; // 💥 IMPORT THƯ VIỆN HLS
 import Button from '../Button';
@@ -46,6 +46,11 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
     const [videoPreviewUrl, setVideoPreviewUrl] = useState(''); // File chọn từ máy
     const [videoUploading, setVideoUploading] = useState(false);
     const [videoProgress, setVideoProgress] = useState(0);
+
+    // State Upload Document
+    const [docTitle, setDocTitle] = useState('');
+    const [docFile, setDocFile] = useState(null);
+    const [docUploading, setDocUploading] = useState(false);
 
     // 💥 Ưu tiên hiển thị: Nếu vừa chọn file mới -> chiếu file mới. Nếu không -> chiếu link HLS từ DB
     const displayVideoUrl = videoPreviewUrl || lesson.hlsUrl;
@@ -222,6 +227,55 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
         }
     };
 
+    const handleUploadDocument = async () => {
+        if (!docFile) return alert("Vui lòng chọn file tài liệu!");
+        if (!docTitle.trim()) return alert("Vui lòng nhập tên tài liệu!");
+        if (isNewLesson) return alert("Vui lòng Lưu thông tin bài học trước khi tải tài liệu!");
+
+        setDocUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('title', docTitle);
+            formData.append('file', docFile);
+
+            const response = await lessonApi.uploadDocument(lesson.id, formData);
+            const updatedLesson = response.data?.data || response.data || response;
+
+            onUpdateLocal(lesson.id, updatedLesson);
+            alert("Tải tài liệu lên thành công!");
+            
+            // Reset form
+            setDocTitle('');
+            setDocFile(null);
+            // Reset input file
+            const fileInput = document.getElementById(`doc-upload-${lesson.id}`);
+            if (fileInput) fileInput.value = '';
+
+        } catch (error) {
+            console.error("Lỗi upload tài liệu:", error);
+            alert(error.response?.data?.message || "Lỗi khi tải tài liệu lên!");
+        } finally {
+            setDocUploading(false);
+        }
+    };
+
+    const handleDeleteDocument = async (docId) => {
+        if (!window.confirm("Bạn có chắc chắn muốn xóa tài liệu này?")) return;
+
+        try {
+            await lessonApi.deleteDocument(docId);
+            
+            // Cập nhật UI local
+            const updatedDocuments = lesson.documents.filter(d => d.id !== docId);
+            onUpdateLocal(lesson.id, { ...lesson, documents: updatedDocuments });
+            
+            alert("Đã xóa tài liệu!");
+        } catch (error) {
+            console.error("Lỗi xóa tài liệu:", error);
+            alert(error.response?.data?.message || "Lỗi khi xóa tài liệu!");
+        }
+    };
+
     return (
         <div ref={itemRef} className="border border-slate-200 rounded-xl bg-slate-50 overflow-hidden mb-3">
             {/* --- HEADER --- */}
@@ -369,6 +423,86 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
                                 <FaSpinner className="animate-spin" /> Đang chuyển mã HLS trên máy chủ. Video sẽ xuất hiện tại đây sau ít phút (Vui lòng tải lại trang).
                             </div>
                         )}
+                    </div>
+
+                    {/* KHỐI 3: QUẢN LÝ TÀI LIỆU (PDF/WORD) */}
+                    <div className={`p-4 rounded-xl border ${isNewLesson ? 'border-dashed border-slate-300 bg-slate-50 opacity-60 pointer-events-none' : 'border-emerald-100 bg-emerald-50/30'}`}>
+                        <h4 className="font-bold text-slate-700 mb-4 text-sm uppercase">3. Tài liệu bài học (PDF / Word)</h4>
+                        
+                        {/* Form upload tài liệu */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <InputField
+                                label="Tên tài liệu"
+                                placeholder="Ví dụ: Slide bài giảng, Bài tập về nhà..."
+                                value={docTitle}
+                                onChange={(e) => setDocTitle(e.target.value)}
+                                icon={FaFileAlt}
+                            />
+                            <div className="flex flex-col justify-end">
+                                <label className="text-[11px] font-bold text-slate-700 ml-1 uppercase tracking-wide block mb-1">Chọn file (PDF/DOCX)</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        id={`doc-upload-${lesson.id}`}
+                                        type="file"
+                                        accept=".pdf,.doc,.docx"
+                                        onChange={(e) => setDocFile(e.target.files[0])}
+                                        className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                                    />
+                                    <Button
+                                        type="button"
+                                        onClick={handleUploadDocument}
+                                        disabled={docUploading || !docFile || !docTitle}
+                                        className="whitespace-nowrap bg-emerald-600 hover:bg-emerald-700 text-white"
+                                    >
+                                        {docUploading ? <FaSpinner className="animate-spin" /> : <FaUpload />}
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Danh sách tài liệu đã upload */}
+                        <div className="space-y-2 mt-4">
+                            {lesson.documents && lesson.documents.length > 0 ? (
+                                lesson.documents.map((doc) => (
+                                    <div key={doc.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200 hover:border-emerald-300 transition shadow-sm">
+                                        <div className="flex items-center gap-3">
+                                            {doc.fileType === 'PDF' ? (
+                                                <FaFilePdf className="text-red-500 text-lg" />
+                                            ) : (
+                                                <FaFileWord className="text-blue-500 text-lg" />
+                                            )}
+                                            <div>
+                                                <div className="text-sm font-bold text-slate-700">{doc.title}</div>
+                                                <div className="text-[10px] text-slate-400 uppercase font-bold">{doc.fileType}</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <a 
+                                                href={doc.fileUrl} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="p-2 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-full transition"
+                                                title="Xem tài liệu"
+                                            >
+                                                <FaDownload size={14} />
+                                            </a>
+                                            <button 
+                                                type="button"
+                                                onClick={() => handleDeleteDocument(doc.id)}
+                                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition"
+                                                title="Xóa tài liệu"
+                                            >
+                                                <FaTrash size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-6 text-slate-400 text-xs italic bg-white/50 rounded-xl border border-dashed border-slate-200">
+                                    Chưa có tài liệu đính kèm cho bài học này.
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

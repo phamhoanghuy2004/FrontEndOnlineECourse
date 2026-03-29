@@ -61,7 +61,7 @@ const CourseManagementPage = () => {
 
             <div className="flex flex-col gap-4">
                 <FilterBar
-                    filters={['ALL', 'BASIC', 'MEDIUM', 'ADVANCE']}
+                    filters={['ALL', 'BEGINNER', 'INTERMEDIATE', 'ADVANCED']}
                     activeFilter={filterLevel}
                     onFilterChange={setFilterLevel}
                     onToggleAdvanced={() => setIsAdvancedOpen(!isAdvancedOpen)}

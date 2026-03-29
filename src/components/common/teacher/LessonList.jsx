@@ -11,18 +11,21 @@ import InputField from '../InputField';
 import lessonApi from '../../../api/lessonApi';
 import axios from 'axios';
 
+import SockJS from 'sockjs-client';
+import { Client } from '@stomp/stompjs';
+
 
 // ==========================================
 // COMPONENT CON: QUẢN LÝ TỪNG BÀI HỌC
 // ==========================================
 const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
-    // 💥 Mặc định bài cũ thì thu gọn, bài mới tạo (temp_) thì mở rộng ra luôn
     const isNewLesson = String(lesson.id).startsWith('temp_');
     const [expanded, setExpanded] = useState(isNewLesson);
     const itemRef = useRef(null);
-
-    // Dùng để gắn Hls.js vào thẻ video
     const videoRef = useRef(null);
+
+    // 💥 WEBSOCKET MỚI THÊM: Quản lý kết nối STOMP
+    const stompClientRef = useRef(null);
 
     useEffect(() => {
         if (expanded && itemRef.current && isNewLesson) {
@@ -40,62 +43,96 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
     });
 
     const [isSavingText, setIsSavingText] = useState(false);
-
-    // State Upload Video
     const [videoFile, setVideoFile] = useState(null);
-    const [videoPreviewUrl, setVideoPreviewUrl] = useState(''); // File chọn từ máy
+    const [videoPreviewUrl, setVideoPreviewUrl] = useState('');
     const [videoUploading, setVideoUploading] = useState(false);
     const [videoProgress, setVideoProgress] = useState(0);
 
-    // 💥 Ưu tiên hiển thị: Nếu vừa chọn file mới -> chiếu file mới. Nếu không -> chiếu link HLS từ DB
     const displayVideoUrl = videoPreviewUrl || lesson.hlsUrl;
 
-    // 💥 LOGIC PHÁT VIDEO HLS (.m3u8)
-    // 💥 LOGIC PHÁT VIDEO HLS (.m3u8) ĐÃ ĐƯỢC FIX LỖI VÒNG ĐỜI REACT
+    // --- LOGIC HLS ---
     useEffect(() => {
         let hls;
-
-        // 💥 BẮT BỆNH: Thêm điều kiện `expanded` để khi mở thẻ ra, nó mới đi tìm thẻ video để gắn
         if (expanded && displayVideoUrl && displayVideoUrl.includes('.m3u8') && videoRef.current) {
-
             if (Hls.isSupported()) {
                 hls = new Hls();
                 hls.loadSource(displayVideoUrl);
                 hls.attachMedia(videoRef.current);
-
-                // (Tùy chọn) Log lỗi ra console nếu link Cloudinary bị hỏng để dễ bắt bệnh
                 hls.on(Hls.Events.ERROR, function (event, data) {
                     if (data.fatal) {
                         console.error('HLS Error:', data);
                     }
                 });
-
             } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-                // Hỗ trợ riêng cho trình duyệt Safari (Apple)
                 videoRef.current.src = displayVideoUrl;
             }
         }
-
-        // Cleanup khi đóng bài học hoặc component bị hủy
         return () => {
             if (hls) hls.destroy();
         };
-
-        // 💥 TỬ HUYỆT: Phải đưa `expanded` vào mảng dependency này!
     }, [displayVideoUrl, expanded]);
 
-    // Cleanup Blob URL để tránh tràn RAM
     useEffect(() => {
         return () => {
             if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
         };
     }, [videoPreviewUrl]);
 
+    // 💥 WEBSOCKET MỚI THÊM: Lắng nghe trạng thái bài học
+    useEffect(() => {
+        // Chỉ mở kết nối WebSocket khi bài học ĐÃ CÓ ID và đang ở trạng thái PROCESSING
+        if (!isNewLesson && lesson.videoStatus === 'PROCESSING') {
+            const socket = new SockJS('http://localhost:8080/ws');
+            const client = new Client({
+                webSocketFactory: () => socket,
+                reconnectDelay: 5000, // Tự động kết nối lại nếu rớt mạng
+                onConnect: () => {
+                    console.log(`🔌 Kết nối WebSocket thành công cho Lesson ${lesson.id}`);
+
+                    // Lắng nghe kênh cụ thể của bài học này
+                    client.subscribe(`/topic/lessons/${lesson.id}`, (message) => {
+                        const payload = JSON.parse(message.body);
+                        console.log("📨 Nhận tín hiệu từ Webhook:", payload);
+
+                        if (payload.status === 'READY') {
+                            // Cập nhật lên component cha để UI load lại video HLS
+                            onUpdateLocal(lesson.id, {
+                                ...lesson,
+                                videoStatus: 'READY',
+                                hlsUrl: payload.hlsUrl,
+                                durationSeconds: payload.durationSeconds
+                            });
+
+                            // Có thể thêm một thông báo popup (Toast) ở đây
+                            alert(`Nấu video thành công cho bài học: ${lesson.title}`);
+
+                            // Xong việc thì ngắt kết nối luôn cho đỡ tốn tài nguyên
+                            client.deactivate();
+                        }
+                    });
+                },
+                onStompError: (frame) => {
+                    console.error('Lỗi STOMP:', frame.headers['message']);
+                }
+            });
+
+            client.activate();
+            stompClientRef.current = client;
+        }
+
+        // Cleanup: Ngắt kết nối khi đóng component hoặc không còn PROCESSING
+        return () => {
+            if (stompClientRef.current) {
+                stompClientRef.current.deactivate();
+            }
+        };
+    }, [lesson.id, lesson.videoStatus, isNewLesson]); // Phụ thuộc vào ID và Status
+
+
     const handleTextChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    // 💥 GỌI API THEO TRẠNG THÁI (CREATE vs UPDATE)
     const handleSaveDetails = async () => {
         setIsSavingText(true);
         try {
@@ -108,26 +145,17 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
             let savedLesson;
 
             if (isNewLesson) {
-                // 1. GỌI API TẠO MỚI
                 const response = await lessonApi.create(payload);
-
-                // 💥 BÓC RUỘT DATA: Tùy cấu hình api/axios của bạn.
-                // Thường nếu Backend trả về ApiResponse<LessonResponse> thì data nằm ở response.data.data
+                // Bạn có thể phải console.log(response) để biết lấy .data hay .data.data
                 savedLesson = response.data?.data || response.data || response;
-
                 alert("Tạo bài học mới thành công!");
             } else {
-                // 2. GỌI API CẬP NHẬT
                 const response = await lessonApi.update(lesson.id, payload);
-
-                // 💥 CŨNG PHẢI BÓC RUỘT DATA ĐỂ CẬP NHẬT LẠI UI
                 savedLesson = response.data?.data || response.data || response;
-
                 alert("Cập nhật thông tin bài học thành công!");
             }
 
             if (savedLesson) {
-                // Truyền cục data ĐÃ BÓC SẠCH SẼ lên Component cha
                 onUpdateLocal(lesson.id, savedLesson);
             }
 
@@ -151,30 +179,47 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
         if (!videoFile) return alert("Vui lòng chọn file video!");
         if (isNewLesson) return alert("Vui lòng Lưu thông tin bài học (để tạo ID) trước khi tải video!");
 
+        // Lấy lại ID từ lesson props (vì có thể nó vừa được tạo mới xong)
+        const currentLessonId = lesson.id;
+
         setVideoUploading(true);
         setVideoProgress(0);
 
         try {
-            // Bước 1: Xin chữ ký (Signature) từ Spring Boot
-            console.log("1. Đang xin chữ ký upload từ Server...");
-            const sigResponse = await lessonApi.getVideoUploadSignature();
+            console.log("1. Đang xin chữ ký upload từ Server cho Lesson:", currentLessonId);
 
-            // Bóc tách data (Tùy cấu trúc ApiResponse của bạn)
+            // Truyền lessonId vào API xin chữ ký
+            const sigResponse = await lessonApi.getVideoUploadSignature(currentLessonId);
             const ticket = sigResponse.data?.data || sigResponse.data || sigResponse;
 
-            // Bước 2: Đóng gói hành lý (FormData) đúng chuẩn Cloudinary yêu cầu
+            console.log("🎟️ Ticket nhận được từ Server:", ticket);
+
+            // 💥 Lấy thêm notificationUrl từ vé
+            const apiKey = ticket.apiKey || ticket.api_key;
+            const cloudName = ticket.cloudName || ticket.cloud_name;
+            const publicId = ticket.publicId || ticket.public_id;
+            const eagerAsync = ticket.eagerAsync !== undefined ? ticket.eagerAsync : ticket.eager_async;
+            const notificationUrl = ticket.notificationUrl || ticket.notification_url;
+
+            if (!cloudName || !apiKey || !publicId || !notificationUrl) {
+                throw new Error("Dữ liệu chữ ký từ Server bị thiếu! Vui lòng kiểm tra lại Backend.");
+            }
+
             const uploadData = new FormData();
             uploadData.append('file', videoFile);
-            uploadData.append('api_key', ticket.api_key);
+            uploadData.append('api_key', apiKey);
             uploadData.append('timestamp', ticket.timestamp);
             uploadData.append('signature', ticket.signature);
             uploadData.append('folder', ticket.folder);
             uploadData.append('eager', ticket.eager);
-            uploadData.append('eager_async', ticket.eager_async);
+            uploadData.append('eager_async', eagerAsync);
+            uploadData.append('public_id', publicId);
 
-            // Bước 3: Đâm thẳng lên Cloudinary bằng axios thuần
-            console.log("2. Bắt đầu đẩy MP4 lên Cloudinary...");
-            const cloudUrl = `https://api.cloudinary.com/v1_1/${ticket.cloud_name}/video/upload`;
+            // 💥 CHÌA KHÓA GIẢI MÃ LỖI 401 NẰM Ở DÒNG NÀY:
+            uploadData.append('notification_url', notificationUrl);
+
+            console.log(`2. Bắt đầu đẩy MP4 lên Cloudinary (Cloud Name: ${cloudName})...`);
+            const cloudUrl = `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`;
 
             const cloudResponse = await axios.post(cloudUrl, uploadData, {
                 onUploadProgress: (progressEvent) => {
@@ -183,38 +228,39 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
                 }
             });
 
-            // Lấy kết quả Cloudinary trả về
             const cloudinaryData = cloudResponse.data;
             console.log("Upload Cloudinary thành công:", cloudinaryData);
 
-            // Bước 4: Lưu thông tin bản nháp vào Spring Boot
             console.log("3. Đang lưu thông tin bản nháp vào Database...");
-            await lessonApi.saveVideoDraft(lesson.id, {
+            await lessonApi.saveVideoDraft(currentLessonId, {
                 publicVideoId: cloudinaryData.public_id,
                 rawUrl: cloudinaryData.secure_url
             });
 
-            // Bước 5: Cập nhật giao diện (UI) React
-            onUpdateLocal(lesson.id, {
+            // 💥 KÍCH HOẠT WEBSOCKET THÔNG QUA STATE MỚI
+            onUpdateLocal(currentLessonId, {
                 ...lesson,
-                videoStatus: 'PROCESSING',
+                videoStatus: 'PROCESSING', // -> Dòng này sẽ kích hoạt Hook WebSocket
                 publicVideoId: cloudinaryData.public_id,
                 rawUrl: cloudinaryData.secure_url
             });
 
             alert("Upload thành công! Video đang được hệ thống chuyển sang HLS (khoảng 5-10 phút).");
-
-            // Dọn dẹp form
             setVideoFile(null);
             setVideoPreviewUrl('');
 
         } catch (error) {
             console.error("Lỗi upload video:", error);
-            // Xử lý báo lỗi chi tiết để dễ debug
-            if (error.response?.status === 429) {
+
+            // 💥 Bắt luôn cái lỗi 500 nếu Spring Boot sập lúc tạo chữ ký
+            if (error.response?.status === 500) {
+                alert("Server Backend bị lỗi (500) khi xin chữ ký! Vui lòng mở IntelliJ để xem log đỏ.");
+            } else if (error.response?.status === 400) {
+                alert("Lỗi tham số: Kiểm tra xem đã truyền đúng lessonId chưa (Lỗi 400)!");
+            } else if (error.response?.status === 429) {
                 alert("Bạn đã upload quá nhiều lần. Vui lòng thử lại sau 1 giờ!");
             } else {
-                alert("Upload thất bại! Vui lòng thử lại.");
+                alert(`Upload thất bại! ${error.message || "Vui lòng thử lại."}`);
             }
         } finally {
             setVideoUploading(false);

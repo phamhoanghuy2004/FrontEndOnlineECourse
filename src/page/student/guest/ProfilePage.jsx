@@ -52,9 +52,9 @@ const ProfilePage = () => {
 
     const [activeTab, setActiveTab] = useState("info");
     const [isEditing, setIsEditing] = useState(false);
-    
+
     const [previewAvatar, setPreviewAvatar] = useState(null);
-    const [avatarFile, setAvatarFile] = useState(null); 
+    const [avatarFile, setAvatarFile] = useState(null);
     const [errors, setErrors] = useState({});
     const [globalError, setGlobalError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -85,7 +85,7 @@ const ProfilePage = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-        
+
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: null }));
         }
@@ -108,7 +108,7 @@ const ProfilePage = () => {
             }
 
             setGlobalError("");
-            setAvatarFile(file); 
+            setAvatarFile(file);
 
             const reader = new FileReader();
             reader.onloadend = () => setPreviewAvatar(reader.result);
@@ -150,10 +150,10 @@ const ProfilePage = () => {
             console.log("Payload gọi API:", payload, avatarFile);
             alert("Cập nhật thông tin thành công!");
 
-            await fetchUserProfile (user.roles);
-            
+            await fetchUserProfile(user.roles);
+
             setIsEditing(false);
-            setAvatarFile(null); 
+            setAvatarFile(null);
         } catch (error) {
             setGlobalError(`Cập nhật thất bại: ${error.message || "Có lỗi xảy ra"}`);
         } finally {
@@ -183,6 +183,13 @@ const ProfilePage = () => {
         navigate("/");
     };
 
+    // Tạo một hàm nhỏ xử lý URL
+    const getAvatarSrc = (url) => {
+        if (!url) return "https://via.placeholder.com/150";
+        // Ép HTTP thành HTTPS để không bị trình duyệt chặn
+        return url.replace(/^http:\/\//i, 'https://');
+    };
+
     return (
         <div className="bg-gray-50 min-h-screen pt-24 pb-12 font-sans">
             <div className="container mx-auto px-6">
@@ -204,9 +211,10 @@ const ProfilePage = () => {
                             <div className="relative w-32 h-32 mb-4 mt-6 group">
                                 <div className="w-full h-full rounded-full overflow-hidden border-4 border-white shadow-lg">
                                     <img
-                                        src={previewAvatar || "https://via.placeholder.com/150"}
+                                        src={getAvatarSrc(previewAvatar)}
                                         alt="Avatar"
                                         className="w-full h-full object-cover"
+                                        referrerPolicy="no-referrer"
                                     />
                                 </div>
                                 {isEditing && (
@@ -227,8 +235,8 @@ const ProfilePage = () => {
                                     </div>
                                     <span className="text-xs text-gray-400 uppercase font-semibold">Xu hiện có</span>
                                 </div>
-                                
-                                <div 
+
+                                <div
                                     onClick={() => navigate(`/learner/${user?.id}/study-goal`)}
                                     className="text-center p-2 rounded-xl cursor-pointer hover:bg-blue-50 hover:scale-105 transition-all group"
                                     title="Nhấn để xem chi tiết mục tiêu"

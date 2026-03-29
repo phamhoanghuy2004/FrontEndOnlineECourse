@@ -5,8 +5,8 @@ const lessonApi = {
         return axiosClient.post('/lessons', data);
     },
 
-    getVideoUploadSignature: () => {
-        return axiosClient.get('/lessons/generateVideoUploadSignature');
+    getVideoUploadSignature: (lessonId) => {
+        return axiosClient.get(`/lessons/generateVideoUploadSignature?lessonId=${lessonId}`);
     },
     
     saveVideoDraft: (lessonId, data) => {

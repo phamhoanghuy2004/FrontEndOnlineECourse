@@ -8,6 +8,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  define: {
+    global: 'window',
+  },
   server: {
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',

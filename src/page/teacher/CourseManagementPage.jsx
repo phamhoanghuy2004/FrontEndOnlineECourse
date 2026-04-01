@@ -15,6 +15,7 @@ const CourseManagementPage = () => {
     const [filterLevel, setFilterLevel] = useState('ALL');
     const [isAdvancedOpen, setIsAdvancedOpen] = useState(true);
     const [isLoading, setIsLoading] = useState(true);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         const fetchCourses = async () => {
@@ -31,12 +32,15 @@ const CourseManagementPage = () => {
     }, []);
 
     const handleDelete = async (id) => {
+        setIsDeleting(true);
         try {
             await courseApi.delete(id);
             setCourses(courses.filter(course => course.id !== id));
         } catch (error) {
             console.error('Error deleting course:', error);
             alert('Có lỗi xảy ra khi xóa khóa học!');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -100,7 +104,7 @@ const CourseManagementPage = () => {
                     <p className="mt-4 text-slate-500">Đang tải danh sách khóa học...</p>
                 </div>
             ) : (
-                <CourseTable courses={filteredCourses} onDelete={handleDelete} />
+                <CourseTable courses={filteredCourses} onDelete={handleDelete} isDeleting={isDeleting} />
             )}
 
         </div>

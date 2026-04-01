@@ -492,6 +492,7 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
 const LessonList = ({ lessons, onChange, courseId }) => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedLessonId, setSelectedLessonId] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleAddLesson = () => {
         const hasUnsavedLesson = lessons.some(l => String(l.id).startsWith('temp_'));
@@ -508,15 +509,23 @@ const LessonList = ({ lessons, onChange, courseId }) => {
 
     const handleConfirmDelete = async () => {
         if (selectedLessonId) {
-            if (String(selectedLessonId).startsWith('temp_')) {
-                onChange(lessons.filter(l => l.id !== selectedLessonId));
-            } else {
-                // Gọi API DELETE LESSON (Nếu có)
-                // await lessonApi.delete(selectedLessonId);
-                onChange(lessons.filter(l => l.id !== selectedLessonId));
+            setIsDeleting(true);
+            try {
+                if (String(selectedLessonId).startsWith('temp_')) {
+                    onChange(lessons.filter(l => l.id !== selectedLessonId));
+                } else {
+                    // Gọi API DELETE LESSON (Nếu có)
+                    // await lessonApi.delete(selectedLessonId);
+                    onChange(lessons.filter(l => l.id !== selectedLessonId));
+                }
+                setSelectedLessonId(null);
+                setIsDeleteModalOpen(false);
+            } catch (error) {
+                console.error("Lỗi khi xóa bài học:", error);
+                alert("Không thể xóa bài học.");
+            } finally {
+                setIsDeleting(false);
             }
-            setSelectedLessonId(null);
-            setIsDeleteModalOpen(false);
         }
     };
 
@@ -539,7 +548,16 @@ const LessonList = ({ lessons, onChange, courseId }) => {
                     <LessonItem key={lesson.id} index={index} lesson={lesson} courseId={courseId} onUpdateLocal={handleUpdateSingleLesson} onDelete={handleDeleteClick} />
                 ))}
             </div>
-            <ConfirmationModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} onConfirm={handleConfirmDelete} title="Xóa bài học này?" message="Hành động này sẽ xóa vĩnh viễn nội dung và video của bài học." confirmText="Xóa bài học" variant="danger" />
+            <ConfirmationModal 
+                isOpen={isDeleteModalOpen} 
+                onClose={() => !isDeleting && setIsDeleteModalOpen(false)} 
+                onConfirm={handleConfirmDelete} 
+                title="Xóa bài học này?" 
+                message="Hành động này sẽ xóa vĩnh viễn nội dung và video của bài học." 
+                confirmText="Xóa bài học" 
+                variant="danger" 
+                isLoading={isDeleting}
+            />
         </div>
     );
 };

@@ -5,7 +5,8 @@ const Button = ({
     onClick,
     variant = 'primary',
     className = '',
-    type = 'button'
+    type = 'button',
+    disabled = false
 }) => {
 
     const baseStyles = "px-8 py-3 rounded-full font-bold transition-all duration-300 transform flex items-center justify-center gap-2";
@@ -16,13 +17,16 @@ const Button = ({
         outline: "border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-50 hover:-translate-y-1",
     };
 
-    const combinedStyles = `${baseStyles} ${variants[variant] || variants.primary} ${className}`;
+    const disabledStyles = "opacity-50 cursor-not-allowed transform-none hover:transform-none";
+
+    const combinedStyles = `${baseStyles} ${variants[variant] || variants.primary} ${disabled ? disabledStyles : ''} ${className}`;
 
     return (
         <button
             type={type}
-            onClick={onClick}
+            onClick={!disabled ? onClick : undefined}
             className={combinedStyles}
+            disabled={disabled}
         >
             {children}
         </button>

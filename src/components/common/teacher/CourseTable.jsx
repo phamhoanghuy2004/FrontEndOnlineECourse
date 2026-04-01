@@ -3,7 +3,7 @@ import { FaEdit, FaTrash, FaEye, FaStar } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import ConfirmationModal from '../../common/ConfirmationModal';
 
-const CourseTable = ({ courses, onDelete }) => {
+const CourseTable = ({ courses, onDelete, isDeleting }) => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedCourseId, setSelectedCourseId] = useState(null);
 
@@ -12,10 +12,11 @@ const CourseTable = ({ courses, onDelete }) => {
         setIsDeleteModalOpen(true);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (selectedCourseId) {
-            onDelete(selectedCourseId);
+            await onDelete(selectedCourseId);
             setSelectedCourseId(null);
+            setIsDeleteModalOpen(false);
         }
     };
 
@@ -92,12 +93,13 @@ const CourseTable = ({ courses, onDelete }) => {
 
             <ConfirmationModal
                 isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
+                onClose={() => !isDeleting && setIsDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 title="Xóa khóa học?"
                 message="Khóa học và toàn bộ dữ liệu liên quan sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác."
                 confirmText="Xóa khóa học"
                 variant="danger"
+                isLoading={isDeleting}
             />
         </>
     );

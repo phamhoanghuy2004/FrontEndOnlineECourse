@@ -8,7 +8,7 @@ import SelectField from '../../common/SelectField';
 import LessonList from './LessonList';
 import categoryApi from '../../../api/categoryApi';
 
-const CourseForm = ({ initialData, onSubmit, isEditing }) => {
+const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
     const navigate = useNavigate();
     const [categories, setCategories] = useState([]);
     const [imageFile, setImageFile] = useState(null);
@@ -182,10 +182,13 @@ const CourseForm = ({ initialData, onSubmit, isEditing }) => {
                             </div>
                         </div>
 
-                        {/* 💥 NÚT LƯU ĐƯỢC CHUYỂN XUỐNG ĐÂY */}
                         <div className="pt-4 mt-2 border-t border-slate-100 flex justify-end">
-                            <Button type="submit" className="!bg-emerald-600 !shadow-emerald-500/30 hover:!bg-emerald-700 !px-6">
-                                <FaSave /> {isEditing ? 'Lưu thay đổi khóa học' : 'Tạo khóa học & Tiếp tục'}
+                            <Button 
+                                type="submit" 
+                                disabled={isSubmitting}
+                                className="!bg-emerald-600 !shadow-emerald-500/30 hover:!bg-emerald-700 !px-6"
+                            >
+                                <FaSave /> {isSubmitting ? 'Đang lưu...' : (isEditing ? 'Lưu thay đổi khóa học' : 'Tạo khóa học & Tiếp tục')}
                             </Button>
                         </div>
                     </div>

@@ -23,7 +23,9 @@ const SidebarTeacher = () => {
 
             <nav className="flex-1 px-4 space-y-2 mt-4">
                 {menuItems.map((item) => {
-                    const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
+                    const isActive = item.path === '/teacher' 
+                        ? location.pathname === '/teacher' 
+                        : (location.pathname === item.path || location.pathname.startsWith(item.path + '/'));
                     return (
                         <Link to={item.path} key={item.path}>
                             <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive

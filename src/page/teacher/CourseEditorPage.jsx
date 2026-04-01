@@ -9,6 +9,7 @@ const CourseEditorPage = () => {
     const isEditing = !!id;
 
     const [initialData, setInitialData] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (isEditing) {
@@ -27,6 +28,7 @@ const CourseEditorPage = () => {
     }, [id, isEditing, navigate]);
 
     const handleSubmit = async (formData, imageFile) => {
+        setIsSubmitting(true);
         try {
             const data = new FormData();
             
@@ -49,9 +51,8 @@ const CourseEditorPage = () => {
                 alert('Tạo khóa học mới thành công!');
             }
             navigate('/teacher/courses');
-        } catch (error) {
-            console.error('Error saving course:', error);
-            alert('Có lỗi xảy ra khi lưu khóa học!');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -61,6 +62,7 @@ const CourseEditorPage = () => {
                 initialData={initialData}
                 onSubmit={handleSubmit}
                 isEditing={isEditing}
+                isSubmitting={isSubmitting}
             />
         </div>
     );

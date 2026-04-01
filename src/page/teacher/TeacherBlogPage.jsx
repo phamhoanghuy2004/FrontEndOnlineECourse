@@ -13,6 +13,7 @@ const TeacherBlogPage = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedBlogId, setSelectedBlogId] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         fetchBlogs();
@@ -37,15 +38,17 @@ const TeacherBlogPage = () => {
 
     const handleConfirmDelete = async () => {
         if (selectedBlogId) {
+            setIsDeleting(true);
             try {
                 await blogApi.delete(selectedBlogId);
                 setBlogs(blogs.filter(b => b.id !== selectedBlogId));
+                setSelectedBlogId(null);
+                setIsDeleteModalOpen(false);
             } catch (error) {
                 console.error("Failed to delete blog", error);
                 alert("Failed to delete blog: " + (error.response?.data?.message || error.message));
             } finally {
-                setSelectedBlogId(null);
-                setIsDeleteModalOpen(false);
+                setIsDeleting(false);
             }
         }
     };
@@ -116,12 +119,13 @@ const TeacherBlogPage = () => {
 
             <ConfirmationModal
                 isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
+                onClose={() => !isDeleting && setIsDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 title="Xóa bài viết?"
                 message="Hành động này không thể hoàn tác. Bài viết sẽ bị xóa vĩnh viễn."
                 confirmText="Xóa bài viết"
                 variant="danger"
+                isLoading={isDeleting}
             />
         </div>
     );

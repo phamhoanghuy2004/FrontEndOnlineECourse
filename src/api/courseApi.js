@@ -27,7 +27,11 @@ const courseApi = {
 
     delete: (id) => {
         return axiosClient.delete(`/courses/${id}`);
-    }
+    },
+
+    searchCourses: (params) => {
+        return axiosClient.get('/courses/search', { params });
+    },
 };
 
 export default courseApi;

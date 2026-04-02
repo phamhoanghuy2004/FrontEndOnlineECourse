@@ -1,10 +1,8 @@
 import React from 'react';
 import { motion } from "framer-motion";
-import { FaLayerGroup, FaTags, FaSearch, FaRedoAlt } from "react-icons/fa";
-
-// Import Components
-import InputField from '../../../../common/InputField'; // Nhớ đường dẫn file
-import SelectField from '../../../../common/SelectField'; // Component mới tạo ở trên
+import { FaLayerGroup, FaTags, FaSearch, FaRedoAlt, FaSortAmountDown } from "react-icons/fa";
+import InputField from '../../../../common/InputField'; 
+import SelectField from '../../../../common/SelectField'; 
 import { panelVariants } from '../../../../../constants/motionVariants';
 
 const AdvancedFilterPanel = ({ filters, setFilters, onReset }) => {
@@ -14,20 +12,24 @@ const AdvancedFilterPanel = ({ filters, setFilters, onReset }) => {
         setFilters(prev => ({ ...prev, [name]: value }));
     };
 
-    // Định nghĩa Options cho gọn code render
     const levelOptions = [
         { value: 'ALL', label: 'Tất cả trình độ' },
-        { value: 'BASIC', label: 'Cơ bản' },
-        { value: 'MEDIUM', label: 'Trung cấp' },
-        { value: 'ADVANCE', label: 'Nâng cao' }
+        { value: 'BEGINNER', label: 'Cơ bản (Beginner)' },
+        { value: 'INTERMEDIATE', label: 'Trung cấp (Intermediate)' },
+        { value: 'ADVANCED', label: 'Nâng cao (Advanced)' }
     ];
 
-    const priceOptions = [
-        { value: 'ALL', label: 'Tất cả mức giá' },
-        { value: 'LOW', label: 'Dưới 500k' },
-        { value: 'MEDIUM', label: '500k - 1 triệu' },
-        { value: 'HIGH', label: 'Trên 1 triệu' }
+    const sortOptions = [
+        { value: '', label: 'Mặc định (Thông minh)' },
+        { value: 'NEWEST', label: 'Mới nhất' },
+        { value: 'PRICE_ASC', label: 'Giá tăng dần' },
+        { value: 'PRICE_DESC', label: 'Giá giảm dần' },
+        { value: 'RELEVANCE', label: 'Khớp từ khóa nhất' }
     ];
+
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+    };
 
     return (
         <motion.div
@@ -37,13 +39,13 @@ const AdvancedFilterPanel = ({ filters, setFilters, onReset }) => {
             exit="exit"
             className="overflow-hidden"
         >
-            {/* CONTAINER CHÍNH */}
-            <div className="bg-white border-2 border-primary shadow-xl shadow-primary/10 rounded-[24px] p-5 mb-10 mx-auto max-w-5xl">
+            <div className="bg-white border-2 border-primary shadow-xl shadow-primary/10 rounded-[24px] p-5 mb-10 mx-auto max-w-6xl">
+                
+                {/* CSS Grid chia 4 cột, items-end để các element nằm sát đáy bằng nhau */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
 
-                <div className="flex flex-col md:flex-row gap-4 items-end">
-
-                    {/* 1. LEVEL SELECT */}
-                    <div className="w-full md:w-3/10">
+                    {/* Cột 1: TRÌNH ĐỘ (LEVEL) */}
+                    <div className="w-full">
                         <SelectField
                             label="Trình độ"
                             icon={FaLayerGroup}
@@ -54,40 +56,64 @@ const AdvancedFilterPanel = ({ filters, setFilters, onReset }) => {
                         />
                     </div>
 
-                    {/* 2. PRICE SELECT */}
-                    <div className="w-full md:w-3/10">
-                        <SelectField
-                            label="Mức giá"
-                            icon={FaTags}
-                            name="price"
-                            value={filters.price}
-                            onChange={handleChange}
-                            options={priceOptions}
+                    {/* Cột 2: KEYWORD (Đã dời sang đây, đứng độc lập) */}
+                    <div className="w-full">
+                        <InputField
+                            label="Tìm khóa học, giảng viên..."
+                            icon={FaSearch}
+                            name="keyword"
+                            type="text"
+                            placeholder="VD: TOEIC, Huy Ca..."
+                            value={filters.keyword}
+                            onChange={handleChange} 
                         />
                     </div>
 
-                    {/* 3. TUTOR SEARCH + RESET BUTTON */}
-                    {/* Gom 2 cái này vào 1 div flex để nó nằm cạnh nhau */}
-                    <div className="w-full md:w-4/10 flex items-end gap-3">
+                    {/* Cột 3: MỨC GIÁ (PRICE RANGE) */}
+                    <div className="w-full flex flex-col justify-end h-[68px] pb-1"> 
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1">
+                                <FaTags className="text-primary" /> Mức giá tối đa:
+                            </label>
+                            <span className="text-sm font-extrabold text-primary">
+                                {filters.maxPrice >= 5000000 ? 'Mọi mức giá' : formatCurrency(filters.maxPrice)}
+                            </span>
+                        </div>
+                        <input
+                            type="range"
+                            name="maxPrice"
+                            min="0"
+                            max="5000000"
+                            step="100000"
+                            value={filters.maxPrice}
+                            onChange={handleChange}
+                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary hover:accent-emerald-600 transition-all"
+                        />
+                        <div className="flex justify-between text-[10px] font-semibold text-slate-400 mt-1.5">
+                            <span>Miễn phí</span>
+                            <span>5Tr+</span>
+                        </div>
+                    </div>
+
+                    {/* Cột 4: BỘ SẮP XẾP (SORT BY) + NÚT RESET */}
+                    <div className="w-full flex items-end gap-2">
                         <div className="flex-grow">
-                            {/* Lưu ý: Bạn cần sửa InputField nhận thêm prop 'name' để handleChange hoạt động đúng */}
-                            <InputField
-                                label="Giảng viên"
-                                icon={FaSearch}
-                                name="tutor"
-                                type="text"
-                                placeholder="Tìm tên GV..."
-                                value={filters.tutor}
-                                onChange={handleChange} 
+                            <SelectField
+                                label="Sắp xếp theo"
+                                icon={FaSortAmountDown}
+                                name="sortBy"
+                                value={filters.sortBy}
+                                onChange={handleChange}
+                                options={sortOptions}
                             />
                         </div>
 
-                        {/* NÚT RESET */}
+                        {/* NÚT RESET - Đứng cạnh ô Sắp xếp */}
                         <motion.button 
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={onReset}
-                            className="flex-shrink-0 w-[42px] h-[42px] flex items-center justify-center rounded-lg bg-red-50 text-red-500 border border-red-100 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-300 mb-[1px]" // mb-[1px] để cân với border input
+                            className="flex-shrink-0 w-[42px] h-[42px] flex items-center justify-center rounded-lg bg-red-50 text-red-500 border border-red-100 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-300 mb-[1px]"
                             title="Đặt lại bộ lọc"
                         >
                             <motion.div 

@@ -1,19 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
+import { 
     FaUserEdit, FaCamera, FaCoins, FaHistory, FaSave, FaTimes, 
     FaEnvelope, FaBirthdayCake, FaSignOutAlt, FaMapMarkerAlt, 
-    FaBriefcase, FaIdCard, FaQuoteLeft, FaCertificate, FaExternalLinkAlt
+    FaBriefcase, FaIdCard, FaQuoteLeft, FaCertificate, FaExternalLinkAlt, FaPlus
 } from "react-icons/fa";
 import { useAuth } from "../../hooks/useAuth";
+import userApi from "../../api/userApi";
+import certificateApi from "../../api/certificateApi";
+import CertificateModal from "../../components/common/teacher/CertificateModal";
+import ConfirmationModal from "../../components/common/ConfirmationModal";
+import { toast } from "react-hot-toast";
 
 const TeacherProfilePage = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, fetchUserProfile } = useAuth();
     const navigate = useNavigate();
 
     const [activeTab, setActiveTab] = useState("info");
     const [isEditing, setIsEditing] = useState(false);
     const [previewAvatar, setPreviewAvatar] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Certificate states
+    const [certificates, setCertificates] = useState([]);
+    const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+    const [editingCert, setEditingCert] = useState(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [certToDelete, setCertToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const [formData, setFormData] = useState({
         fullName: "",
@@ -41,8 +56,25 @@ const TeacherProfilePage = () => {
                 certificates: user.certificates || []
             });
             setPreviewAvatar(user.avatarUrl);
+            
+            // Chỉ cập nhật certificates nếu local list đang trống (lần đầu load)
+            // hoặc khi user thực sự thay đổi ID.
+            // Điều này tránh việc AuthContext cập nhật chậm đè lên list local vừa CRUD xong.
+            if (!certificates || certificates.length === 0) {
+                console.log("Khởi tạo certificates từ AuthContext:", user.certificates);
+                setCertificates(user.certificates || []);
+            }
         }
-    }, [user]);
+    }, [user?.id]); // Chỉ chạy khi user ID thay đổi thực sự
+
+    const fetchCertificates = async () => {
+        try {
+            const res = await certificateApi.getMyCertificates();
+            setCertificates(res.data);
+        } catch (err) {
+            console.error("Fetch certificates error:", err);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -52,15 +84,52 @@ const TeacherProfilePage = () => {
     const handleAvatarChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            setSelectedFile(file);
             const objectUrl = URL.createObjectURL(file);
             setPreviewAvatar(objectUrl);
         }
     };
 
-    const handleSave = () => {
-        console.log("Saving teacher data:", formData);
-        setIsEditing(false);
-        alert("Cập nhật thông tin thành công!");
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            const promises = [];
+            const userData = {
+                fullName: formData.fullName,
+                dob: formData.dob,
+                address: formData.address,
+                jobTitle: formData.jobTitle
+            };
+
+            const userFormData = new FormData();
+            userFormData.append("data", new Blob([JSON.stringify(userData)], { type: "application/json" }));
+            
+            if (selectedFile) {
+                userFormData.append("avatar", selectedFile);
+            }
+
+            promises.push(userApi.updateUser(userFormData));
+
+            // 2. Cập nhật bio nếu có thay đổi
+            if (formData.bio !== user.bio) {
+                promises.push(userApi.updateTeacherProfile({ bio: formData.bio }));
+            }
+
+            await Promise.all(promises);
+
+            // 3. Refresh user data trong AuthContext
+            const roles = user.roles || []; 
+            await fetchUserProfile(roles);
+            
+            setIsEditing(false);
+            setSelectedFile(null);
+            toast.success("Cập nhật thông tin thành công!");
+        } catch (err) {
+            console.error("Update profile error:", err);
+            toast.error(err.message || "Có lỗi xảy ra khi cập nhật hồ sơ");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleCancel = () => {
@@ -81,6 +150,63 @@ const TeacherProfilePage = () => {
     const handleLogout = () => {
         logout();
         navigate("/login");
+    };
+
+    // --- CERTIFICATE ACTIONS ---
+    const handleOpenAddCert = () => {
+        setEditingCert(null);
+        setIsCertModalOpen(true);
+    };
+
+    const handleOpenEditCert = (e, cert) => {
+        e.stopPropagation();
+        setEditingCert(cert);
+        setIsCertModalOpen(true);
+    };
+
+    const handleOpenDeleteCert = (e, cert) => {
+        e.stopPropagation();
+        setCertToDelete(cert);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleSaveCertificate = async (formData, id) => {
+        try {
+            if (id) {
+                await certificateApi.updateCertificate(id, formData);
+                toast.success("Cập nhật chứng chỉ thành công!");
+            } else {
+                await certificateApi.createCertificate(formData);
+                toast.success("Thêm chứng chỉ thành công!");
+            }
+            await fetchCertificates();
+            if (user?.roles) await fetchUserProfile(user.roles);
+        } catch (err) {
+            console.error("Lỗi khi lưu chứng chỉ:", err);
+            toast.error(err.message || "Có lỗi xảy ra khi lưu chứng chỉ");
+            throw err;
+        }
+    };
+
+    const confirmDeleteCertificate = async () => {
+        if (!certToDelete) return;
+        setIsDeleting(true);
+        try {
+            await certificateApi.deleteCertificate(certToDelete.id);
+            toast.success("Xóa chứng chỉ thành công!");
+            // 1. Fetch list local
+            await fetchCertificates();
+            // 2. Đồng bộ global state
+            if (user?.roles) await fetchUserProfile(user.roles);
+            
+            setIsDeleteModalOpen(false);
+            setCertToDelete(null);
+        } catch (err) {
+            console.error("Lỗi khi xóa chứng chỉ:", err);
+            toast.error(err.message || "Không thể xóa chứng chỉ");
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     return (
@@ -168,8 +294,15 @@ const TeacherProfilePage = () => {
                                             <button onClick={handleCancel} className="flex items-center gap-2 text-slate-500 hover:bg-slate-100 px-5 py-2.5 rounded-2xl font-bold text-sm transition-all">
                                                 <FaTimes /> Hủy
                                             </button>
-                                            <button onClick={handleSave} className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-2xl font-bold text-sm hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all">
-                                                <FaSave /> Lưu hồ sơ
+                                            <button 
+                                                onClick={handleSave} 
+                                                disabled={isSaving}
+                                                className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-2xl font-bold text-sm hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {isSaving ? (
+                                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                ) : <FaSave />}
+                                                {isSaving ? "Đang lưu..." : "Lưu hồ sơ"}
                                             </button>
                                         </div>
                                     )}
@@ -265,8 +398,13 @@ const TeacherProfilePage = () => {
                                     />
                                     {isEditing && (
                                         <div className="mt-4 flex justify-end">
-                                            <button onClick={handleSave} className="bg-emerald-600 text-white px-6 py-2.5 rounded-2xl font-bold text-sm hover:bg-emerald-700 transition-all">
-                                                Cập nhật Bio
+                                            <button 
+                                                onClick={handleSave} 
+                                                disabled={isSaving}
+                                                className="bg-emerald-600 text-white px-6 py-2.5 rounded-2xl font-bold text-sm hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                            >
+                                                {isSaving && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}
+                                                {isSaving ? "Đang cập nhật..." : "Cập nhật Bio"}
                                             </button>
                                         </div>
                                     )}
@@ -274,32 +412,81 @@ const TeacherProfilePage = () => {
 
                                 {/* Certificates Section */}
                                 <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
-                                    <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                                        <FaCertificate className="text-yellow-500" /> Bằng cấp & Chứng chỉ
-                                    </h3>
-                                    {formData.certificates && formData.certificates.length > 0 ? (
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                            <FaCertificate className="text-yellow-500" /> Bằng cấp & Chứng chỉ
+                                        </h3>
+                                        <button 
+                                            onClick={handleOpenAddCert}
+                                            className="text-emerald-600 font-bold text-sm hover:bg-emerald-50 px-4 py-2 rounded-xl transition-all flex items-center gap-2"
+                                        >
+                                            <FaPlus className="text-xs" /> Thêm mới
+                                        </button>
+                                    </div>
+
+                                    {certificates && certificates.length > 0 ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {formData.certificates.map((cert) => (
+                                            {certificates.map((cert) => (
                                                 <div key={cert.id} className="p-5 border border-slate-100 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-md hover:border-emerald-100 transition-all group">
                                                     <div className="flex justify-between items-start mb-3">
                                                         <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
-                                                            {cert.certType || "CERTIFICATE"}
+                                                            {cert.certType}
                                                         </span>
-                                                        <a href={cert.evidenceUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-emerald-600 transition-colors">
-                                                            <FaExternalLinkAlt className="text-sm" />
-                                                        </a>
+                                                        <div className="flex items-center gap-3">
+                                                            <button 
+                                                                type="button"
+                                                                onClick={(e) => handleOpenEditCert(e, cert)}
+                                                                className="p-2 bg-white shadow-sm rounded-lg text-slate-400 hover:text-blue-500 hover:shadow transition-all"
+                                                                title="Sửa"
+                                                            >
+                                                                <FaUserEdit className="text-sm" />
+                                                            </button>
+                                                            <button 
+                                                                type="button"
+                                                                onClick={(e) => handleOpenDeleteCert(e, cert)}
+                                                                className="p-2 bg-white shadow-sm rounded-lg text-slate-400 hover:text-rose-500 hover:shadow transition-all"
+                                                                title="Xóa"
+                                                            >
+                                                                <FaTimes className="text-sm" />
+                                                            </button>
+                                                            <a 
+                                                                href={cert.evidenceUrl} 
+                                                                target="_blank" 
+                                                                rel="noopener noreferrer" 
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                className="p-2 bg-white shadow-sm rounded-lg text-slate-400 hover:text-emerald-600 hover:shadow transition-all text-center flex items-center justify-center" 
+                                                                title="Xem minh chứng"
+                                                            >
+                                                                <FaExternalLinkAlt className="text-xs" />
+                                                            </a>
+                                                        </div>
                                                     </div>
-                                                    <h4 className="font-bold text-slate-800 mb-1">{cert.certType === 'IELTS' ? 'English Fluency Certificate' : cert.certType}</h4>
+                                                    <h4 className="font-bold text-slate-800 mb-1">{cert.certType}</h4>
                                                     <div className="flex items-end justify-between">
                                                         <div>
-                                                            <p className="text-xs text-slate-400 mb-1">Ngày cấp: {cert.issuedDate}</p>
+                                                            <p className="text-[10px] text-slate-400 mb-1 uppercase tracking-tight">Ngày cấp: {cert.issuedDate}</p>
                                                             <div className="flex gap-2">
                                                                 <span className="text-emerald-600 font-bold text-lg">{cert.totalScore}</span>
-                                                                <span className="text-slate-400 text-xs self-end mb-1">Total Score</span>
+                                                                <span className="text-slate-400 text-[10px] self-end mb-1 uppercase">Total Score</span>
                                                             </div>
                                                         </div>
-                                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <span className="text-[10px] text-slate-400 font-medium">Verified ✓</span>
+                                                        <div className="flex gap-1">
+                                                            <div className="flex flex-col items-center">
+                                                                <span className="text-[8px] text-slate-400 uppercase">L</span>
+                                                                <span className="text-xs font-bold text-slate-600">{cert.listeningScore}</span>
+                                                            </div>
+                                                            <div className="flex flex-col items-center ml-2">
+                                                                <span className="text-[8px] text-slate-400 uppercase">R</span>
+                                                                <span className="text-xs font-bold text-slate-600">{cert.readingScore}</span>
+                                                            </div>
+                                                            <div className="flex flex-col items-center ml-2">
+                                                                <span className="text-[8px] text-slate-400 uppercase">S</span>
+                                                                <span className="text-xs font-bold text-slate-600">{cert.speakingScore}</span>
+                                                            </div>
+                                                            <div className="flex flex-col items-center ml-2">
+                                                                <span className="text-[8px] text-slate-400 uppercase">W</span>
+                                                                <span className="text-xs font-bold text-slate-600">{cert.writingScore}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -309,7 +496,12 @@ const TeacherProfilePage = () => {
                                         <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
                                             <FaCertificate className="text-5xl text-slate-200 mx-auto mb-4" />
                                             <p className="text-slate-400 font-medium font-sans">Bạn chưa cập nhật chứng chỉ nào.</p>
-                                            <button className="mt-4 text-emerald-600 font-bold text-sm hover:underline">Thêm chứng chỉ mới</button>
+                                            <button 
+                                                onClick={handleOpenAddCert}
+                                                className="mt-4 text-emerald-600 font-bold text-sm hover:underline"
+                                            >
+                                                Thêm chứng chỉ mới
+                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -318,6 +510,26 @@ const TeacherProfilePage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Modals */}
+            <CertificateModal 
+                isOpen={isCertModalOpen}
+                onClose={() => setIsCertModalOpen(false)}
+                onSave={handleSaveCertificate}
+                editingCert={editingCert}
+            />
+
+            <ConfirmationModal 
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDeleteCertificate}
+                title="Xóa chứng chỉ"
+                message={`Bạn có chắc chắn muốn xóa chứng chỉ ${certToDelete?.certType} này không? Hành động này không thể hoàn tác.`}
+                confirmText="Xóa ngay"
+                cancelText="Hủy"
+                variant="danger"
+                isLoading={isDeleting}
+            />
         </div>
     );
 };

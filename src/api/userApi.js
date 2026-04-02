@@ -42,6 +42,10 @@ const userApi = {
     });
   },
 
+  updateTeacherProfile: (data) => {
+    return axiosClient.put('/teachers/profile', data);
+  },
+
 }
 
 export default userApi;

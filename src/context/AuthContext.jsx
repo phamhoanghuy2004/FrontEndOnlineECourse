@@ -43,9 +43,16 @@ export const AuthProvider = ({ children }) => {
     const [error, setError] = useState(null);
 
 
-    const fetchUserProfile = async (roles) => {
+    const fetchUserProfile = async (rolesArg) => {
         try {
             let response;
+            let roles = rolesArg;
+
+            // Nếu không truyền roles hoặc roles rỗng, thử lấy từ token hoặc user hiện tại
+            if (!roles || roles.length === 0) {
+                const token = localStorage.getItem("token");
+                roles = token ? getRolesFromToken(token) : (user?.roles || []);
+            }
 
             if (roles.includes('ADMIN')) {
                 response = await userApi.getAdminInfoApi(); 

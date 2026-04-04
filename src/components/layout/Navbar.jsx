@@ -101,8 +101,12 @@ const Navbar = () => {
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
-                                        <FaUserCircle size={24} />
+                                    <div className="w-full h-full bg-slate-100 flex items-center justify-center overflow-hidden">
+                                        <img 
+                                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userName || 'User')}&background=random&color=fff`} 
+                                            alt={userName}
+                                            className="w-full h-full object-cover"
+                                        />
                                     </div>
                                 )}
                             </Link>

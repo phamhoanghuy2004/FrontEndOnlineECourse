@@ -6,6 +6,11 @@ const courseApi = {
     },
 
     getById: (id) => {
+        return axiosClient.get(`/courses/teacher/${id}`);
+    },
+
+    // 💥 HÀM MỚI THÊM VÀO DÀNH CHO PUBLIC (HỌC VIÊN)
+    getCourseDetail: (id) => {
         return axiosClient.get(`/courses/${id}`);
     },
 

@@ -7,8 +7,8 @@ import CourseCard from '../../../../common/student/guest/course/CourseCard';
 import AdvancedFilterPanel from '../../../../common/student/guest/course/AdvancedFilterPanel';
 import { fadeInBottom } from '../../../../../constants/motionVariants';
 import courseApi from '../../../../../api/courseApi';
-import categoryApi from '../../../../../api/categoryApi'; // 💥 Import thêm API lấy danh mục
-import { FaSpinner } from 'react-icons/fa';
+import categoryApi from '../../../../../api/categoryApi';
+import { FaSpinner, FaChevronLeft, FaChevronRight } from 'react-icons/fa'; // 💥 Thêm Icon cho Phân trang
 
 const CourseListSection = () => {
     // --- STATE QUẢN LÝ UI & DATA GỐC ---
@@ -17,40 +17,31 @@ const CourseListSection = () => {
     const [loading, setLoading] = useState(false);
 
     const [rawCourses, setRawCourses] = useState([]);
-    const [categories, setCategories] = useState([]); // 💥 Lưu mảng object category từ BE
-    const [filterOptions, setFilterOptions] = useState(["ALL"]); // 💥 Tự động build tab
+    const [categories, setCategories] = useState([]); 
+    const [filterOptions, setFilterOptions] = useState(["ALL"]); 
+
+    // 💥 STATE PHÂN TRANG
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     // --- STATE BỘ LỌC NÂNG CAO ---
     const [advancedFilters, setAdvancedFilters] = useState({
         level: 'ALL',
         maxPrice: 5000000,
         keyword: '',
-        sortBy: '' // Mặc định rỗng để BE tự quyết
+        sortBy: '' 
     });
 
-    // 💥 1. GỌI API LẤY DANH SÁCH CATEGORY KHI VỪA VÀO TRANG
+    // 1. GỌI API LẤY DANH SÁCH CATEGORY KHI VỪA VÀO TRANG
     useEffect(() => {
         const fetchCategories = async () => {
             try {
                 const res = await categoryApi.getAll();
-
-                // 💥 In thẳng cái 'res' gốc ra xem hình thù nó thế nào
-                console.log("1. Toàn bộ API Response trả về:", res);
-
-                // 💥 Bọc lót mọi trường hợp bóc vỏ của Axios:
-                // - Trường hợp 1: Axios chưa bóc -> res.data.data (Của Spring Boot)
-                // - Trường hợp 2: Axios ĐÃ bóc -> res.data (Của Spring Boot)
                 const catData = res.data?.data || res.data || [];
-
-                console.log("2. Danh sách Category sau khi móc ra:", catData);
-
                 if (catData.length > 0) {
                     setCategories(catData);
                     setFilterOptions(["ALL", ...catData.map(c => c.name)]);
-                } else {
-                    console.warn("LẠ NHỈ? Móc data ra vẫn rỗng. Hãy kiểm tra lại Backend!");
                 }
-
             } catch (error) {
                 console.error("Lỗi tải danh mục:", error);
             }
@@ -58,49 +49,46 @@ const CourseListSection = () => {
         fetchCategories();
     }, []);
 
-    // 💥 2. GỌI API SEARCH KHÓA HỌC (Lắng nghe cả advancedFilters và activeFilter)
+    // 2. GỌI API SEARCH KHÓA HỌC (Lắng nghe Filter + Pagination)
     useEffect(() => {
         const fetchCourses = async () => {
             setLoading(true);
             try {
                 const params = {
-                    page: 0,
-                    size: 50
+                    page: currentPage - 1, // 💥 Gửi xuống Backend (BE đếm từ 0)
+                    size: 6 // 💥 Đặt size nhỏ (VD: 12) để dễ thấy tính năng phân trang
                 };
 
-                // Lọc theo danh mục Tab
                 if (activeFilter !== "ALL") {
                     const selectedCat = categories.find(c => c.name === activeFilter);
-                    if (selectedCat) {
-                        params.categoryId = selectedCat.id;
-                    }
+                    if (selectedCat) params.categoryId = selectedCat.id;
                 }
 
-                // 💥 Bắn các Params từ Panel xuống Backend
                 if (advancedFilters.level !== 'ALL') params.level = advancedFilters.level;
                 if (advancedFilters.maxPrice < 5000000) params.maxPrice = advancedFilters.maxPrice;
                 if (advancedFilters.keyword.trim()) params.keyword = advancedFilters.keyword.trim();
-
-                // 💥 Nếu user chọn explicit Sort thì gửi đi, không thì thôi
                 if (advancedFilters.sortBy !== '') params.sortBy = advancedFilters.sortBy;
 
                 const response = await courseApi.searchCourses(params);
 
-                // BỌC LÓT AN TOÀN CHO MỌI TRƯỜNG HỢP CỦA AXIOS
-                let courses = [];
-                if (response?.data?.data?.content) {
-                    courses = response.data.data.content;
-                } else if (response?.data?.content) {
-                    courses = response.data.content;
-                } else if (response?.content) {
-                    courses = response.content;
+                // BÓC TÁCH DỮ LIỆU PAGE RESPONSE
+                let pageData = {};
+                if (response?.data?.data) {
+                    pageData = response.data.data;
+                } else if (response?.data) {
+                    pageData = response.data;
+                } else {
+                    pageData = response;
                 }
 
-                setRawCourses(courses);
+                setRawCourses(pageData.content || []);
+                // 💥 Cập nhật tổng số trang từ Backend trả về
+                setTotalPages(pageData.totalPages || 1); 
 
             } catch (error) {
                 console.error("Lỗi lấy danh sách khóa học:", error);
                 setRawCourses([]);
+                setTotalPages(1);
             } finally {
                 setLoading(false);
             }
@@ -111,13 +99,12 @@ const CourseListSection = () => {
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [advancedFilters, activeFilter, categories]);
+    }, [advancedFilters, activeFilter, categories, currentPage]); // 💥 Lắng nghe thêm currentPage
 
-    // --- LOGIC GOM NHÓM (GROUPING) CHO UI CAROUSEL CŨ ---
+    // --- LOGIC GOM NHÓM (GROUPING) ---
     const processedData = useMemo(() => {
         if (!rawCourses || rawCourses.length === 0) return [];
 
-        // 💥 Backend ĐÃ LỌC SẴN rồi, Frontend bây giờ chỉ việc Gom nhóm theo tên
         const grouped = rawCourses.reduce((acc, course) => {
             let cat = acc.find(c => c.name === course.categoryName);
             if (!cat) {
@@ -134,9 +121,18 @@ const CourseListSection = () => {
         }, []);
 
         return grouped;
+    }, [rawCourses]);
 
-    }, [rawCourses]); // 💥 Đã xóa điều kiện activeFilter ở đây vì BE lo việc lọc rồi
+    // --- HANDLERS ---
+    const handleFilterChange = (filterName) => {
+        setActiveFilter(filterName);
+        setCurrentPage(1); // 💥 Nhớ reset page về 1 khi đổi Tab
+    };
 
+    const handleAdvancedFilterChange = (newFilters) => {
+        setAdvancedFilters(newFilters);
+        setCurrentPage(1); // 💥 Nhớ reset page về 1 khi tìm kiếm
+    };
 
     const handleResetFilters = () => {
         setAdvancedFilters({
@@ -146,6 +142,64 @@ const CourseListSection = () => {
             sortBy: ''
         });
         setActiveFilter("ALL");
+        setCurrentPage(1);
+    };
+
+    // --- RENDER HỆ THỐNG NÚT PHÂN TRANG ---
+    const renderPagination = () => {
+        if (totalPages <= 1) return null; // Nếu chỉ có 1 trang thì ẩn luôn thanh phân trang
+
+        const pages = [];
+        for (let i = 1; i <= totalPages; i++) {
+            pages.push(
+                <button
+                    key={i}
+                    onClick={() => setCurrentPage(i)}
+                    className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold transition-all duration-300 ${
+                        currentPage === i
+                            ? "bg-primary text-white shadow-lg shadow-primary/40 transform scale-105"
+                            : "bg-white text-gray-500 hover:bg-green-50 hover:text-primary border border-gray-200"
+                    }`}
+                >
+                    {i}
+                </button>
+            );
+        }
+
+        return (
+            <div className="flex justify-center items-center gap-3 mt-16 pb-8">
+                {/* Nút Prev */}
+                <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold transition-all duration-300 border ${
+                        currentPage === 1 
+                            ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed" 
+                            : "bg-white text-gray-600 border-gray-200 hover:bg-primary hover:text-white hover:border-primary shadow-sm"
+                    }`}
+                >
+                    <FaChevronLeft size={14} />
+                </button>
+
+                {/* Các số trang */}
+                <div className="flex gap-2">
+                    {pages}
+                </div>
+
+                {/* Nút Next */}
+                <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold transition-all duration-300 border ${
+                        currentPage === totalPages 
+                            ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed" 
+                            : "bg-white text-gray-600 border-gray-200 hover:bg-primary hover:text-white hover:border-primary shadow-sm"
+                    }`}
+                >
+                    <FaChevronRight size={14} />
+                </button>
+            </div>
+        );
     };
 
     return (
@@ -154,9 +208,9 @@ const CourseListSection = () => {
 
                 {/* 1. FILTER BAR */}
                 <FilterBar
-                    filters={filterOptions} // 💥 Truyền mảng đã load từ API
+                    filters={filterOptions} 
                     activeFilter={activeFilter}
-                    onFilterChange={setActiveFilter}
+                    onFilterChange={handleFilterChange} // 💥 Trỏ về Handler mới để reset Page
                     isAdvancedOpen={showAdvanced}
                     onToggleAdvanced={() => setShowAdvanced(!showAdvanced)}
                 />
@@ -166,18 +220,18 @@ const CourseListSection = () => {
                     {showAdvanced && (
                         <AdvancedFilterPanel
                             filters={advancedFilters}
-                            setFilters={setAdvancedFilters}
+                            setFilters={handleAdvancedFilterChange} // 💥 Trỏ về Handler mới để reset Page
                             onReset={handleResetFilters}
                         />
                     )}
                 </AnimatePresence>
 
                 {/* 3. DANH SÁCH HIỂN THỊ */}
-                <div className="flex flex-col gap-20 relative min-h-[400px]">
+                <div className="flex flex-col gap-16 relative min-h-[400px]">
 
                     {loading && (
-                        <div className="absolute inset-0 bg-slate-50/50 backdrop-blur-sm z-10 flex justify-center items-start pt-20">
-                            <FaSpinner className="animate-spin text-primary text-4xl" />
+                        <div className="absolute inset-0 bg-slate-50/60 backdrop-blur-sm z-20 flex justify-center items-start pt-32 rounded-3xl">
+                            <FaSpinner className="animate-spin text-primary text-5xl drop-shadow-md" />
                         </div>
                     )}
 
@@ -226,6 +280,10 @@ const CourseListSection = () => {
                         )}
                     </AnimatePresence>
                 </div>
+
+                {/* 💥 4. HIỂN THỊ THANH PHÂN TRANG XỊN XÒ */}
+                {renderPagination()}
+
             </div>
         </section>
     );

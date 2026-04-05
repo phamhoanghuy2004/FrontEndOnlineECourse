@@ -1,78 +1,88 @@
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { courses, instructors } from "../../../data/mockData";
 import { FiArrowLeft } from "react-icons/fi";
 import CourseHeader from "../../../components/sections/student/guest/courseDetailPage/CourseHeader";
 import CourseHero from "../../../components/sections/student/guest/courseDetailPage/CourseHero";
-import TrialLesson from "../../../components/sections/student/guest/courseDetailPage/TrialLesson";
 import InstructorInfo from "../../../components/sections/student/guest/courseDetailPage/InstructorInfo";
 import CourseSidebar from "../../../components/sections/student/guest/courseDetailPage/CourseSidebar";
 import CourseContent from "../../../components/sections/student/guest/courseDetailPage/CourseContent";
+import CourseTOC from "../../../components/sections/student/guest/courseDetailPage/CourseTOC";
 import { useAuth } from "../../../hooks/useAuth"; 
+import courseApi from "../../../api/courseApi"; 
 
 const CourseDetailPage = () => {
     const { id } = useParams();
     const { user } = useAuth(); 
 
-    const courseId = parseInt(id);
-    const course = courses.find((c) => c.id === courseId);
+    const [course, setCourse] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    if (!course) {
+    useEffect(() => {
+        const fetchCourseDetail = async () => {
+            try {
+                setLoading(true);
+                const response = await courseApi.getCourseDetail(id);
+                if (response && response.data) {
+                    setCourse(response.data);
+                } else {
+                    setError("Không tìm thấy khóa học");
+                }
+            } catch (err) {
+                setError(err.message || "Lỗi kết nối đến máy chủ");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCourseDetail();
+    }, [id]);
+
+    if (loading) return <div className="min-h-screen flex items-center justify-center text-primary font-bold text-xl">Đang tải dữ liệu...</div>;
+    if (error || !course) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-                <h2 className="text-3xl font-bold text-gray-800 mb-4">Khoá học không tồn tại</h2>
+                <h2 className="text-3xl font-bold text-gray-800 mb-4">{error || "Khoá học không tồn tại"}</h2>
                 <Link to="/courses" className="text-primary hover:underline flex items-center gap-2">
-                    <FiArrowLeft /> Quay lại danh sách khóa học
+                    <FiArrowLeft /> Quay lại danh sách
                 </Link>
             </div>
         );
     }
 
-    const teacher = instructors.find(i => i.name === course.tutor) || instructors[0];
-
-    // --- LOGIC MỚI Ở ĐÂY ---
-    // User đã đăng nhập VÀ Id khóa học là 1 thì mới tính là đã đăng ký
-    const isRegistered = user && course.id === 1; 
+    const isRegistered = user && course.id === 1; // Logic fake tạm thời
+    
+    // 💥 KIỂM TRA XEM KHÓA HỌC CÓ BÀI HỌC HAY KHÔNG
+    const hasLessons = course.lessons && course.lessons.length > 0;
 
     return (
-        <div className="bg-gray-50 min-h-screen pb-20 pt-24 font-sans text-gray-800">
-            {/* Truyền isRegistered xuống Header */}
+        <div className="bg-slate-50 min-h-screen pb-20 pt-24 font-sans text-gray-800">
             <CourseHeader course={course} isRegistered={isRegistered} />
 
-            <div className="container mx-auto px-6 mt-8">
-                {/* Mobile Breadcrumb */}
-                <div className="md:hidden mb-6">
-                    <Link to="/courses" className="text-gray-500 hover:text-primary flex items-center gap-2 mb-4">
-                        <FiArrowLeft /> Quay lại
-                    </Link>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-
-                    {/* Logic layout: Dựa vào isRegistered thay vì chỉ user */}
-                    <div className={`${isRegistered ? 'lg:col-span-3' : 'lg:col-span-2'} space-y-10`}>
-
-                        <CourseHero course={course} />
-
-                        {/* Truyền cả user (để lấy id chat) và isRegistered (để hiện nút) */}
-                        <InstructorInfo teacher={teacher} user={user} isRegistered={isRegistered} />
-
-                        {/* Chỉ hiện Trial Lesson nếu CHƯA đăng ký */}
-                        {!isRegistered && (
-                            <TrialLesson course={course} />
-                        )}
-
-                        {/* Truyền isRegistered xuống Content */}
-                        <CourseContent course={course} isRegistered={isRegistered} />
-
-                    </div>
-
-                    {/* Sidebar: Chỉ hiện khi CHƯA đăng ký */}
-                    {!isRegistered && (
-                        <div className="lg:col-span-1">
-                            <CourseSidebar course={course} />
+            <div className="container mx-auto px-4 lg:px-8 max-w-[1536px] mt-8">
+                
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
+                    
+                    {/* 💥 CỘT TRÁI: Chỉ render khi CÓ BÀI HỌC */}
+                    {hasLessons && (
+                        <div className="hidden lg:block lg:col-span-2">
+                            <CourseTOC lessons={course.lessons} />
                         </div>
                     )}
 
+                    {/* 💥 CỘT GIỮA: Co giãn thông minh
+                        - Nếu CÓ bài học: Chiếm 7 cột (để chừa 2 cột cho Mục lục)
+                        - Nếu KHÔNG CÓ bài học: Phình to ra chiếm 9 cột
+                    */}
+                    <div className={`${hasLessons ? 'lg:col-span-7' : 'lg:col-span-9'} space-y-8 transition-all duration-300`}>
+                        <CourseHero course={course} />
+                        <InstructorInfo course={course} user={user} isRegistered={isRegistered} />
+                        <CourseContent lessons={course.lessons} isRegistered={isRegistered} />
+                    </div>
+
+                    {/* CỘT PHẢI: MUA KHÓA HỌC (Luôn giữ nguyên 3 cột) */}
+                    <div className="lg:col-span-3">
+                        <CourseSidebar course={course} isRegistered={isRegistered} />
+                    </div>
                 </div>
             </div>
         </div>

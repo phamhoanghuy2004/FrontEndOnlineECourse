@@ -1,98 +1,106 @@
 import React from 'react';
-import { FaFileAlt, FaClipboardCheck, FaLock, FaUnlock, FaClock } from "react-icons/fa";
+import { motion } from "framer-motion";
+import { FaPlayCircle, FaFileAlt, FaLock } from "react-icons/fa";
 
-const CourseContent = ({ course, isRegistered }) => {
-    // If no lessons, return null or a message
-    if (!course.lessons || course.lessons.length === 0) return null;
+const formatDuration = (seconds) => {
+    if (!seconds) return "00:00";
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+};
+
+const CourseContent = ({ lessons, isRegistered }) => {
+    if (!lessons || lessons.length === 0) return (
+        <div className="p-8 bg-white rounded-3xl shadow-sm text-center text-gray-500">Nội dung đang được cập nhật...</div>
+    );
 
     return (
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <FaClipboardCheck className="text-primary" /> Nội dung khóa học
-                </h3>
-                <span className="text-gray-500 text-sm font-medium">{course.lessons.length} bài học</span>
-            </div>
+        <div className="space-y-6">
+            {lessons.map((lesson, index) => {
+                const canWatch = isRegistered || lesson.isPreview;
 
-            <div className="space-y-4">
-                {course.lessons.map((lesson) => (
-                    <div
+                return (
+                    <motion.div 
+                        id={`lesson-${lesson.id}`} 
                         key={lesson.id}
-                        className={`border border-gray-100 rounded-2xl overflow-hidden transition-all ${lesson.isTrial ? 'bg-white shadow-md' : 'bg-gray-50 opacity-90'
-                            }`}
+                        initial={{ opacity: 0, y: 10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden"
                     >
-                        {/* Header of Lesson Item */}
-                        <div className={`flex items-center justify-between p-4 ${lesson.isTrial ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
-                            <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${lesson.isTrial ? 'bg-primary/10 text-primary' : 'bg-gray-200 text-gray-500'
-                                    }`}>
-                                    {lesson.isTrial ? <FaUnlock size={14} /> : <FaLock size={14} />}
-                                </div>
-                                <div>
-                                    <h4 className={`font-bold ${lesson.isTrial ? 'text-gray-900' : 'text-gray-500'}`}>
-                                        {lesson.title}
-                                    </h4>
-                                    <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                                        <div className="flex items-center gap-1">
-                                            <FaClock size={12} /> {lesson.duration}
-                                        </div>
-                                        {lesson.isTrial && (
-                                            <span className="text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full">
-                                                Học thử
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
+                        {/* Header Bài học */}
+                        <div className={`px-6 py-4 flex justify-between items-center ${canWatch ? 'bg-gradient-to-r from-slate-900 to-slate-800' : 'bg-slate-100'}`}>
+                            <h2 className={`text-xl font-bold flex items-center gap-3 ${canWatch ? 'text-white' : 'text-slate-500'}`}>
+                                {canWatch ? <FaPlayCircle className="text-primary" /> : <FaLock className="text-slate-400" />}
+                                Bài {index + 1}: {lesson.title}
+                            </h2>
+                            {lesson.isPreview && !isRegistered && (
+                                <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                                    Học thử
+                                </span>
+                            )}
                         </div>
 
-                        {/* Expanded Content for Trial Lessons */}
-                        {lesson.isTrial && (
-                            <div className="px-4 pb-4 pl-[4.5rem]">
-                                {/* Video Preview (if available) - condensed */}
-                                {lesson.video && (
-                                    <div className="mb-3 relative pt-[40%] bg-black rounded-xl overflow-hidden shadow-sm">
-                                        <iframe
-                                            className="absolute top-0 left-0 w-full h-full"
-                                            src={lesson.video}
-                                            title={lesson.title}
-                                            frameBorder="0"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                            allowFullScreen
-                                        ></iframe>
+                        {/* Nội dung chữ */}
+                        <div className="p-6">
+                            <p className="text-slate-600 mb-6 leading-relaxed">
+                                {lesson.content || "Mô tả bài học sẽ được giảng viên cập nhật chi tiết tại đây."}
+                            </p>
+
+                            {/* Khu vực Video Player */}
+                            <div className="relative pt-[56.25%] bg-black rounded-2xl overflow-hidden shadow-md mb-6 group">
+                                {canWatch && lesson.previewVideoUrl ? (
+                                    
+                                    // 💥 FIX TẠI ĐÂY: DÙNG THẺ <video> THAY VÌ <iframe>
+                                    // 💥 Thêm controls để hiện thanh điều khiển
+                                    <video
+                                        className="absolute top-0 left-0 w-full h-full object-contain"
+                                        src={lesson.previewVideoUrl}
+                                        controls
+                                        controlsList="nodownload" // Tùy chọn: Chặn nút tải xuống mặc định
+                                    >
+                                        Trình duyệt của bạn không hỗ trợ thẻ video.
+                                    </video>
+
+                                ) : (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-sm text-white">
+                                        <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-4 backdrop-blur-md">
+                                            <FaLock size={24} className="text-slate-300" />
+                                        </div>
+                                        <p className="font-semibold text-lg">Nội dung bị khóa</p>
+                                        <p className="text-sm text-slate-400 mt-1">Vui lòng đăng ký khóa học để xem video này</p>
+                                        <span className="mt-4 px-4 py-1.5 bg-slate-800 rounded-full text-xs font-medium border border-slate-700">
+                                            Thời lượng: {formatDuration(lesson.durationSeconds)}
+                                        </span>
                                     </div>
                                 )}
-
-                                {/* Action Buttons */}
-                                <div className="flex flex-wrap gap-3 mt-3">
-                                    {lesson.document && (
-                                        <a href={lesson.document} target="_blank" rel="noopener noreferrer"
-                                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-colors">
-                                            <FaFileAlt size={14} /> Tài liệu
-                                        </a>
-                                    )}
-                                    {lesson.test && (
-                                        <a href={lesson.test} target="_blank" rel="noopener noreferrer"
-                                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-50 text-orange-700 text-sm font-medium hover:bg-orange-100 transition-colors">
-                                            <FaClipboardCheck size={14} /> Bài tập
-                                        </a>
-                                    )}
-                                </div>
                             </div>
-                        )}
-                    </div>
-                ))}
-            </div>
 
-            {/* 2. CTA for locked content - CHỈ HIỂN THỊ KHI KHÔNG CÓ USER */}
-            {!isRegistered && (
-                <div className="mt-8 text-center p-6 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                    <p className="text-gray-600 mb-3">Đăng ký khóa học để mở khóa toàn bộ {course.lessons.length} bài học</p>
-                    <button className="bg-white border border-gray-200 text-gray-700 px-6 py-2 rounded-full font-bold shadow-sm hover:bg-gray-50 transition-all">
-                        Xem chi tiết lộ trình
-                    </button>
-                </div>
-            )}
+                            {/* Khu vực Tài liệu đính kèm */}
+                            {lesson.documents && lesson.documents.length > 0 && (
+                                <div className="mt-4 border-t pt-4">
+                                    <h4 className="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">Tài liệu đính kèm</h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {lesson.documents.map(doc => (
+                                            canWatch && doc.fileUrl ? (
+                                                <a key={doc.id} href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 transition border border-blue-100">
+                                                    <FaFileAlt size={20} className="text-blue-500" />
+                                                    <span className="font-medium text-sm truncate">{doc.title}</span>
+                                                </a>
+                                            ) : (
+                                                <div key={doc.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 text-slate-400 border border-slate-100 cursor-not-allowed">
+                                                    <FaLock size={16} />
+                                                    <span className="font-medium text-sm truncate">{doc.title}</span>
+                                                </div>
+                                            )
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                );
+            })}
         </div>
     );
 };

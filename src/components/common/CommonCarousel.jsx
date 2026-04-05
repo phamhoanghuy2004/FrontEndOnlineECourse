@@ -19,7 +19,7 @@ const CommonCarousel = ({
             slidesPerView={1}
             pagination={{ clickable: true }}
             autoplay={{
-                delay: 3000,
+                delay: 60000,
                 disableOnInteraction: false,
             }}
             breakpoints={breakpoints} 

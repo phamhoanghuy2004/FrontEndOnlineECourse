@@ -6,6 +6,11 @@ const courseApi = {
     },
 
     getById: (id) => {
+        return axiosClient.get(`/courses/teacher/${id}`);
+    },
+
+    // 💥 HÀM MỚI THÊM VÀO DÀNH CHO PUBLIC (HỌC VIÊN)
+    getCourseDetail: (id) => {
         return axiosClient.get(`/courses/${id}`);
     },
 
@@ -27,7 +32,11 @@ const courseApi = {
 
     delete: (id) => {
         return axiosClient.delete(`/courses/${id}`);
-    }
+    },
+
+    searchCourses: (params) => {
+        return axiosClient.get('/courses/search', { params });
+    },
 };
 
 export default courseApi;

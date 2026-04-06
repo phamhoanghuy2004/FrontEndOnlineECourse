@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
     FaTrash, FaVideo, FaFileAlt, FaPlus,
     FaChevronDown, FaChevronUp, FaUpload, FaSave, FaSpinner,
-    FaSortNumericDown, FaPaperclip, FaFilePdf, FaFileWord
+    FaSortNumericDown, FaPaperclip, FaFilePdf, FaFileWord, FaBookOpen
 } from 'react-icons/fa';
 import Hls from 'hls.js';
 import Button from '../Button';
@@ -12,6 +12,9 @@ import lessonApi from '../../../api/lessonApi';
 import axios from 'axios';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
+import testApi from '../../../api/testApi';
+import AddTestSetModal from './AddTestSetModal';
+import TestSetDetailModal from './TestSetDetailModal';
 
 // ==========================================
 // COMPONENT CON: QUẢN LÝ TỪNG BÀI HỌC
@@ -47,32 +50,26 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
     const [isFetchingDocs, setIsFetchingDocs] = useState(false);
 
     const [hasFetchedDocs, setHasFetchedDocs] = useState(false);
+    const [testSet, setTestSet] = useState(null);
+    const [isFetchingTestSet, setIsFetchingTestSet] = useState(false);
+    const [isAddTestSetOpen, setIsAddTestSetOpen] = useState(false);
+    const [isTestSetDetailOpen, setIsTestSetDetailOpen] = useState(false);
 
     const displayVideoUrl = videoPreviewUrl || lesson.hlsUrl;
 
     // 💥 GỌI API LẤY DANH SÁCH DOCUMENT KHI MOUNT BÀI HỌC
     useEffect(() => {
         const fetchDocuments = async () => {
-            // Chỉ fetch khi: 
-            // 1. Bài học đang mở (expanded)
-            // 2. Chưa từng fetch (hasFetchedDocs = false)
-            // 3. Không phải bài học mới tạo (isNewLesson = false)
             if (expanded && !hasFetchedDocs && !isNewLesson) {
                 setIsFetchingDocs(true);
                 try {
                     const response = await lessonApi.getDocuments(lesson.id);
-                    // Nhận mảng tài liệu từ BE trả về
                     const fetchedDocs = response.data?.data || response.data || [];
-
-                    // Cập nhật mảng vừa lấy được vào Local State của Form
                     onUpdateLocal(lesson.id, {
                         ...lesson,
                         documents: fetchedDocs
                     });
-
-                    // 💥 Đánh dấu là đã fetch xong, lần sau mở lại không cần gọi API nữa
                     setHasFetchedDocs(true);
-
                 } catch (error) {
                     console.error(`Lỗi tải danh sách tài liệu cho bài học ${lesson.id}:`, error);
                     onUpdateLocal(lesson.id, { ...lesson, documents: [] });
@@ -85,8 +82,28 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
         fetchDocuments();
     }, [expanded, hasFetchedDocs, isNewLesson, lesson.id]);
 
+    // 💥 GỌI API LẤY TESTSET KHI MOUNT BÀI HỌC
+    useEffect(() => {
+        const fetchTestSet = async () => {
+            if (expanded && !testSet && !isNewLesson) {
+                setIsFetchingTestSet(true);
+                try {
+                    const response = await testApi.getTestSetByLessonId(lesson.id);
+                    setTestSet(response.data?.data || response.data);
+                } catch (error) {
+                    if (error.response?.status !== 404) {
+                        console.error(`Lỗi tải TestSet cho bài học ${lesson.id}:`, error);
+                    }
+                } finally {
+                    setIsFetchingTestSet(false);
+                }
+            }
+        };
+
+        fetchTestSet();
+    }, [expanded, testSet, isNewLesson, lesson.id]);
+
     // --- LOGIC HLS & SCROLL & WEBSOCKET --- 
-    // (Giữ nguyên toàn bộ logic cũ cực xịn của bạn)
     useEffect(() => {
         if (expanded && itemRef.current && isNewLesson) {
             setTimeout(() => { itemRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
@@ -163,7 +180,7 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
             }
             if (savedLesson) onUpdateLocal(lesson.id, savedLesson);
         } catch (error) {
-            alert(error.response?.data?.message || error.message || "Lỗi khi lưu thông tin bài học!");
+            alert(error.response?.data?.message || "Lỗi khi lưu thông tin bài học!");
         } finally {
             setIsSavingText(false);
         }
@@ -178,71 +195,40 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
     };
 
     const handleUploadVideo = async () => {
-        if (!videoFile) return alert("Vui lòng chọn file video!");
-        if (isNewLesson) return alert("Vui lòng Lưu thông tin bài học (để tạo ID) trước khi tải video!");
-
-        const currentLessonId = lesson.id;
+        if (!videoFile || isNewLesson) return alert("Vui lòng Lưu thông tin trước khi tải video!");
         setVideoUploading(true);
-        setVideoProgress(0);
-
         try {
-            const sigResponse = await lessonApi.getVideoUploadSignature(currentLessonId);
-            const ticket = sigResponse.data?.data || sigResponse.data || sigResponse;
-
-            const apiKey = ticket.apiKey || ticket.api_key;
-            const cloudName = ticket.cloudName || ticket.cloud_name;
-
-            // Do BE không có @JsonProperty nên nó trả về camelCase
-            const publicId = ticket.publicId;
-            const notificationUrl = ticket.notificationUrl;
-
-            // 💥 1. LẤY THÊM 2 TRƯỜNG EAGER TỪ BACKEND TRẢ VỀ
-            const eager = ticket.eager;
-            const eagerAsync = ticket.eagerAsync !== undefined ? ticket.eagerAsync : ticket.eager_async;
-
-            if (!cloudName || !apiKey || !publicId || !notificationUrl || !eager) {
-                throw new Error("Dữ liệu chữ ký từ Server bị thiếu! Vui lòng kiểm tra lại Backend.");
-            }
-
+            const sigResponse = await lessonApi.getVideoUploadSignature(lesson.id);
+            const ticket = sigResponse.data?.data || sigResponse.data;
             const uploadData = new FormData();
             uploadData.append('file', videoFile);
-            uploadData.append('api_key', apiKey);
+            uploadData.append('api_key', ticket.apiKey || ticket.api_key);
             uploadData.append('timestamp', ticket.timestamp);
             uploadData.append('signature', ticket.signature);
             uploadData.append('folder', ticket.folder);
-            uploadData.append('public_id', publicId);
-            uploadData.append('notification_url', notificationUrl);
+            uploadData.append('public_id', ticket.publicId);
+            uploadData.append('notification_url', ticket.notificationUrl);
+            uploadData.append('eager', ticket.eager);
+            uploadData.append('eager_async', ticket.eagerAsync);
 
-            // 💥 2. NHÉT NÓ VÀO FORMDATA ĐỂ CLOUDINARY KIỂM TRA CHỮ KÝ CHUẨN XÁC
-            uploadData.append('eager', eager);
-            uploadData.append('eager_async', eagerAsync);
-
-            console.log(`2. Bắt đầu đẩy MP4 lên Cloudinary (Cloud Name: ${cloudName})...`);
-
-            const cloudUrl = `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`;
+            const cloudUrl = `https://api.cloudinary.com/v1_1/${ticket.cloudName || ticket.cloud_name}/video/upload`;
             const cloudResponse = await axios.post(cloudUrl, uploadData, {
-                onUploadProgress: (progressEvent) => {
-                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    setVideoProgress(percentCompleted);
-                }
+                onUploadProgress: (p) => setVideoProgress(Math.round((p.loaded * 100) / p.total))
             });
 
             const cloudinaryData = cloudResponse.data;
-            await lessonApi.saveVideoDraft(currentLessonId, {
+            await lessonApi.saveVideoDraft(lesson.id, {
                 publicVideoId: cloudinaryData.public_id,
                 rawUrl: cloudinaryData.secure_url
             });
 
-            onUpdateLocal(currentLessonId, {
+            onUpdateLocal(lesson.id, {
                 ...lesson,
                 videoStatus: 'PROCESSING',
                 publicVideoId: cloudinaryData.public_id,
                 rawUrl: cloudinaryData.secure_url
             });
-
-            alert("Upload thành công! Video đang được chuyển sang HLS.");
-            setVideoFile(null);
-            setVideoPreviewUrl('');
+            alert("Upload video thành công!");
         } catch (error) {
             alert(`Upload thất bại! ${error.message}`);
         } finally {
@@ -251,38 +237,30 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
         }
     };
 
-    // 💥 HANDLERS DOCUMENT (PDF/Word)
+    // 💥 HANDLERS DOCUMENT
     const handleSelectDoc = (e) => {
         const file = e.target.files[0];
         if (file) {
             setDocFile(file);
-            // Tự động điền tên tài liệu bằng tên file nếu User lười chưa nhập
             if (!docTitle) setDocTitle(file.name.split('.')[0]);
         }
     };
 
     const handleUploadDocument = async () => {
-        if (!docFile || !docTitle.trim()) return alert("Vui lòng nhập tên và chọn file tài liệu!");
-        if (isNewLesson) return alert("Vui lòng Lưu bài học (để tạo ID) trước khi tải tài liệu!");
-
+        if (!docFile || !docTitle.trim() || isNewLesson) return alert("Vui lòng nhập tên và chọn file!");
         setIsDocUploading(true);
         try {
             const formData = new FormData();
             formData.append('title', docTitle);
             formData.append('file', docFile);
-
             const response = await lessonApi.uploadDocument(lesson.id, formData);
             const newDoc = response.data?.data || response.data;
-
-            // 💥 Nối tài liệu mới vào cuối mảng documents hiện tại
             onUpdateLocal(lesson.id, {
                 ...lesson,
                 documents: [...(lesson.documents || []), newDoc]
             });
-
             alert("Tải lên tài liệu thành công!");
-            setDocFile(null);
-            setDocTitle('');
+            setDocFile(null); setDocTitle('');
         } catch (error) {
             alert(error.response?.data?.message || "Lỗi tải lên tài liệu!");
         } finally {
@@ -290,16 +268,13 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
         }
     };
 
-    const handleDeleteDocument = async (documentId) => {
+    const handleDeleteDocument = async (did) => {
         if (!window.confirm("Bạn có chắc chắn muốn xóa tài liệu này?")) return;
-
         try {
-            await lessonApi.deleteDocument(documentId);
-
-            // 💥 Lọc bỏ tài liệu đã xóa khỏi State
+            await lessonApi.deleteDocument(did);
             onUpdateLocal(lesson.id, {
                 ...lesson,
-                documents: (lesson.documents || []).filter(d => d.id !== documentId)
+                documents: (lesson.documents || []).filter(d => d.id !== did)
             });
         } catch (error) {
             alert(error.response?.data?.message || "Lỗi khi xóa tài liệu!");
@@ -321,6 +296,7 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
                 </div>
                 <div className="flex items-center gap-2 text-slate-400">
                     {lesson.documents?.length > 0 && <span className="text-xs bg-indigo-100 text-indigo-600 font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><FaPaperclip size={10} /> {lesson.documents.length}</span>}
+                    {testSet && <span className="text-xs bg-emerald-100 text-emerald-600 font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><FaBookOpen size={10} /> {testSet.title}</span>}
                     {lesson.videoStatus === 'READY' && <FaVideo title="Đã có video" className="text-emerald-500 ml-1" />}
                     {lesson.videoStatus === 'PROCESSING' && <FaSpinner className="text-blue-500 animate-spin ml-1" title="Đang xử lý HLS" />}
 
@@ -333,9 +309,9 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
 
             {/* --- BODY --- */}
             {expanded && (
-                <div className="p-5 bg-white border-t border-slate-100 space-y-6 animate-in fade-in duration-200">
+                <div className="p-5 bg-white border-t border-slate-100 space-y-6">
 
-                    {/* KHỐI 1: TEXT FORM (Giữ nguyên) */}
+                    {/* KHỐI 1: TEXT FORM */}
                     <div className="p-4 rounded-xl border border-slate-100 bg-slate-50">
                         <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-200/60">
                             <h4 className="font-bold text-slate-700 text-sm uppercase m-0">1. Thông tin bài học</h4>
@@ -367,7 +343,7 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
                         </div>
                     </div>
 
-                    {/* KHỐI 2: VIDEO (Giữ nguyên) */}
+                    {/* KHỐI 2: VIDEO */}
                     <div className={`p-4 rounded-xl border ${isNewLesson ? 'border-dashed border-slate-300 bg-slate-50 opacity-60 pointer-events-none' : 'border-blue-100 bg-blue-50/30'}`}>
                         <h4 className="font-bold text-slate-700 mb-2 text-sm uppercase">2. Video Bài Giảng</h4>
                         {isNewLesson && <p className="text-xs text-red-500 mb-4 font-semibold">⚠️ Cần "Lưu tạo mới" ở trên để có ID trước khi tải video.</p>}
@@ -393,102 +369,95 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
                                 </div>
                             </div>
                         )}
-                        {!videoUploading && lesson.videoStatus === 'PROCESSING' && (
-                            <div className="mt-4 text-sm font-bold text-orange-600 flex items-center gap-2 bg-orange-100 p-3 rounded-lg border border-orange-200">
-                                <FaSpinner className="animate-spin" /> Đang chuyển mã HLS trên máy chủ. Video sẽ xuất hiện tại đây sau ít phút (Vui lòng tải lại trang).
-                            </div>
-                        )}
                     </div>
 
-                    {/* 💥 KHỐI 3: QUẢN LÝ TÀI LIỆU (PDF/WORD) */}
+                    {/* KHỐI 3: TÀI LIỆU */}
                     <div className={`p-4 rounded-xl border ${isNewLesson ? 'border-dashed border-slate-300 bg-slate-50 opacity-60 pointer-events-none' : 'border-indigo-100 bg-indigo-50/30'}`}>
                         <h4 className="font-bold text-slate-700 mb-2 text-sm uppercase">3. Tài liệu đính kèm</h4>
-                        {isNewLesson && <p className="text-xs text-red-500 mb-4 font-semibold">⚠️ Cần "Lưu tạo mới" ở trên để có ID trước khi tải tài liệu.</p>}
-
-                        {/* Form Upload Tài liệu */}
                         <div className="flex flex-col md:flex-row gap-3 mb-5 items-end">
                             <div className="flex-1 w-full">
-                                <InputField
-                                    label="Tên tài liệu *"
-                                    value={docTitle}
-                                    onChange={(e) => setDocTitle(e.target.value)}
-                                    placeholder="VD: Slide bài giảng, Bài tập..."
-                                    icon={FaFileAlt}
-                                />
+                                <InputField label="Tên tài liệu *" value={docTitle} onChange={(e) => setDocTitle(e.target.value)} placeholder="VD: Slide bài giảng..." icon={FaFileAlt} />
                             </div>
                             <div className="flex-1 w-full">
-                                <label className="text-[11px] font-bold text-slate-700 ml-1 uppercase tracking-wide block mb-1">File (PDF/Word) *</label>
-                                <input
-                                    type="file"
-                                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                    onChange={handleSelectDoc}
-                                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 bg-white border border-slate-200 rounded-lg h-[42px]"
-                                    disabled={isDocUploading}
-                                />
+                                <input type="file" accept=".pdf,.doc,.docx" onChange={handleSelectDoc} className="block w-full text-sm text-slate-500 file:bg-indigo-50 file:text-indigo-700 bg-white border border-slate-200 rounded-lg h-[42px]" disabled={isDocUploading} />
                             </div>
-                            <Button
-                                type="button"
-                                onClick={handleUploadDocument}
-                                disabled={!docFile || !docTitle.trim() || isDocUploading || isNewLesson}
-                                className="w-full md:w-auto flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white !py-2.5 h-[42px]"
-                            >
+                            <Button type="button" onClick={handleUploadDocument} disabled={!docFile || !docTitle.trim() || isDocUploading || isNewLesson} className="w-full md:w-auto flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white h-[42px]">
                                 {isDocUploading ? <FaSpinner className="animate-spin" /> : <FaUpload />} Tải lên
                             </Button>
                         </div>
 
-                        {/* Danh sách Tài liệu đã up */}
-                        {isFetchingDocs ? (
-                            <div className="flex justify-center items-center py-6 text-indigo-500 text-sm font-bold bg-white border border-dashed border-indigo-200 rounded-lg">
-                                <FaSpinner className="animate-spin mr-2 text-lg" /> Đang tải danh sách tài liệu...
-                            </div>
-                        ) : lesson.documents && lesson.documents.length > 0 ? (
-                            <div className="space-y-2">
-                                <h5 className="text-xs font-bold text-slate-500 uppercase">Danh sách đã tải lên ({lesson.documents.length})</h5>
-                                {lesson.documents.map(doc => (
-                                    <div key={doc.id} className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg hover:border-indigo-300 transition-colors">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${doc.fileType === 'WORD' ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'}`}>
-                                                {doc.fileType === 'WORD' ? <FaFileWord size={14} /> : <FaFilePdf size={14} />}
-                                            </div>
-                                            <div>
-                                                <a
-                                                    href={doc.fileUrl}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    download={doc.title}
-                                                    className="text-sm font-bold text-slate-700 hover:text-indigo-600 transition-colors block"
-                                                >
-                                                    {doc.title}
-                                                </a>
-                                                <span className="text-[10px] text-slate-400 uppercase font-semibold">{doc.fileType || 'DOCUMENT'}</span>
-                                            </div>
-                                        </div>
-                                        <Button
-                                            type="button"
-                                            onClick={() => handleDeleteDocument(doc.id)}
-                                            className="!p-2 !bg-red-50 !text-red-500 hover:!bg-red-500 hover:!text-white rounded-md transition-colors"
-                                            title="Xóa tài liệu"
-                                        >
-                                            <FaTrash size={12} />
-                                        </Button>
+                        {lesson.documents?.map(doc => (
+                            <div key={doc.id} className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg mb-2">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${doc.fileType === 'WORD' ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'}`}>
+                                        {doc.fileType === 'WORD' ? <FaFileWord size={14} /> : <FaFilePdf size={14} />}
                                     </div>
-                                ))}
+                                    <span className="text-sm font-bold text-slate-700">{doc.title}</span>
+                                </div>
+                                <Button type="button" onClick={() => handleDeleteDocument(doc.id)} className="!p-2 !bg-red-50 !text-red-500 hover:!bg-red-500 hover:!text-white rounded-md transition-colors">
+                                    <FaTrash size={12} />
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* KHỐI 4: BÀI TẬP (CLICABLE UI) */}
+                    <div className={`p-4 rounded-xl border ${isNewLesson ? 'border-dashed border-slate-300 bg-slate-50 opacity-60 pointer-events-none' : 'border-emerald-100 bg-emerald-50/30'}`}>
+                        <div className="flex items-center justify-between mb-4">
+                            <h4 className="font-bold text-slate-700 text-sm uppercase">4. Bài Tập & Kiểm Tra</h4>
+                            {!testSet && (
+                                <Button size="sm" onClick={() => setIsAddTestSetOpen(true)} variant='primary'><FaPlus /> Thêm TestSet</Button>
+                            )}
+                        </div>
+
+                        {isFetchingTestSet ? (
+                            <div className="flex justify-center items-center py-4 text-emerald-500 text-sm font-bold bg-white border border-dashed border-emerald-200 rounded-lg">
+                                <FaSpinner className="animate-spin mr-2" /> Đang kiểm tra...
+                            </div>
+                        ) : testSet ? (
+                            <div 
+                                onClick={() => setIsTestSetDetailOpen(true)}
+                                className="bg-white p-4 border border-emerald-100 rounded-xl relative group cursor-pointer hover:border-emerald-500 hover:shadow-md transition-all active:scale-[0.98]"
+                            >
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center border border-emerald-100 shadow-sm group-hover:bg-emerald-100 transition-colors">
+                                        <FaBookOpen size={24} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <h5 className="font-bold text-slate-800 text-base leading-tight mb-1 group-hover:text-emerald-600 transition-colors">{testSet.title}</h5>
+                                            <span className="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Nhấn để quản lý</span>
+                                        </div>
+                                        <p className="text-xs text-slate-400 font-medium mb-1">{testSet.year} • {testSet.isPublic ? "Công khai" : "Riêng tư"}</p>
+                                        <p className="text-[13px] text-slate-600 line-clamp-2">{testSet.description}</p>
+                                    </div>
+                                </div>
                             </div>
                         ) : (
-                            <div className="text-center p-4 bg-white border border-dashed border-slate-200 rounded-lg text-slate-400 text-sm">
-                                Chưa có tài liệu nào đính kèm.
+                            <div className="text-center p-6 bg-white border border-dashed border-slate-200 rounded-lg text-slate-400 text-sm">
+                                Bài học này chưa có bộ câu hỏi ôn tập.
                             </div>
                         )}
                     </div>
+
+                    {/* Modals */}
+                    <AddTestSetModal
+                        isOpen={isAddTestSetOpen}
+                        onClose={() => setIsAddTestSetOpen(false)}
+                        lessonId={lesson.id}
+                        onSuccess={(newTs) => { setTestSet(newTs); setIsAddTestSetOpen(false); }}
+                    />
+                    <TestSetDetailModal
+                        isOpen={isTestSetDetailOpen}
+                        onClose={() => setIsTestSetDetailOpen(false)}
+                        testSet={testSet}
+                    />
                 </div>
             )}
         </div>
     );
 };
 
-// ==========================================
-// COMPONENT CHÍNH: LESSON LIST (Giữ nguyên của bạn)
-// ==========================================
 const LessonList = ({ lessons, onChange, courseId }) => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedLessonId, setSelectedLessonId] = useState(null);
@@ -496,13 +465,8 @@ const LessonList = ({ lessons, onChange, courseId }) => {
 
     const handleAddLesson = () => {
         const hasUnsavedLesson = lessons.some(l => String(l.id).startsWith('temp_'));
-        if (hasUnsavedLesson) {
-            alert("⚠️ Vui lòng LƯU THÔNG TIN bài học đang soạn hiện tại trước khi thêm bài mới!");
-            return;
-        }
-
-        const newLesson = { id: `temp_${Date.now()}`, title: '', content: '', isPreview: false, videoStatus: 'NONE', displayOrder: lessons.length + 1, documents: [] };
-        onChange([...lessons, newLesson]);
+        if (hasUnsavedLesson) return alert("Vui lòng lưu bài mới trước!");
+        onChange([...lessons, { id: `temp_${Date.now()}`, title: '', content: '', isPreview: false, videoStatus: 'NONE', displayOrder: lessons.length + 1, documents: [] }]);
     };
 
     const handleDeleteClick = (id) => { setSelectedLessonId(id); setIsDeleteModalOpen(true); };
@@ -511,21 +475,10 @@ const LessonList = ({ lessons, onChange, courseId }) => {
         if (selectedLessonId) {
             setIsDeleting(true);
             try {
-                if (String(selectedLessonId).startsWith('temp_')) {
-                    onChange(lessons.filter(l => l.id !== selectedLessonId));
-                } else {
-                    // Gọi API DELETE LESSON (Nếu có)
-                    // await lessonApi.delete(selectedLessonId);
-                    onChange(lessons.filter(l => l.id !== selectedLessonId));
-                }
-                setSelectedLessonId(null);
+                onChange(lessons.filter(l => l.id !== selectedLessonId));
                 setIsDeleteModalOpen(false);
-            } catch (error) {
-                console.error("Lỗi khi xóa bài học:", error);
-                alert("Không thể xóa bài học.");
-            } finally {
-                setIsDeleting(false);
-            }
+            } catch (error) { alert("Lỗi khi xóa bài học."); }
+            finally { setIsDeleting(false); }
         }
     };
 
@@ -550,12 +503,10 @@ const LessonList = ({ lessons, onChange, courseId }) => {
             </div>
             <ConfirmationModal 
                 isOpen={isDeleteModalOpen} 
-                onClose={() => !isDeleting && setIsDeleteModalOpen(false)} 
+                onClose={() => setIsDeleteModalOpen(false)} 
                 onConfirm={handleConfirmDelete} 
                 title="Xóa bài học này?" 
-                message="Hành động này sẽ xóa vĩnh viễn nội dung và video của bài học." 
-                confirmText="Xóa bài học" 
-                variant="danger" 
+                message="Hành động này sẽ xóa vĩnh viễn nội dung và video." 
                 isLoading={isDeleting}
             />
         </div>

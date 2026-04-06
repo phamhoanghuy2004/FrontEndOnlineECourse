@@ -95,6 +95,7 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/verify-otp" element={<VerifyOtpPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/payment/result" element={<PaymentResultPage />} />
             
               <Route path="/complete-profile" element={
                 <ProtectedRoute>
@@ -111,12 +112,6 @@ function App() {
               <Route path="/checkout/course/:id" element={
                 <ProtectedRoute>
                   <CourseCheckoutPage />
-                </ProtectedRoute>
-              } />
-
-              <Route path="/payment/result" element={
-                <ProtectedRoute>
-                  <PaymentResultPage />
                 </ProtectedRoute>
               } />
 

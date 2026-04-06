@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { ChatProvider } from "./context/ChatContext";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // --- Layouts ---
 import GuestLayout from "./components/layout/GuestLayout";   
@@ -30,6 +32,8 @@ import LevelTestPage from "./page/student/guest/LevelTestPage";
 import TestPracticePage from "./page/student/guest/TestPracticePage";
 import ProfilePage from "./page/student/guest/ProfilePage";
 import ForgotPasswordPage from "./page/auth/ForgotPasswordPage";
+import CourseCheckoutPage from "./page/student/guest/CourseCheckoutPage";
+import PaymentResultPage from "./page/student/guest/PaymentResultPage";
 
 // --- Learner Pages ---
 import LearnerHomePage from "./page/student/learner/LearnerHomePage";
@@ -56,6 +60,19 @@ function App() {
       <AuthProvider>
         <ChatProvider>
           <ScrollToTop />
+
+          <ToastContainer 
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
 
           <Routes>
             {/* =========================================================
@@ -90,6 +107,19 @@ function App() {
                   <ProfilePage />
                 </ProtectedRoute>
               } />
+
+              <Route path="/checkout/course/:id" element={
+                <ProtectedRoute>
+                  <CourseCheckoutPage />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/payment/result" element={
+                <ProtectedRoute>
+                  <PaymentResultPage />
+                </ProtectedRoute>
+              } />
+
             </Route>
 
             {/* =========================================================

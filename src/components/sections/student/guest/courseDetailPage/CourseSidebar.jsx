@@ -1,7 +1,10 @@
 import React from 'react';
 import { FaCheckCircle } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
 
 const CourseSidebar = ({ course, isRegistered }) => {
+    const navigate = useNavigate();
+
     // Format tiền VND
     const formatPrice = (price) => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -29,7 +32,7 @@ const CourseSidebar = ({ course, isRegistered }) => {
                     </div>
 
                     {!isRegistered ? (
-                        <button className="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg shadow-md hover:shadow-lg hover:bg-green-600 transition-all transform hover:-translate-y-1 block">
+                        <button onClick={() => navigate(`/checkout/course/${course.id}`)} className="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg shadow-md hover:shadow-lg hover:bg-green-600 transition-all transform hover:-translate-y-1 block">
                             Đăng ký học ngay
                         </button>
                     ) : (

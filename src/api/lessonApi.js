@@ -32,7 +32,11 @@ const lessonApi = {
     getDocuments: (lessonId) => {
         return axiosClient.get(`/lessons/${lessonId}/documents`);
     },
-  
+
+    delete: (id) => {
+        return axiosClient.delete(`/lessons/${id}`);
+    },
+
 };
 
 export default lessonApi;

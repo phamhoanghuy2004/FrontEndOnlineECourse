@@ -387,14 +387,22 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
                         </div>
 
                         {lesson.documents?.map(doc => (
-                            <div key={doc.id} className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg mb-2">
+                            <div 
+                                key={doc.id} 
+                                className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg mb-2 hover:border-indigo-400 hover:shadow-sm transition-all cursor-pointer group/doc"
+                                onClick={() => window.open(doc.fileUrl, '_blank')}
+                            >
                                 <div className="flex items-center gap-3">
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${doc.fileType === 'WORD' ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'}`}>
                                         {doc.fileType === 'WORD' ? <FaFileWord size={14} /> : <FaFilePdf size={14} />}
                                     </div>
-                                    <span className="text-sm font-bold text-slate-700">{doc.title}</span>
+                                    <span className="text-sm font-bold text-slate-700 group-hover/doc:text-indigo-600 transition-colors">{doc.title}</span>
                                 </div>
-                                <Button type="button" onClick={() => handleDeleteDocument(doc.id)} className="!p-2 !bg-red-50 !text-red-500 hover:!bg-red-500 hover:!text-white rounded-md transition-colors">
+                                <Button 
+                                    type="button" 
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteDocument(doc.id); }} 
+                                    className="!p-2 !bg-red-50 !text-red-500 hover:!bg-red-500 hover:!text-white rounded-md transition-colors"
+                                >
                                     <FaTrash size={12} />
                                 </Button>
                             </div>
@@ -475,9 +483,15 @@ const LessonList = ({ lessons, onChange, courseId }) => {
         if (selectedLessonId) {
             setIsDeleting(true);
             try {
+                // Nếu không phải là bài học tạm (đã lưu DB) thì gọi API xóa
+                if (!String(selectedLessonId).startsWith('temp_')) {
+                    await lessonApi.delete(selectedLessonId);
+                }
                 onChange(lessons.filter(l => l.id !== selectedLessonId));
                 setIsDeleteModalOpen(false);
-            } catch (error) { alert("Lỗi khi xóa bài học."); }
+            } catch (error) { 
+                alert(error.response?.data?.message || "Lỗi khi xóa bài học."); 
+            }
             finally { setIsDeleting(false); }
         }
     };

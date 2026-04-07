@@ -1,27 +1,88 @@
-import { useState, useEffect } from "react";
-import { navLinks } from "../../data/mockData";
+import { useState, useEffect, useMemo } from "react";
 import LOGO from "../../assets/LOGO.png";
-import { FaChevronDown, FaUserCircle } from "react-icons/fa";
+import { FaChevronDown } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import categoryApi from "../../api/categoryApi";
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
+    const [categories, setCategories] = useState([]);
     const { user } = useAuth();
 
+    // Xử lý hiệu ứng scroll
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50);
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    // 💥 KIỂM TRA ROLE BẰNG MẢNG: 
-    // Vì Backend lưu là "STUDENT" nhưng Frontend bạn dùng link "LEARNER", 
-    // tôi check cả 2 cho an toàn tuyệt đối.
+    // 💥 CALL API BẰNG CATEGORY API
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                // Gọi qua file trung gian, code cực kỳ gọn gàng
+                const response = await categoryApi.getAll();
+
+                // Nhờ interceptor của bạn, response lúc này chính là cục ApiResponse
+                if (response && response.data) {
+                    setCategories(response.data);
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải danh mục khóa học:", error);
+            }
+        };
+        fetchCategories();
+    }, []);
+
+
+    const navLinks = useMemo(() => {
+        const dynamicCourseDropdown = categories.map(cat => ({
+            name: cat.name,
+            href: `/courses?category=${cat.id}`
+        }));
+
+        return [
+            {
+                name: "Khóa học",
+                href: "/courses",
+                dropdown: dynamicCourseDropdown.length > 0 ? dynamicCourseDropdown : null,
+            },
+            {
+                name: "Đánh giá trình độ",
+                href: "/level-test",
+            },
+            {
+                name: "Luyện đề",
+                href: "/tests",
+                dropdown: [
+                    { name: "TOEIC", href: "/tests" },
+                    {
+                        name: "Luyện đề nâng cao",
+                        href: "/tests",
+                        dropdown: [
+                            { name: "TOEIC", href: "/tests" },
+                            { name: "IELTS", href: "/tests" },
+                        ],
+                    },
+                ],
+            },
+            {
+                name: "Blog",
+                href: "/blog",
+            },
+            {
+                name: "Liên hệ tư vấn",
+                href: "/consultation",
+            },
+        ];
+    }, [categories]);
+
+    // Kiểm tra Role
     const isStudent = user?.roles?.includes('STUDENT') || user?.roles?.includes('LEARNER');
 
-    // 💥 ĐỒNG BỘ DỮ LIỆU TỪ BACKEND DTO
-    const userAvatar = user?.avatarUrl || user?.avatar; 
+    // Đồng bộ DTO
+    const userAvatar = user?.avatarUrl || user?.avatar;
     const userName = user?.fullName || user?.name || user?.username;
 
     return (
@@ -34,7 +95,7 @@ const Navbar = () => {
                 <Link to="/" className="flex items-center h-18">
                     <img
                         src={LOGO}
-                        alt="EduSkill Logo"
+                        alt="Echill Logo"
                         className="w-auto h-full object-contain"
                     />
                 </Link>
@@ -50,7 +111,7 @@ const Navbar = () => {
                                 {link.name}
                                 {link.dropdown && <FaChevronDown className="text-xs transition-transform group-hover:rotate-180" />}
                             </Link>
-                            
+
                             {/* DROPDOWN AREA */}
                             {link.dropdown && (
                                 <div className="absolute top-full left-0 pt-4 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:-translate-y-2 translate-y-0 z-50">
@@ -74,13 +135,10 @@ const Navbar = () => {
                 {/* --- RIGHT SIDE: AUTH BUTTONS OR USER PROFILE --- */}
                 <div className="hidden md:flex items-center gap-4">
                     {user ? (
-                        /* ================== TRƯỜNG HỢP ĐÃ ĐĂNG NHẬP ================== */
                         <div className="flex items-center gap-4">
-
-                            {/* 💥 Áp dụng logic kiểm tra Role mới */}
                             {isStudent && (
                                 <Link
-                                    to={`/learner/${user.id}`} 
+                                    to={`/learner/${user.id}`}
                                     className="bg-primary text-white px-5 py-2 rounded-full font-semibold shadow-md hover:bg-green-600 hover:shadow-lg transition-all transform hover:-translate-y-0.5"
                                 >
                                     Học ngay
@@ -93,7 +151,6 @@ const Navbar = () => {
                                 className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-100 shadow-sm cursor-pointer hover:border-primary transition-colors"
                                 title={userName}
                             >
-                                {/* 💥 Lấy đúng trường avatarUrl từ Backend */}
                                 {userAvatar ? (
                                     <img
                                         src={userAvatar}
@@ -102,8 +159,8 @@ const Navbar = () => {
                                     />
                                 ) : (
                                     <div className="w-full h-full bg-slate-100 flex items-center justify-center overflow-hidden">
-                                        <img 
-                                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userName || 'User')}&background=random&color=fff`} 
+                                        <img
+                                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userName || 'User')}&background=random&color=fff`}
                                             alt={userName}
                                             className="w-full h-full object-cover"
                                         />
@@ -112,7 +169,6 @@ const Navbar = () => {
                             </Link>
                         </div>
                     ) : (
-                        /* ================== TRƯỜNG HỢP KHÁCH (GUEST) ================== */
                         <>
                             <Link
                                 to="/register"

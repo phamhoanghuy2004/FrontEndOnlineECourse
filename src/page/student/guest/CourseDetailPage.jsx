@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
-import CourseHeader from "../../../components/sections/student/guest/courseDetailPage/CourseHeader";
 import CourseHero from "../../../components/sections/student/guest/courseDetailPage/CourseHero";
-import InstructorInfo from "../../../components/sections/student/guest/courseDetailPage/InstructorInfo";
 import CourseSidebar from "../../../components/sections/student/guest/courseDetailPage/CourseSidebar";
 import CourseContent from "../../../components/sections/student/guest/courseDetailPage/CourseContent";
 import CourseTOC from "../../../components/sections/student/guest/courseDetailPage/CourseTOC";
 import { useAuth } from "../../../hooks/useAuth"; 
 import courseApi from "../../../api/courseApi"; 
+import CourseDescription from "../../../components/sections/student/guest/courseDetailPage/CourseDescription";
 
 const CourseDetailPage = () => {
     const { id } = useParams();
@@ -56,7 +55,6 @@ const CourseDetailPage = () => {
 
     return (
         <div className="bg-slate-50 min-h-screen pb-20 pt-24 font-sans text-gray-800">
-            <CourseHeader course={course} isRegistered={isRegistered} />
 
             <div className="container mx-auto px-4 lg:px-8 max-w-[1536px] mt-8">
                 
@@ -75,7 +73,7 @@ const CourseDetailPage = () => {
                     */}
                     <div className={`${hasLessons ? 'lg:col-span-7' : 'lg:col-span-9'} space-y-8 transition-all duration-300`}>
                         <CourseHero course={course} />
-                        <InstructorInfo course={course} user={user} isRegistered={isRegistered} />
+                        <CourseDescription description={course.description} />
                         <CourseContent lessons={course.lessons} isRegistered={isRegistered} />
                     </div>
 

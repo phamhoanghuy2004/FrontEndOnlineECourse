@@ -1,6 +1,8 @@
 import { FaSave, FaImage, FaLayerGroup, FaTags, FaAlignLeft, FaDollarSign, FaArrowLeft, FaCloudUploadAlt, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
 import Button from '../../common/Button';
 import InputField from '../../common/InputField';
@@ -22,6 +24,16 @@ const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
         categoryId: '',
         lessons: []
     });
+
+    const modules = {
+        toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            ['link', 'image'],
+            ['clean'] // Nút xóa format
+        ]
+    };
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -170,21 +182,21 @@ const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
                                 Mô tả khóa học
                             </label>
                             <div className="relative group">
-                                <FaAlignLeft className="absolute left-3 top-3 text-slate-400 text-xs" />
-                                <textarea
-                                    name="description"
-                                    rows={4}
-                                    value={formData.description}
-                                    onChange={handleChange}
-                                    className="w-full pl-9 pr-3 py-3 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all placeholder:text-slate-400 font-medium text-slate-700"
-                                    placeholder="Mô tả nội dung, mục tiêu khóa học..."
-                                />
+                                <div className="bg-white rounded-lg">
+                                    <ReactQuill
+                                        theme="snow"
+                                        value={formData.description}
+                                        onChange={(htmlValue) => setFormData(prev => ({ ...prev, description: htmlValue }))}
+                                        modules={modules}
+                                        className="h-64 mb-12 pb-12"
+                                    />
+                                </div>
                             </div>
                         </div>
 
                         <div className="pt-4 mt-2 border-t border-slate-100 flex justify-end">
-                            <Button 
-                                type="submit" 
+                            <Button
+                                type="submit"
                                 disabled={isSubmitting}
                                 className="!bg-emerald-600 !shadow-emerald-500/30 hover:!bg-emerald-700 !px-6"
                             >

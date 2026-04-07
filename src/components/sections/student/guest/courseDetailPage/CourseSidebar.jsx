@@ -54,7 +54,7 @@ const CourseSidebar = ({ course, isRegistered }) => {
                     </div>
                     <div className="flex items-center gap-3 text-sm text-slate-700 font-medium">
                         <FaCheckCircle className="text-green-500 flex-shrink-0" size={18} />
-                        <span>Cấp chứng chỉ hoàn thành</span>
+                        <span>Đạt target khi hoàn thành</span>
                     </div>
                 </div>
             </div>

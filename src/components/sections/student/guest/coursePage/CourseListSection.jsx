@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FilterBar from '../../../../common/FilterBar';
 import SectionHeader from '../../../../common/SectionHeader';
@@ -9,8 +9,13 @@ import { fadeInBottom } from '../../../../../constants/motionVariants';
 import courseApi from '../../../../../api/courseApi';
 import categoryApi from '../../../../../api/categoryApi';
 import { FaSpinner, FaChevronLeft, FaChevronRight } from 'react-icons/fa'; // 💥 Thêm Icon cho Phân trang
+import { useSearchParams } from 'react-router-dom';
 
 const CourseListSection = () => {
+    // Dùng hook để lấy query param từ URL
+    const [searchParams] = useSearchParams();
+    const sectionRef = useRef(null);
+
     // --- STATE QUẢN LÝ UI & DATA GỐC ---
     const [activeFilter, setActiveFilter] = useState("ALL");
     const [showAdvanced, setShowAdvanced] = useState(false);
@@ -20,7 +25,7 @@ const CourseListSection = () => {
     const [categories, setCategories] = useState([]); 
     const [filterOptions, setFilterOptions] = useState(["ALL"]); 
 
-    // 💥 STATE PHÂN TRANG
+    // STATE PHÂN TRANG
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
@@ -41,13 +46,24 @@ const CourseListSection = () => {
                 if (catData.length > 0) {
                     setCategories(catData);
                     setFilterOptions(["ALL", ...catData.map(c => c.name)]);
+
+                    const categoryParamId = searchParams.get('category');
+                    if (categoryParamId) {
+                        const matchingCat = catData.find(c => c.id.toString() === categoryParamId);
+                        if (matchingCat) {
+                            setActiveFilter(matchingCat.name); 
+                            setTimeout(() => {
+                                sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }, 300); 
+                        }
+                    }
                 }
             } catch (error) {
                 console.error("Lỗi tải danh mục:", error);
             }
         };
         fetchCategories();
-    }, []);
+    }, [searchParams]);
 
     // 2. GỌI API SEARCH KHÓA HỌC (Lắng nghe Filter + Pagination)
     useEffect(() => {
@@ -203,7 +219,7 @@ const CourseListSection = () => {
     };
 
     return (
-        <section id="course-list" className="py-16 bg-slate-50 min-h-screen">
+        <section ref={sectionRef} id="course-list" className="py-16 bg-slate-50 min-h-screen">
             <div className="container mx-auto px-6">
 
                 {/* 1. FILTER BAR */}

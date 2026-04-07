@@ -28,6 +28,7 @@ const AddTestSetModal = ({ isOpen, onClose, lessonId, onSuccess }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        e.stopPropagation();
         setIsSaving(true);
         try {
             const response = await testApi.createTestSet(formData);

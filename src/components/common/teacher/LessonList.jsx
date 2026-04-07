@@ -300,7 +300,7 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
                     {lesson.videoStatus === 'READY' && <FaVideo title="Đã có video" className="text-emerald-500 ml-1" />}
                     {lesson.videoStatus === 'PROCESSING' && <FaSpinner className="text-blue-500 animate-spin ml-1" title="Đang xử lý HLS" />}
 
-                    <button onClick={(e) => { e.stopPropagation(); onDelete(lesson.id); }} className="p-1.5 hover:text-red-500 hover:bg-red-50 rounded-md transition ml-2">
+                    <button type = "button" onClick={(e) => { e.stopPropagation(); onDelete(lesson.id); }} className="p-1.5 hover:text-red-500 hover:bg-red-50 rounded-md transition ml-2">
                         <FaTrash size={12} />
                     </button>
                     {expanded ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}

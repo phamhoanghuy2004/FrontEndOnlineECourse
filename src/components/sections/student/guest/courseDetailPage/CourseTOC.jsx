@@ -15,7 +15,7 @@ const CourseTOC = ({ lessons }) => {
 
     return (
         <div className="sticky top-28 bg-white p-5 rounded-2xl shadow-sm border border-gray-100 max-h-[80vh] overflow-y-auto custom-scrollbar">
-            <h3 className="font-bold text-lg text-gray-900 mb-4 border-b pb-2">Mục lục bài học</h3>
+            <h3 className="font-bold text-lg text-gray-900 mb-4 border-b pb-2">Danh sách bài học</h3>
             <ul className="space-y-3">
                 {lessons.map((lesson, index) => (
                     <li 

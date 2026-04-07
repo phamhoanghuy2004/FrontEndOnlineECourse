@@ -206,10 +206,13 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
             uploadData.append('timestamp', ticket.timestamp);
             uploadData.append('signature', ticket.signature);
             uploadData.append('folder', ticket.folder);
-            uploadData.append('public_id', ticket.publicId);
-            uploadData.append('notification_url', ticket.notificationUrl);
+            
+            uploadData.append('public_id', ticket.publicId || ticket.public_id);
+            uploadData.append('notification_url', ticket.notificationUrl || ticket.notification_url);
             uploadData.append('eager', ticket.eager);
-            uploadData.append('eager_async', ticket.eagerAsync);
+            
+            const eagerAsyncVal = ticket.eagerAsync !== undefined ? ticket.eagerAsync : ticket.eager_async;
+            uploadData.append('eager_async', eagerAsyncVal);
 
             const cloudUrl = `https://api.cloudinary.com/v1_1/${ticket.cloudName || ticket.cloud_name}/video/upload`;
             const cloudResponse = await axios.post(cloudUrl, uploadData, {

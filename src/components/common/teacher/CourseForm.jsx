@@ -1,4 +1,4 @@
-import { FaSave, FaImage, FaLayerGroup, FaTags, FaAlignLeft, FaDollarSign, FaArrowLeft, FaCloudUploadAlt, FaTrash } from 'react-icons/fa';
+import { FaSave, FaLayerGroup, FaTags, FaDollarSign, FaArrowLeft, FaCloudUploadAlt, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import ReactQuill from 'react-quill-new';

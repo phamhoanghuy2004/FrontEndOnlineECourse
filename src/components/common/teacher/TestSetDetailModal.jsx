@@ -219,54 +219,62 @@ const TestSetDetailModal = ({ isOpen, onClose, testSet: initialTestSet }) => {
                                 </div>
                             ) : tests.length > 0 ? (
                                 <div className="grid gap-4">
-                                    {tests.map(test => (
-                                        <div 
-                                            key={test.id} 
-                                            className="group p-5 border border-slate-100 bg-white rounded-3xl hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/10 transition-all cursor-pointer relative overflow-hidden"
-                                            onClick={() => setSelectedTestId(test.id)}
-                                        >
-                                            <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-100 group-hover:bg-indigo-500 transition-colors"></div>
-                                            <div className="flex items-center justify-between ml-2">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 rounded-2xl bg-slate-50 group-hover:bg-indigo-50 flex items-center justify-center text-indigo-500 transition-colors">
-                                                        <FaListOl size={18} />
+                                    {tests.map(test => {
+                                        // 👉 THAY ĐỔI CHÍNH Ở ĐÂY: Đếm số câu hỏi xuyên qua các sections
+                                        const totalQuestionsCount = (test.sections || []).reduce((total, section) => {
+                                            return total + (section.questions?.length || 0);
+                                        }, 0);
+
+                                        return (
+                                            <div 
+                                                key={test.id} 
+                                                className="group p-5 border border-slate-100 bg-white rounded-3xl hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/10 transition-all cursor-pointer relative overflow-hidden"
+                                                onClick={() => setSelectedTestId(test.id)}
+                                            >
+                                                <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-100 group-hover:bg-indigo-500 transition-colors"></div>
+                                                <div className="flex items-center justify-between ml-2">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-12 h-12 rounded-2xl bg-slate-50 group-hover:bg-indigo-50 flex items-center justify-center text-indigo-500 transition-colors">
+                                                            <FaListOl size={18} />
+                                                        </div>
+                                                        <div>
+                                                            <h5 className="font-bold text-slate-800 text-base mb-1 group-hover:text-indigo-600 transition-colors">{test.title}</h5>
+                                                            <div className="flex items-center gap-4">
+                                                                <span className="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1.5">
+                                                                    <FaClock className="text-indigo-400/50" /> {test.durationMinutes} Phút
+                                                                </span>
+                                                                <span className="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1.5">
+                                                                    {/* 👉 HIỂN THỊ SỐ CÂU HỎI ĐÃ ĐƯỢC TÍNH TOÁN */}
+                                                                    <FaListOl className="text-indigo-400/50" /> {totalQuestionsCount} Câu hỏi
+                                                                </span>
+                                                                <span className="text-[10px] text-emerald-600 font-black uppercase flex items-center gap-1.5 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100">
+                                                                    Target: {test.passScore}%
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <h5 className="font-bold text-slate-800 text-base mb-1 group-hover:text-indigo-600 transition-colors">{test.title}</h5>
-                                                        <div className="flex items-center gap-4">
-                                                            <span className="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1.5">
-                                                                <FaClock className="text-indigo-400/50" /> {test.durationMinutes} Phút
-                                                            </span>
-                                                            <span className="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1.5">
-                                                                <FaListOl className="text-indigo-400/50" /> {test.questions?.length || 0} Câu hỏi
-                                                            </span>
-                                                            <span className="text-[10px] text-emerald-600 font-black uppercase flex items-center gap-1.5 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100">
-                                                                Target: {test.passScore}%
-                                                            </span>
+                                                    
+                                                    <div className="flex items-center gap-2">
+                                                        <Button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteTest(test.id);
+                                                            }}
+                                                            disabled={isDeleting === test.id}
+                                                            className="!p-3 !bg-slate-50 !text-slate-300 hover:!bg-red-50 hover:!text-red-500 rounded-2xl transition-all opacity-0 group-hover:opacity-100"
+                                                            title="Xóa bài Test"
+                                                        >
+                                                            {isDeleting === test.id ? <FaSpinner className="animate-spin" /> : <FaTrash size={14} />}
+                                                        </Button>
+                                                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 group-hover:text-indigo-500 transition-all group-hover:translate-x-1">
+                                                            <FaArrowLeft className="rotate-180" size={14} />
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
-                                                <div className="flex items-center gap-2">
-                                                    <Button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDeleteTest(test.id);
-                                                        }}
-                                                        disabled={isDeleting === test.id}
-                                                        className="!p-3 !bg-slate-50 !text-slate-300 hover:!bg-red-50 hover:!text-red-500 rounded-2xl transition-all opacity-0 group-hover:opacity-100"
-                                                        title="Xóa bài Test"
-                                                    >
-                                                        {isDeleting === test.id ? <FaSpinner className="animate-spin" /> : <FaTrash size={14} />}
-                                                    </Button>
-                                                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 group-hover:text-indigo-500 transition-all group-hover:translate-x-1">
-                                                        <FaArrowLeft className="rotate-180" size={14} />
-                                                    </div>
-                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             ) : (
                                 <div className="text-center py-24 px-10 border-2 border-dashed border-slate-100 rounded-[40px] space-y-6 bg-slate-50/50">

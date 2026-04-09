@@ -9,6 +9,10 @@ const testApi = {
         return axiosClient.get(`/test-sets/lesson/${lessonId}`);
     },
 
+    getTestSetWithHistory: (id) => {
+        return axiosClient.get(`/test-sets/${id}/history`);
+    },
+
     createTest: (formData) => {
         const url = '/quizzes';
         return axiosClient.post(url, formData, {

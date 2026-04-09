@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { FaPlayCircle, FaFileAlt, FaLock, FaChevronDown, FaChevronUp, FaListUl, FaClipboardCheck, FaPen } from "react-icons/fa"; // 💥 Import thêm Icon bài Test
 import DOMPurify from 'dompurify';
+import { useNavigate } from 'react-router-dom';
 
 const formatDuration = (seconds) => {
     if (!seconds) return "00:00";
@@ -13,13 +14,11 @@ const formatDuration = (seconds) => {
 const LessonItem = ({ lesson, isRegistered }) => {
     const canWatch = isRegistered || lesson.isPreview;
     const [isExpanded, setIsExpanded] = useState(false);
+    const navigate = useNavigate();
 
-    // Xử lý khi click vào nút làm bài test
-    const handleDoTest = () => {
+   const handleDoTest = () => {
         if (!lesson.testSetId) return;
-        // Chuyển hướng sang trang làm test hoặc mở modal tùy logic của bạn
-        alert(`Sẽ chuyển hướng tới bài Test ID: ${lesson.testSetId}`);
-        // Ví dụ: navigate(`/course/learning/test/${lesson.testSetId}`);
+        navigate(`/test-sets/${lesson.testSetId}`);
     };
 
     return (

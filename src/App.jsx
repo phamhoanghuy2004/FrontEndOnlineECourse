@@ -6,9 +6,9 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // --- Layouts ---
-import GuestLayout from "./components/layout/GuestLayout";   
-import LearnerLayout from "./components/layout/LearnerLayout"; 
-import TeacherLayout from "./components/layout/TeacherLayout"; 
+import GuestLayout from "./components/layout/GuestLayout";
+import LearnerLayout from "./components/layout/LearnerLayout";
+import TeacherLayout from "./components/layout/TeacherLayout";
 
 // --- Common Components ---
 import ScrollToTop from "./components/common/ScrollToTop";
@@ -34,6 +34,7 @@ import ProfilePage from "./page/student/guest/ProfilePage";
 import ForgotPasswordPage from "./page/auth/ForgotPasswordPage";
 import CourseCheckoutPage from "./page/student/guest/CourseCheckoutPage";
 import PaymentResultPage from "./page/student/guest/PaymentResultPage";
+import TestSetDetail from "./page/student/guest/TestSetDetail";
 
 // --- Learner Pages ---
 import LearnerHomePage from "./page/student/learner/LearnerHomePage";
@@ -53,6 +54,7 @@ import TeacherBlogPage from "./page/teacher/TeacherBlogPage";
 import BlogEditorPage from "./page/teacher/BlogEditorPage";
 import TeacherProfilePage from "./page/teacher/TeacherProfilePage";
 
+
 function App() {
   return (
     // 💥 FIX: ĐƯA <Router> RA NGOÀI CÙNG ĐỂ BAO BỌC TẤT CẢ CÁC PROVIDER
@@ -61,7 +63,7 @@ function App() {
         <ChatProvider>
           <ScrollToTop />
 
-          <ToastContainer 
+          <ToastContainer
             position="top-right"
             autoClose={3000}
             hideProgressBar={false}
@@ -96,7 +98,7 @@ function App() {
               <Route path="/verify-otp" element={<VerifyOtpPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/payment/result" element={<PaymentResultPage />} />
-            
+
               <Route path="/complete-profile" element={
                 <ProtectedRoute>
                   <CompleteProfilePage />
@@ -112,6 +114,13 @@ function App() {
               <Route path="/checkout/course/:id" element={
                 <ProtectedRoute>
                   <CourseCheckoutPage />
+                </ProtectedRoute>
+              } />
+
+              {/* 💥 ROUTE MỚI: XEM CHI TIẾT BỘ ĐỀ VÀ LỊCH SỬ LÀM BÀI */}
+              <Route path="/test-sets/:id" element={
+                <ProtectedRoute>
+                  <TestSetDetail />
                 </ProtectedRoute>
               } />
 

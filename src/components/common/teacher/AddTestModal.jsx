@@ -9,7 +9,8 @@ const AddTestModal = ({ isOpen, onClose, testSetId, onSuccess }) => {
         title: '',
         durationMinutes: 45,
         passScore: 50.0,
-        testSetId: testSetId
+        testSetId: testSetId,
+        type: "PRACTICE"
     });
     const [file, setFile] = useState(null);
     const [isSaving, setIsSaving] = useState(false);

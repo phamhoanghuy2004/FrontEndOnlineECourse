@@ -15,6 +15,8 @@ import { Client } from '@stomp/stompjs';
 import testApi from '../../../api/testApi';
 import AddTestSetModal from './AddTestSetModal';
 import TestSetDetailModal from './TestSetDetailModal';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
 // ==========================================
 // COMPONENT CON: QUẢN LÝ TỪNG BÀI HỌC
@@ -25,6 +27,16 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
     const itemRef = useRef(null);
     const videoRef = useRef(null);
     const stompClientRef = useRef(null);
+
+    const modules = {
+        toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            ['link', 'image'],
+            ['clean'] // Nút xóa format
+        ]
+    };
 
     // --- STATES ---
     const [formData, setFormData] = useState({
@@ -201,16 +213,17 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
             const sigResponse = await lessonApi.getVideoUploadSignature(lesson.id);
             const ticket = sigResponse.data?.data || sigResponse.data;
             const uploadData = new FormData();
+
+            // GIỮ NGUYÊN KHÔNG ĐỤNG CHẠM
             uploadData.append('file', videoFile);
             uploadData.append('api_key', ticket.apiKey || ticket.api_key);
             uploadData.append('timestamp', ticket.timestamp);
             uploadData.append('signature', ticket.signature);
             uploadData.append('folder', ticket.folder);
-            
             uploadData.append('public_id', ticket.publicId || ticket.public_id);
             uploadData.append('notification_url', ticket.notificationUrl || ticket.notification_url);
             uploadData.append('eager', ticket.eager);
-            
+
             const eagerAsyncVal = ticket.eagerAsync !== undefined ? ticket.eagerAsync : ticket.eager_async;
             uploadData.append('eager_async', eagerAsyncVal);
 
@@ -220,17 +233,26 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
             });
 
             const cloudinaryData = cloudResponse.data;
+
+            // 💥 FIX Ở ĐÂY: Trích xuất duration từ Cloudinary và làm tròn thành số nguyên
+            const durationSeconds = cloudinaryData.duration ? Math.round(cloudinaryData.duration) : 0;
+
+            // 💥 Kẹp thêm durationSeconds đẩy xuống Backend
             await lessonApi.saveVideoDraft(lesson.id, {
                 publicVideoId: cloudinaryData.public_id,
-                rawUrl: cloudinaryData.secure_url
+                rawUrl: cloudinaryData.secure_url,
+                durationSeconds: durationSeconds
             });
 
+            // 💥 Cập nhật luôn vào State Local của Frontend cho đồng bộ (để UI có thể hiển thị nếu cần)
             onUpdateLocal(lesson.id, {
                 ...lesson,
                 videoStatus: 'PROCESSING',
                 publicVideoId: cloudinaryData.public_id,
-                rawUrl: cloudinaryData.secure_url
+                rawUrl: cloudinaryData.secure_url,
+                durationSeconds: durationSeconds
             });
+
             alert("Upload video thành công!");
         } catch (error) {
             alert(`Upload thất bại! ${error.message}`);
@@ -303,7 +325,7 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
                     {lesson.videoStatus === 'READY' && <FaVideo title="Đã có video" className="text-emerald-500 ml-1" />}
                     {lesson.videoStatus === 'PROCESSING' && <FaSpinner className="text-blue-500 animate-spin ml-1" title="Đang xử lý HLS" />}
 
-                    <button type = "button" onClick={(e) => { e.stopPropagation(); onDelete(lesson.id); }} className="p-1.5 hover:text-red-500 hover:bg-red-50 rounded-md transition ml-2">
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onDelete(lesson.id); }} className="p-1.5 hover:text-red-500 hover:bg-red-50 rounded-md transition ml-2">
                         <FaTrash size={12} />
                     </button>
                     {expanded ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
@@ -342,7 +364,17 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
 
                         <div>
                             <label className="text-[11px] font-bold text-slate-700 ml-1 uppercase tracking-wide block mb-1">Nội dung / Mô tả *</label>
-                            <textarea value={formData.content} onChange={(e) => handleTextChange('content', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-slate-700 text-sm resize-none" rows="3"></textarea>
+                            <div className="relative group">
+                                <div className="bg-white rounded-lg">
+                                    <ReactQuill
+                                        theme="snow"
+                                        value={formData.content}
+                                        onChange={(htmlValue) => handleTextChange('content', htmlValue)}
+                                        modules={modules}
+                                        className="h-64 mb-12 pb-12"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -426,7 +458,7 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
                                 <FaSpinner className="animate-spin mr-2" /> Đang kiểm tra...
                             </div>
                         ) : testSet ? (
-                            <div 
+                            <div
                                 onClick={() => setIsTestSetDetailOpen(true)}
                                 className="bg-white p-4 border border-emerald-100 rounded-xl relative group cursor-pointer hover:border-emerald-500 hover:shadow-md transition-all active:scale-[0.98]"
                             >
@@ -518,12 +550,12 @@ const LessonList = ({ lessons, onChange, courseId }) => {
                     <LessonItem key={lesson.id} index={index} lesson={lesson} courseId={courseId} onUpdateLocal={handleUpdateSingleLesson} onDelete={handleDeleteClick} />
                 ))}
             </div>
-            <ConfirmationModal 
-                isOpen={isDeleteModalOpen} 
-                onClose={() => setIsDeleteModalOpen(false)} 
-                onConfirm={handleConfirmDelete} 
-                title="Xóa bài học này?" 
-                message="Hành động này sẽ xóa vĩnh viễn nội dung và video." 
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Xóa bài học này?"
+                message="Hành động này sẽ xóa vĩnh viễn nội dung và video."
                 isLoading={isDeleting}
             />
         </div>

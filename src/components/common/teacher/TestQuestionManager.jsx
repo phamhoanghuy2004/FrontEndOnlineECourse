@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { 
+import {
     FaArrowLeft, FaSave, FaTrash, FaCheck, FaTimes, FaEdit, FaClock,
     FaPlus, FaLightbulb, FaTag, FaBrain, FaRegCircle, FaCheckCircle,
-    FaSpinner
+    FaSpinner, FaBookOpen
 } from 'react-icons/fa';
 import Button from '../Button';
 import testApi from '../../../api/testApi';
@@ -11,10 +11,9 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
     const [test, setTest] = useState(null);
     const [questions, setQuestions] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(null); // stores questionId being saved
-    const [editStates, setEditStates] = useState({}); // stores local changes for each question
+    const [isSaving, setIsSaving] = useState(null);
+    const [editStates, setEditStates] = useState({});
 
-    // Edit Test Info State
     const [isEditingInfo, setIsEditingInfo] = useState(false);
     const [editTestInfo, setEditTestInfo] = useState({
         title: '',
@@ -34,17 +33,23 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
         try {
             const response = await testApi.getTestById(testId);
             const data = response.data?.data || response.data;
+
+            // LẤY CÂU HỎI TỪ SECTIONS VÀ TRẢI PHẲNG (FLATTEN) RA
+            const allQuestions = (data.sections || []).flatMap(section => section.questions || []);
+
+            // Sắp xếp lại theo orderIndex cho chắc chắn
+            allQuestions.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+
             setTest(data);
-            setQuestions(data.questions || []);
+            setQuestions(allQuestions);
             setEditTestInfo({
                 title: data.title || '',
                 durationMinutes: data.durationMinutes || 0,
                 passScore: data.passScore || 0
             });
-            
-            // Initialize edit states
+
             const initialEditStates = {};
-            (data.questions || []).forEach(q => {
+            allQuestions.forEach(q => {
                 initialEditStates[q.id] = { ...q };
             });
             setEditStates(initialEditStates);
@@ -86,8 +91,7 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
         const question = editStates[questionId];
         const newAnswers = [...question.answers];
         newAnswers[index] = { ...newAnswers[index], [field]: value };
-        
-        // If setting one as correct, unset others
+
         if (field === 'isCorrect' && value === true) {
             newAnswers.forEach((ans, i) => {
                 if (i !== index) ans.isCorrect = false;
@@ -107,12 +111,12 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
                 skillType: questionData.skillType,
                 tagName: questionData.tagName,
                 answers: questionData.answers.map(a => ({
-                    id: a.id,        // gửi id để backend cập nhật đúng dòng
+                    id: a.id,
                     content: a.content,
                     isCorrect: a.isCorrect
                 }))
             });
-            // Update local questions list to reflect saved state (reset "dirty" status)
+
             setQuestions(prev => prev.map(q => q.id === questionId ? { ...questionData } : q));
             if (onUpdateSuccess) onUpdateSuccess();
             alert("Đã lưu thay đổi câu hỏi!");
@@ -139,7 +143,7 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
             <div className="flex flex-col bg-white border-b border-slate-100 sticky top-0 z-10 shadow-sm">
                 <div className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-4">
-                        <button 
+                        <button
                             type="button"
                             onClick={onBack}
                             className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500"
@@ -148,32 +152,32 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
                         </button>
                         {isEditingInfo ? (
                             <div className="flex flex-col gap-2 min-w-[300px]">
-                                <input 
+                                <input
                                     className="text-lg font-bold text-slate-800 border-b border-indigo-200 outline-none focus:border-indigo-500 bg-transparent"
                                     value={editTestInfo.title}
-                                    onChange={(e) => setEditTestInfo({...editTestInfo, title: e.target.value})}
+                                    onChange={(e) => setEditTestInfo({ ...editTestInfo, title: e.target.value })}
                                     onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                                     placeholder="Tên bài test"
                                 />
                                 <div className="flex items-center gap-4">
                                     <div className="flex items-center gap-2">
                                         <FaClock className="text-slate-400" size={12} />
-                                        <input 
+                                        <input
                                             type="number"
                                             className="w-16 text-xs font-bold text-slate-600 outline-none border-b border-slate-200"
                                             value={editTestInfo.durationMinutes}
-                                            onChange={(e) => setEditTestInfo({...editTestInfo, durationMinutes: parseInt(e.target.value)})}
+                                            onChange={(e) => setEditTestInfo({ ...editTestInfo, durationMinutes: parseInt(e.target.value) })}
                                             onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                                         />
                                         <span className="text-[10px] text-slate-400 uppercase font-bold">Phút</span>
                                     </div>
                                     <div className="flex items-center gap-2 border-l border-slate-100 pl-4">
                                         <FaCheckCircle className="text-slate-400" size={12} />
-                                        <input 
+                                        <input
                                             type="number"
                                             className="w-16 text-xs font-bold text-slate-600 outline-none border-b border-slate-200"
                                             value={editTestInfo.passScore}
-                                            onChange={(e) => setEditTestInfo({...editTestInfo, passScore: parseFloat(e.target.value)})}
+                                            onChange={(e) => setEditTestInfo({ ...editTestInfo, passScore: parseFloat(e.target.value) })}
                                             onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                                         />
                                         <span className="text-[10px] text-slate-400 uppercase font-bold">%</span>
@@ -184,7 +188,7 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
                             <div>
                                 <div className="flex items-center gap-3">
                                     <h3 className="font-bold text-slate-800 text-lg leading-none">{test?.title}</h3>
-                                    <button 
+                                    <button
                                         type="button"
                                         onClick={() => setIsEditingInfo(true)}
                                         className="p-1.5 text-slate-300 hover:text-indigo-500 transition-colors"
@@ -208,15 +212,15 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
                     </div>
                     {isEditingInfo && (
                         <div className="flex items-center gap-2">
-                            <button 
+                            <button
                                 type="button"
                                 onClick={() => setIsEditingInfo(false)}
                                 className="px-4 py-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
                             >
                                 Hủy
                             </button>
-                            <Button 
-                                onClick={handleSaveTestInfo} 
+                            <Button
+                                onClick={handleSaveTestInfo}
                                 disabled={isSavingInfo}
                                 className="!py-1.5 !px-4 !text-xs"
                             >
@@ -250,12 +254,11 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
                                             Chưa lưu
                                         </span>
                                     )}
-                                    <Button 
+                                    <Button
                                         onClick={() => handleSaveQuestion(q.id)}
                                         disabled={isSaving === q.id || !isDirty}
-                                        className={`!py-1.5 !px-3 !text-xs flex items-center gap-2 ${
-                                            isDirty ? '!bg-indigo-600 !text-white' : '!bg-slate-100 !text-slate-400 cursor-not-allowed'
-                                        }`}
+                                        className={`!py-1.5 !px-3 !text-xs flex items-center gap-2 ${isDirty ? '!bg-indigo-600 !text-white' : '!bg-slate-100 !text-slate-400 cursor-not-allowed'
+                                            }`}
                                     >
                                         {isSaving === q.id ? <FaSpinner className="animate-spin" /> : <FaSave size={12} />}
                                         Lưu thay đổi
@@ -265,10 +268,21 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
 
                             {/* Question Content */}
                             <div className="p-6 space-y-6">
+                                {/* NẾU CÓ ĐOẠN VĂN DÙNG CHUNG (GROUP) THÌ HIỂN THỊ Ở ĐÂY */}
+                                {editQ.group?.sharedContent && (
+                                    <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl text-sm text-blue-800">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <FaBookOpen className="text-blue-500" />
+                                            <span className="text-[11px] font-black uppercase tracking-wider text-blue-600">Đoạn văn dùng chung</span>
+                                        </div>
+                                        <p className="whitespace-pre-wrap leading-relaxed">{editQ.group.sharedContent}</p>
+                                    </div>
+                                )}
+
                                 {/* Content Editor */}
                                 <div className="space-y-2">
                                     <label className="text-[11px] font-black text-slate-400 uppercase ml-1">Nội dung câu hỏi</label>
-                                    <textarea 
+                                    <textarea
                                         className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm text-slate-700 font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white outline-none transition-all resize-none min-h-[100px]"
                                         value={editQ.content}
                                         onChange={(e) => handleFieldChange(q.id, 'content', e.target.value)}
@@ -280,10 +294,9 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
                                 {/* Answers Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {editQ.answers.map((ans, aIdx) => (
-                                        <div key={aIdx} className={`p-4 rounded-2xl border transition-all flex items-start gap-3 ${
-                                            ans.isCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-100'
-                                        }`}>
-                                            <button 
+                                        <div key={aIdx} className={`p-4 rounded-2xl border transition-all flex items-start gap-3 ${ans.isCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-100'
+                                            }`}>
+                                            <button
                                                 type="button"
                                                 onClick={() => handleAnswerChange(q.id, aIdx, 'isCorrect', !ans.isCorrect)}
                                                 className={`mt-1 transition-colors ${ans.isCorrect ? 'text-emerald-500' : 'text-slate-300 hover:text-indigo-400'}`}
@@ -292,7 +305,7 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
                                             </button>
                                             <div className="flex-1 space-y-1">
                                                 <label className="text-[10px] font-bold text-slate-400 uppercase">Đáp án {String.fromCharCode(65 + aIdx)}</label>
-                                                <input 
+                                                <input
                                                     className="w-full bg-transparent border-none p-0 text-sm text-slate-700 font-bold outline-none placeholder:font-normal"
                                                     value={ans.content}
                                                     onChange={(e) => handleAnswerChange(q.id, aIdx, 'content', e.target.value)}
@@ -311,7 +324,7 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
                                         <label className="text-[11px] font-black text-slate-400 uppercase flex items-center gap-2">
                                             <FaLightbulb className="text-amber-400" /> Giải thích lời giải
                                         </label>
-                                        <textarea 
+                                        <textarea
                                             className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs text-slate-600 font-medium focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none min-h-[80px]"
                                             value={editQ.explanation || ''}
                                             onChange={(e) => handleFieldChange(q.id, 'explanation', e.target.value)}
@@ -326,7 +339,7 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
                                             <label className="text-[11px] font-black text-slate-400 uppercase flex items-center gap-2">
                                                 <FaBrain className="text-indigo-400" /> Kỹ năng
                                             </label>
-                                            <select 
+                                            <select
                                                 className="w-full p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-500/20"
                                                 value={editQ.skillType || ''}
                                                 onChange={(e) => handleFieldChange(q.id, 'skillType', e.target.value)}
@@ -343,7 +356,7 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
                                                 <FaTag className="text-emerald-400" /> Thẻ (Tag)
                                             </label>
                                             <div className="relative">
-                                                <input 
+                                                <input
                                                     className="w-full p-2.5 pl-9 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-500/20"
                                                     value={editQ.tagName || ''}
                                                     onChange={(e) => handleFieldChange(q.id, 'tagName', e.target.value)}

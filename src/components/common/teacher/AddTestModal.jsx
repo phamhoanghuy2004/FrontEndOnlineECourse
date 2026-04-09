@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaTimes, FaSave, FaSpinner, FaClock, FaCheckCircle, FaFileExcel, FaUpload } from 'react-icons/fa';
 import Button from '../Button';
 import InputField from '../InputField';
@@ -13,6 +13,13 @@ const AddTestModal = ({ isOpen, onClose, testSetId, onSuccess }) => {
     });
     const [file, setFile] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Cập nhật testSetId khi modal được mở hoặc props thay đổi
+    useEffect(() => {
+        if (isOpen && testSetId) {
+            setFormData(prev => ({ ...prev, testSetId: testSetId }));
+        }
+    }, [isOpen, testSetId]);
 
     if (!isOpen) return null;
 
@@ -68,6 +75,7 @@ const AddTestModal = ({ isOpen, onClose, testSetId, onSuccess }) => {
                         label="Tên bài Test *"
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                         placeholder="VD: Final Mock Test, Unit 1 Quiz..."
                         required
                         icon={FaCheckCircle}
@@ -79,6 +87,7 @@ const AddTestModal = ({ isOpen, onClose, testSetId, onSuccess }) => {
                             type="number"
                             value={formData.durationMinutes}
                             onChange={(e) => setFormData({ ...formData, durationMinutes: parseInt(e.target.value) })}
+                            onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                             icon={FaClock}
                             required
                         />
@@ -88,6 +97,7 @@ const AddTestModal = ({ isOpen, onClose, testSetId, onSuccess }) => {
                             step="0.1"
                             value={formData.passScore}
                             onChange={(e) => setFormData({ ...formData, passScore: parseFloat(e.target.value) })}
+                            onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                             icon={FaCheckCircle}
                             required
                         />

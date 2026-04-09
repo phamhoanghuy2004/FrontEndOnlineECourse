@@ -6,6 +6,7 @@ const InputField = ({
     value,
     name,
     onChange,
+    onKeyDown,
     size = "normal", // Mặc định là normal (Register), truyền "compact" cho Login
     required = false, // Mặc định không hiện sao
     error = false // Cờ hiệu báo lỗi
@@ -31,6 +32,7 @@ const InputField = ({
                     type={type}
                     value={value}
                     onChange={onChange}
+                    onKeyDown={onKeyDown}
                     className={`w-full ${Icon ? 'pl-9' : 'pl-3'} pr-3 ${inputPadding} text-sm rounded-lg outline-none transition-all placeholder:text-slate-400 font-medium
                     ${error 
                         ? 'bg-red-50 border border-red-400 text-red-900 focus:bg-white focus:border-red-500 focus:ring-2 focus:ring-red-500/20' 

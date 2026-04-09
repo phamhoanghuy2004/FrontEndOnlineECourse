@@ -25,6 +25,22 @@ const testApi = {
     deleteTest: (id) => {
         return axiosClient.delete(`/quizzes/${id}`);
     },
+
+    updateTestSet: (id, data) => {
+        return axiosClient.put(`/test-sets/${id}`, data);
+    },
+
+    getTestById: (id) => {
+        return axiosClient.get(`/quizzes/${id}`);
+    },
+
+    updateTestInfo: (id, data) => {
+        return axiosClient.put(`/quizzes/${id}`, data);
+    },
+
+    updateQuestion: (questionId, data) => {
+        return axiosClient.put(`/quizzes/questions/${questionId}`, data);
+    }
 };
 
 export default testApi;

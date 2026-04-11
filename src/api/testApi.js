@@ -44,7 +44,23 @@ const testApi = {
 
     updateQuestion: (questionId, data) => {
         return axiosClient.put(`/quizzes/questions/${questionId}`, data);
+    },
+
+    getRandomTest: (testSetId) => {
+        return axiosClient.get(`/quizzes/test-set/practice/${testSetId}`);
+    },
+
+    submitTest: (sessionId, userAnswers) => {
+        return axiosClient.post(`/quizzes/submit`, {sessionId, userAnswers});
+    },
+    
+    submitTest: (sessionId, userAnswers) => {
+        return axiosClient.post(`/quizzes/submit`, {
+            sessionId: sessionId, 
+            answers: userAnswers // Đổi key thành 'answers' cho khớp DTO
+        });
     }
+    
 };
 
 export default testApi;

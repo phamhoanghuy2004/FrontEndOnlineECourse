@@ -61,7 +61,13 @@ const TestSetDetail = () => {
     }, [id]);
 
     const handleStartTest = () => {
-        navigate(`/test-practice/${id}`);
+        navigate(`/test-practice/${id}`, {
+            state: {
+                testId: id,
+                selectedParts: null,
+                mode: 'full_test'
+            }
+        });
     };
 
     if (loading) {
@@ -75,10 +81,21 @@ const TestSetDetail = () => {
 
     if (!testSetData) {
         return (
-            <div className="max-w-7xl mx-auto p-4 md:p-6 pt-28 text-center text-slate-500">
-                <h2 className="text-2xl font-bold mb-2">Không tìm thấy bài kiểm tra</h2>
-                <p>Bài kiểm tra này có thể đã bị xóa hoặc bạn không có quyền truy cập.</p>
-                <button onClick={() => navigate(-1)} className="mt-6 text-primary font-bold hover:underline">Quay lại</button>
+            // 💥 FIX: Đổi thẻ div bọc ngoài thành flexbox căn giữa 100% chiều cao màn hình (min-h-[70vh] để né header)
+            <div className="min-h-[70vh] flex flex-col items-center justify-center p-4 md:p-6 text-center text-slate-500">
+                <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 max-w-md w-full">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                        <FaBookOpen size={24} />
+                    </div>
+                    <h2 className="text-2xl font-extrabold text-slate-700 mb-2">Không tìm thấy bài kiểm tra</h2>
+                    <p className="text-slate-500 text-sm mb-6">Bài kiểm tra này có thể đã bị xóa hoặc bạn không có quyền truy cập.</p>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-colors flex items-center gap-2 mx-auto"
+                    >
+                        <FaArrowLeft size={12} /> Quay lại
+                    </button>
+                </div>
             </div>
         );
     }

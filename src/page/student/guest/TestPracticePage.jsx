@@ -1,12 +1,11 @@
-import React, { useState, useEffect  } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { FaClock, FaCheckCircle, FaArrowLeft, FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { testSets } from "../../../data/mockData";
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { FaClock, FaCheckCircle, FaArrowLeft, FaChevronLeft, FaChevronRight, FaSpinner } from "react-icons/fa";
 import SingleQuestionBlock from '../../../components/common/student/guest/testPractice/SingleQuestionBlock';
 import GroupQuestionBlock from '../../../components/common/student/guest/testPractice/GroupQuestionBlock';
+import testApi from '../../../api/testApi';
+import { toast } from 'react-toastify';
 
-
-// Helper: Format giây thành mm:ss
 const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -14,71 +13,184 @@ const formatTime = (seconds) => {
 };
 
 const TestPracticePage = () => {
-    const location = useLocation();
+    const { id } = useParams();
     const navigate = useNavigate();
-
-    const { testId, selectedParts, mode } = location.state || {};
+    const testId = id;
 
     const [testData, setTestData] = useState(null);
     const [filteredParts, setFilteredParts] = useState([]);
     const [userAnswers, setUserAnswers] = useState({});
+    const [flaggedQuestions, setFlaggedQuestions] = useState({});
+
+    const [sessionId, setSessionId] = useState(null);
+
     const [timeLeft, setTimeLeft] = useState(0);
+    const endTimeRef = useRef(null);
+
     const [isSubmitted, setIsSubmitted] = useState(false);
-    const [result, setResult] = useState(null);
     const [currentPartIndex, setCurrentPartIndex] = useState(0);
     const [showResultModal, setShowResultModal] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-    // --- 1. KHỞI TẠO DỮ LIỆU ---
+    const [showFinalResultModal, setShowFinalResultModal] = useState(false);
+    const [testResult, setTestResult] = useState(null);
+
+    const STORAGE_ANSWERS_KEY = `echill_answers_${testId}`;
+    const STORAGE_ENDTIME_KEY = `echill_endtime_${testId}`;
+    const STORAGE_SESSION_KEY = `echill_session_${testId}`;
+
     useEffect(() => {
+        let isMounted = true;
+
         if (!testId) {
-            navigate('/');
+            navigate(-1, { replace: true });
             return;
         }
 
-        let foundTest = null;
-        for (const set of testSets) {
-            const test = set.tests.find(t => t.id === testId);
-            if (test) {
-                foundTest = test;
-                break;
+        const fetchTestPractice = async () => {
+            try {
+                setLoading(true);
+                const response = await testApi.getRandomTest(testId);
+                const beTest = response.data.data || response.data;
+
+                if (beTest && isMounted) {
+                    setTestData(beTest);
+                    setSessionId(beTest.sessionId);
+                    localStorage.setItem(STORAGE_SESSION_KEY, beTest.sessionId)
+
+                    let globalQuestionCounter = 1;
+                    const formattedParts = beTest.sections.map((section, index) => {
+                        const groupsMap = new Map();
+                        const standaloneQuestions = [];
+                        const allQuestions = [];
+
+                        section.questions.forEach(q => {
+                            const feQuestion = { ...q, displayNum: globalQuestionCounter++ };
+                            allQuestions.push(feQuestion);
+
+                            if (q.group) {
+                                if (!groupsMap.has(q.group.id)) {
+                                    groupsMap.set(q.group.id, { ...q.group, questions: [] });
+                                }
+                                groupsMap.get(q.group.id).questions.push(feQuestion);
+                            } else {
+                                standaloneQuestions.push(feQuestion);
+                            }
+                        });
+
+                        return {
+                            id: section.id,
+                            name: section.title || `Part ${index + 1}`,
+                            title: '',
+                            description: section.instructions,
+                            questionCount: section.questions.length,
+                            groups: Array.from(groupsMap.values()),
+                            questions: standaloneQuestions,
+                            allQuestions: allQuestions
+                        };
+                    });
+
+                    setFilteredParts(formattedParts);
+
+                    const localAnswers = JSON.parse(localStorage.getItem(STORAGE_ANSWERS_KEY) || '{}');
+                    if (Object.keys(localAnswers).length > 0) {
+                        setUserAnswers(localAnswers);
+                        toast.info("Đã phục hồi đáp án bạn đang làm dở.");
+                    }
+
+                    let savedEndTime = localStorage.getItem(STORAGE_ENDTIME_KEY);
+
+                    if (savedEndTime) {
+                        const remaining = Math.floor((parseInt(savedEndTime) - Date.now()) / 1000);
+                        if (remaining > 0) {
+                            endTimeRef.current = parseInt(savedEndTime);
+                            setTimeLeft(remaining);
+                        } else {
+                            endTimeRef.current = Date.now();
+                            setTimeLeft(0);
+                        }
+                    } else {
+                        const totalSeconds = (beTest.durationMinutes || 120) * 60;
+                        const newEndTime = Date.now() + (totalSeconds * 1000);
+                        endTimeRef.current = newEndTime;
+                        localStorage.setItem(STORAGE_ENDTIME_KEY, newEndTime.toString());
+                        setTimeLeft(totalSeconds);
+                    }
+                }
+            } catch (error) {
+                if (isMounted) {
+                    if (error?.code === 1057) {
+                        toast.warning("Phiên làm bài đã kết thúc, hệ thống đang nộp bài...");
+                        const localAnswers = JSON.parse(localStorage.getItem(STORAGE_ANSWERS_KEY) || '{}');
+                        const savedSessionId = localStorage.getItem(STORAGE_SESSION_KEY);
+                        if (savedSessionId) {
+                            handleFinalSubmit(savedSessionId, localAnswers); 
+                        } else {
+                            toast.error("Không tìm thấy phiên làm bài để nộp.");
+                            navigate(-1, { replace: true });
+                        }
+                    } else {
+                        console.error("Lỗi tải đề thi:", error);
+                        toast.error(error?.message || "Không thể vào thi. Vui lòng thử lại sau!");
+                        navigate(-1, { replace: true });
+                    }
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
-        }
+        };
 
-        if (foundTest) {
-            setTestData(foundTest);
-            const selectedPartsIds = selectedParts || [];
-            const parts = foundTest.parts.filter(p => selectedPartsIds.includes(p.id));
-            setFilteredParts(parts);
+        fetchTestPractice();
 
-            let totalSeconds = 0;
-            if (foundTest.time) {
-                totalSeconds = foundTest.time * 60;
-            } else {
-                totalSeconds = 120 * 60;
-            }
-            setTimeLeft(totalSeconds);
-        }
-    }, [testId, selectedParts, mode, navigate]);
+        return () => {
+            isMounted = false;
+        };
 
-    // --- 2. TIMER ---
+    }, [testId, navigate]);
+
+
     useEffect(() => {
         if (timeLeft > 0 && !isSubmitted) {
             const timerId = setInterval(() => {
-                setTimeLeft(prev => prev - 1);
+                const now = Date.now();
+                const remaining = Math.ceil((endTimeRef.current - now) / 1000);
+
+                if (remaining <= 0) {
+                    setTimeLeft(0);
+                    clearInterval(timerId);
+                } else {
+                    setTimeLeft(remaining);
+                }
             }, 1000);
+
             return () => clearInterval(timerId);
-        } else if (timeLeft === 0 && !isSubmitted && testData) {
-            handleSubmit();
+
+        } else if (timeLeft <= 0 && !isSubmitted && testData) {
+            setIsSubmitted(true);
+            setShowResultModal(false);
+            handleFinalSubmit();
         }
     }, [timeLeft, isSubmitted, testData]);
 
-    // --- 3. LOGIC ---
-    const handleSelectAnswer = (questionId, optionKey) => {
+
+    const handleSelectAnswer = (questionId, optionId) => {
         if (isSubmitted) return;
-        setUserAnswers(prev => ({
-            ...prev,
-            [questionId]: optionKey
-        }));
+
+        const newAnswers = {
+            ...userAnswers,
+            [questionId]: optionId
+        };
+
+        setUserAnswers(newAnswers);
+
+        localStorage.setItem(STORAGE_ANSWERS_KEY, JSON.stringify(newAnswers));
+    };
+
+    const handleToggleFlag = (questionId) => {
+        if (isSubmitted) return;
+        setFlaggedQuestions(prev => ({ ...prev, [questionId]: !prev[questionId] }));
     };
 
     const scrollToQuestion = (questionId, partIndex) => {
@@ -92,38 +204,6 @@ const TestPracticePage = () => {
             const element = document.getElementById(`question-${questionId}`);
             if (element) element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-    };
-
-    const handleSubmit = () => {
-        setIsSubmitted(true);
-        setShowResultModal(true);
-        let totalCorrect = 0;
-        let totalQuestions = 0;
-        const partResults = [];
-
-        filteredParts.forEach(part => {
-            let partCorrect = 0;
-            let partTotal = 0;
-            const processQuestions = (questions) => {
-                questions.forEach(q => {
-                    partTotal++;
-                    const userAnswer = userAnswers[q.id];
-                    if (userAnswer === q.correctAnswer) {
-                        partCorrect++;
-                    }
-                });
-            };
-            if (part.groups) {
-                part.groups.forEach(g => processQuestions(g.questions));
-            } else if (part.questions) {
-                processQuestions(part.questions);
-            }
-            totalCorrect += partCorrect;
-            totalQuestions += partTotal;
-            partResults.push({ id: part.id, name: part.name, correct: partCorrect, total: partTotal });
-        });
-
-        setResult({ score: totalCorrect, total: totalQuestions, details: partResults });
     };
 
     const handleNextPart = () => {
@@ -140,18 +220,51 @@ const TestPracticePage = () => {
         }
     };
 
-    if (!testData || filteredParts.length === 0) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    const handleSubmit = () => {
+        setShowResultModal(true);
+    };
+
+    const handleFinalSubmit = async (customSessionId = sessionId, customAnswers = userAnswers) => {
+        setIsSubmitted(true);
+        setShowResultModal(false);
+
+        const loadingToast = toast.loading("Đang nộp bài...");
+
+        try {
+            const response = await testApi.submitTest(customSessionId, customAnswers);
+
+            localStorage.removeItem(STORAGE_ANSWERS_KEY);
+            localStorage.removeItem(STORAGE_ENDTIME_KEY);
+            localStorage.removeItem(STORAGE_SESSION_KEY);
+
+            toast.update(loadingToast, { render: response.data?.message || "Nộp bài thành công!", type: "success", isLoading: false, autoClose: 3000 });
+
+            setTestResult(response.data?.data || response.data);
+            setShowFinalResultModal(true);
+
+        } catch (error) {
+            toast.update(loadingToast, { render: error.response?.data?.message || "Mất kết nối mạng hoặc lỗi máy chủ! Vui lòng thử F5 nộp lại.", type: "error", isLoading: false, autoClose: 5000 });
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 text-emerald-600">
+                <FaSpinner className="animate-spin text-5xl mb-4" />
+                <span className="font-bold text-lg text-slate-600">Đang khởi tạo đề thi cho bạn...</span>
+            </div>
+        );
+    }
+
+    if (!testData || filteredParts.length === 0) return null;
 
     const currentPart = filteredParts[currentPartIndex];
 
     return (
-        // 1. THÊM pt-28 (padding top ~ 112px) ĐỂ ĐẨY TRANG XUỐNG DƯỚI NAVBAR CHÍNH
         <div className="min-h-screen bg-slate-50 font-sans pb-20 pt-28">
 
-            {/* --- HEADER (STICKY) --- */}
-            {/* 2. SỬA top-0 THÀNH top-20 ĐỂ HEADER DÍNH BÊN DƯỚI NAVBAR CHÍNH KHI SCROLL */}
             <header className="sticky top-20 z-40 bg-white shadow-sm border-b border-gray-200 transition-all rounded-2xl mx-4 mt-4">
-                <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+                <div className="container mx-auto px-4 h-16 flex flex-wrap items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
                             <FaArrowLeft />
@@ -161,7 +274,6 @@ const TestPracticePage = () => {
                         </div>
                     </div>
 
-                    {/* Part Navigation */}
                     <div className="hidden lg:flex items-center gap-2 bg-gray-100 p-1 rounded-lg overflow-x-auto max-w-xl no-scrollbar">
                         {filteredParts.map((part, index) => (
                             <button
@@ -179,16 +291,16 @@ const TestPracticePage = () => {
                         ))}
                     </div>
 
-                    <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-2 text-xl font-mono font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg">
-                            <FaClock className="animate-pulse" />
+                    <div className="flex items-center gap-4 md:gap-6">
+                        <div className={`flex items-center gap-2 text-xl font-mono font-bold px-3 py-1 rounded-lg ${timeLeft <= 300 ? 'text-red-600 bg-red-50' : 'text-emerald-600 bg-emerald-50'}`}>
+                            <FaClock className={timeLeft <= 300 && !isSubmitted ? 'animate-pulse' : ''} />
                             <span>{formatTime(timeLeft)}</span>
                         </div>
                         <button
                             onClick={handleSubmit}
                             disabled={isSubmitted}
                             className={`hidden md:block px-6 py-2 rounded-full font-bold text-white transition-all shadow-lg
-                                ${isSubmitted ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-emerald-500/30 active:scale-95'}
+                                ${isSubmitted ? 'bg-gray-400 cursor-not-allowed hidden' : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-emerald-500/30 active:scale-95'}
                             `}
                         >
                             Nộp bài
@@ -199,17 +311,16 @@ const TestPracticePage = () => {
 
             <div className="container mx-auto px-4 mt-6 flex flex-col lg:flex-row gap-6">
 
-                {/* --- LEFT CONTENT --- */}
                 <div className="flex-1 space-y-6">
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px]">
                         <div className="bg-emerald-50/50 px-6 py-5 border-b border-emerald-100">
                             <div className="flex justify-between items-center mb-2">
-                                <h2 className="text-xl font-extrabold text-emerald-800">{currentPart.name}: {currentPart.title}</h2>
+                                <h2 className="text-xl font-extrabold text-emerald-800">{currentPart.name} {currentPart.title ? `: ${currentPart.title}` : ''}</h2>
                                 <span className="bg-white text-xs font-bold px-3 py-1 rounded-full border border-emerald-200 text-emerald-600 shadow-sm">
                                     {currentPart.questionCount} câu hỏi
                                 </span>
                             </div>
-                            <p className="text-sm text-gray-600">{currentPart.description}</p>
+                            <p className="text-sm text-gray-600 select-none">{currentPart.description}</p>
                         </div>
 
                         <div className="p-6 space-y-8">
@@ -217,9 +328,11 @@ const TestPracticePage = () => {
                                 <GroupQuestionBlock
                                     key={group.id}
                                     group={group}
-                                    type={currentPart.type}
+                                    type={testData.type}
                                     userAnswers={userAnswers}
+                                    flaggedQuestions={flaggedQuestions}
                                     onSelect={handleSelectAnswer}
+                                    onToggleFlag={handleToggleFlag}
                                     isSubmitted={isSubmitted}
                                 />
                             ))}
@@ -227,9 +340,11 @@ const TestPracticePage = () => {
                                 <SingleQuestionBlock
                                     key={question.id}
                                     question={question}
-                                    type={currentPart.type}
+                                    type={testData.type}
                                     userAnswers={userAnswers}
+                                    flaggedQuestions={flaggedQuestions}
                                     onSelect={handleSelectAnswer}
+                                    onToggleFlag={handleToggleFlag}
                                     isSubmitted={isSubmitted}
                                 />
                             ))}
@@ -261,7 +376,9 @@ const TestPracticePage = () => {
                             <button
                                 onClick={handleSubmit}
                                 disabled={isSubmitted}
-                                className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-200 transition-all"
+                                className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all
+                                    ${isSubmitted ? 'hidden' : 'bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-200'}
+                                `}
                             >
                                 <FaCheckCircle /> Nộp bài thi
                             </button>
@@ -269,9 +386,7 @@ const TestPracticePage = () => {
                     </div>
                 </div>
 
-                {/* --- RIGHT SIDEBAR --- */}
                 <div className="lg:w-72 flex-shrink-0">
-                    {/* 3. SỬA sticky top-24 THÀNH top-40 ĐỂ SIDEBAR CŨNG NÉ NAVBAR CHÍNH */}
                     <div className="sticky top-40 space-y-4">
                         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col max-h-[calc(100vh-180px)]">
                             <div className="p-4 bg-gray-50 border-b border-gray-200 font-bold text-gray-700 flex items-center justify-between">
@@ -285,26 +400,28 @@ const TestPracticePage = () => {
                                         <h4 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider mb-2 ml-1">
                                             {part.name}
                                         </h4>
-                                        {/* 4. THU GỌN GRID: gap-1 và giảm size button */}
+
                                         <div className="grid grid-cols-5 gap-1">
-                                            {(part.groups
-                                                ? part.groups.flatMap(g => g.questions)
-                                                : part.questions
-                                            ).map((q) => {
+                                            {part.allQuestions.map((q) => {
                                                 const isAnswered = !!userAnswers[q.id];
-                                                const displayNum = q.id.replace(/\D/g, '');  // chổ này về sau có thể thay bằng thứ tự của câu hỏi nà
+                                                const isFlagged = !!flaggedQuestions[q.id];
+                                                const displayNum = q.displayNum;
                                                 const isActivePart = pIndex === currentPartIndex;
+
+                                                let btnClass = 'bg-white text-gray-600 border-gray-200 hover:border-emerald-400';
+                                                if (isFlagged) {
+                                                    btnClass = 'bg-red-100 text-red-700 border-red-400 ring-1 ring-red-400';
+                                                } else if (isAnswered) {
+                                                    btnClass = 'bg-emerald-500 text-white border-emerald-500';
+                                                }
 
                                                 return (
                                                     <button
                                                         key={q.id}
                                                         onClick={() => scrollToQuestion(q.id, pIndex)}
                                                         className={`h-7 w-full rounded text-[10px] font-bold transition-all border
-                                                            ${isAnswered
-                                                                ? 'bg-emerald-500 text-white border-emerald-500'
-                                                                : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-400'
-                                                            }
-                                                            ${isActivePart && !isAnswered ? 'ring-1 ring-emerald-400 bg-emerald-50' : ''}
+                                                            ${btnClass}
+                                                            ${isActivePart && !isAnswered && !isFlagged ? 'ring-1 ring-emerald-400 bg-emerald-50' : ''}
                                                         `}
                                                     >
                                                         {displayNum}
@@ -320,40 +437,79 @@ const TestPracticePage = () => {
                 </div>
             </div>
 
-            {/* Modal Kết Quả (Giữ nguyên) */}
-            {showResultModal && result && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-scaleUp">
-                        <div className="bg-emerald-600 p-8 text-center text-white">
-                            <h2 className="text-3xl font-extrabold mb-2">Kết quả bài làm</h2>
-                            <div className="text-6xl font-black my-4">{result.score}<span className="text-2xl font-medium opacity-80">/{result.total}</span></div>
-                            <p className="opacity-90">Bạn đã hoàn thành bài thi!</p>
+            {showResultModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/30 animate-fadeIn">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-scaleUp border border-gray-100">
+                        <div className="bg-emerald-600 p-8 text-center text-white relative overflow-hidden">
+                            <FaCheckCircle className="text-6xl mx-auto mb-4 opacity-90" />
+                            <h2 className="text-3xl font-extrabold mb-2">Xác nhận nộp bài?</h2>
+                            <p className="opacity-90 mt-2 text-emerald-50 bg-emerald-700/50 py-1.5 px-4 rounded-full inline-block font-medium animate-pulse">
+                                ⚠️ Thời gian còn lại vẫn đang đếm lùi
+                            </p>
                         </div>
-                        <div className="p-6 max-h-[50vh] overflow-y-auto">
-                            <h3 className="font-bold text-gray-700 mb-4">Chi tiết từng phần:</h3>
-                            <div className="space-y-3">
-                                {result.details.map(detail => (
-                                    <div key={detail.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                        <span className="font-medium text-gray-700">{detail.name}</span>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-emerald-600 font-bold">{detail.correct}</span>
-                                            <span className="text-gray-400">/</span>
-                                            <span className="text-gray-600">{detail.total}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="p-6 bg-gray-50 border-t border-gray-100 flex flex-col gap-3">
+
+                        <div className="p-8 text-center">
+                            <p className="text-gray-600 font-medium mb-6">
+                                Bạn đã hoàn thành <span className="font-bold text-emerald-600">{Object.keys(userAnswers).length}</span> câu trả lời.
+                                Bấm "Nộp bài ngay" để đóng băng kết quả.
+                            </p>
+
                             <div className="flex gap-3">
-                                <button onClick={() => navigate('/tests')} className="flex-1 py-3 rounded-xl font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-100">Thoát</button>
-                                <button onClick={() => navigate(0)} className="flex-1 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200">Làm lại</button>
+                                <button
+                                    onClick={() => setShowResultModal(false)}
+                                    className="flex-1 py-3.5 rounded-xl font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-all"
+                                >
+                                    Quay lại làm tiếp
+                                </button>
+                                <button
+                                    onClick={handleFinalSubmit}
+                                    className="flex-1 py-3.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all"
+                                >
+                                    Nộp bài ngay
+                                </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Hiển thị kết quả cuối cùng */}
+            {showFinalResultModal && testResult && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-scaleUp border border-gray-100">
+                        <div className={`p-8 text-center text-white ${testResult.isPassed ? 'bg-emerald-600' : 'bg-red-500'}`}>
+                            <FaCheckCircle className="text-6xl mx-auto mb-4 opacity-90" />
+                            <h2 className="text-3xl font-extrabold mb-2">{testResult.isPassed ? 'Chúc mừng!' : 'Chưa đạt!'}</h2>
+                            <p className="opacity-90 mt-2 bg-black/20 py-1.5 px-4 rounded-full inline-block font-medium">
+                                {testResult.message || (testResult.isPassed ? 'Bạn đã vượt qua bài thi' : 'Bạn chưa vượt qua bài thi')}
+                            </p>
+                        </div>
+
+                        <div className="p-8">
+                            <div className="space-y-4 mb-8">
+                                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                                    <span className="text-gray-600 font-medium">Điểm số:</span>
+                                    <span className={`text-2xl font-bold ${testResult.isPassed ? 'text-emerald-600' : 'text-red-500'}`}>
+                                        {testResult.score} đ
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                                    <span className="text-gray-600 font-medium">Số câu đúng:</span>
+                                    <span className="font-bold text-gray-800">{testResult.correctAnswers} / {testResult.totalQuestions}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                                    <span className="text-gray-600 font-medium">Trạng thái nộp:</span>
+                                    <span className={`font-bold ${testResult.isLate ? 'text-red-500' : 'text-emerald-600'}`}>
+                                        {testResult.isLate ? 'Nộp trễ (0đ)' : 'Đúng giờ'}
+                                    </span>
+                                </div>
+                            </div>
+
                             <button
-                                onClick={() => setShowResultModal(false)}
-                                className="w-full py-3 rounded-xl font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all"
+                                onClick={() => navigate(-1)}
+                                className="w-full py-4 rounded-xl font-bold text-white bg-gray-800 hover:bg-gray-900 shadow-lg transition-all flex items-center justify-center gap-2"
                             >
-                                Xem đáp án chi tiết
+                                <FaArrowLeft /> Thoát bài kiểm tra
                             </button>
                         </div>
                     </div>
@@ -362,6 +518,5 @@ const TestPracticePage = () => {
         </div>
     );
 };
-
 
 export default TestPracticePage;

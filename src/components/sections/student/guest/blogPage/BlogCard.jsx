@@ -3,6 +3,13 @@ import { Link } from 'react-router-dom';
 import { FaUser, FaCalendarAlt, FaArrowRight } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
+const stripHtml = (html) => {
+    if (!html) return '';
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+};
+
 const BlogCard = ({ blog }) => {
     return (
         <motion.div
@@ -11,24 +18,19 @@ const BlogCard = ({ blog }) => {
         >
             <Link to={`/blog/${blog.id}`} className="block relative overflow-hidden h-56">
                 <img
-                    src={blog.image}
+                    src={blog.imageUrl || 'https://via.placeholder.com/800'}
                     alt={blog.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
-                <div className="absolute top-4 left-4">
-                    <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                        {blog.category}
-                    </span>
-                </div>
             </Link>
 
             <div className="p-6 flex-grow flex flex-col">
                 <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
                     <span className="flex items-center gap-1">
-                        <FaUser className="text-primary" /> {blog.author}
+                        <FaUser className="text-primary" /> {blog.authorName || 'Teacher'}
                     </span>
                     <span className="flex items-center gap-1">
-                        <FaCalendarAlt className="text-primary" /> {blog.date}
+                        <FaCalendarAlt className="text-primary" /> {blog.createdAt ? blog.createdAt.substring(0, 10) : 'N/A'}
                     </span>
                 </div>
 
@@ -39,7 +41,7 @@ const BlogCard = ({ blog }) => {
                 </Link>
 
                 <p className="text-gray-600 mb-6 text-sm line-clamp-3 flex-grow">
-                    {blog.description}
+                    {stripHtml(blog.excerpt || blog.content)}
                 </p>
 
                 <Link

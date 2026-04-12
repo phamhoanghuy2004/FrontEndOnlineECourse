@@ -4,6 +4,8 @@ import InputField from '../../components/common/InputField';
 import Button from '../../components/common/Button';
 import { FaSave, FaArrowLeft, FaCloudUploadAlt, FaAlignLeft } from 'react-icons/fa';
 import blogApi from '../../api/blogApi';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { useAuth } from '../../hooks/useAuth';
 
 const BlogEditorPage = () => {
@@ -19,6 +21,16 @@ const BlogEditorPage = () => {
     });
     const [imageFile, setImageFile] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+
+    const modules = {
+        toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            ['link', 'image'],
+            ['clean'] // Nút xóa format
+        ]
+    };
 
     useEffect(() => {
         if (isEditing) {
@@ -134,13 +146,18 @@ const BlogEditorPage = () => {
                             <label className="text-[11px] font-bold text-slate-700 ml-1 uppercase tracking-wide block mb-1">
                                 Nội dung
                             </label>
-                            <textarea
-                                className="w-full h-[500px] p-4 text-slate-700 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 transition font-medium"
-                                placeholder="Viết nội dung bài viết ở đây (Hỗ trợ Markdown)..."
-                                value={formData.content}
-                                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                required
-                            />
+                            <div className="relative group">
+                                <div className="bg-white rounded-lg">
+                                    <ReactQuill
+                                        theme="snow"
+                                        value={formData.content}
+                                        onChange={(htmlValue) => setFormData(prev => ({ ...prev, content: htmlValue }))}
+                                        modules={modules}
+                                        className="h-[400px] mb-12 pb-12"
+                                        placeholder="Viết nội dung bài viết ở đây..."
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -5,6 +5,10 @@ const blogApi = {
         return axiosClient.get('/blogs');
     },
 
+    getMyBlogs: () => {
+        return axiosClient.get('/blogs/my-blogs');
+    },
+
     getById: (id) => {
         return axiosClient.get(`/blogs/${id}`);
     },

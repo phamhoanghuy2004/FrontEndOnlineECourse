@@ -6,6 +6,13 @@ import InputField from '../../components/common/InputField';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import blogApi from '../../api/blogApi';
 
+const stripHtml = (html) => {
+    if (!html) return '';
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+};
+
 const TeacherBlogPage = () => {
     const navigate = useNavigate();
     const [blogs, setBlogs] = useState([]);
@@ -22,7 +29,7 @@ const TeacherBlogPage = () => {
     const fetchBlogs = async () => {
         try {
             setIsLoading(true);
-            const res = await blogApi.getAll();
+            const res = await blogApi.getMyBlogs();
             setBlogs(res.data || []);
         } catch (error) {
             console.error("Failed to fetch blogs", error);
@@ -101,7 +108,7 @@ const TeacherBlogPage = () => {
                             </div>
                             <div className="p-5 flex-1 flex flex-col">
                                 <h3 className="font-bold text-slate-800 text-lg mb-2 line-clamp-2 group-hover:text-emerald-600 transition-colors">{blog.title}</h3>
-                                <p className="text-slate-500 text-sm mb-4 line-clamp-2 flex-1">{blog.excerpt}</p>
+                                <p className="text-slate-500 text-sm mb-4 line-clamp-2 flex-1">{stripHtml(blog.excerpt || blog.content)}</p>
 
                                 <div className="flex items-center justify-between pt-4 border-t border-slate-50 mt-auto">
                                     <Link to={`/teacher/blog/${blog.id}/edit`} className="text-sm font-bold text-slate-600 hover:text-emerald-600 flex items-center gap-1 transition">

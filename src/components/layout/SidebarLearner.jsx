@@ -19,32 +19,27 @@ const SidebarLearner = () => {
   const userId = user?.id || user?._id || 'me';
 
   return (
-    <aside className="w-64 bg-white h-screen fixed left-0 top-0 hidden md:flex flex-col z-30">
+    <aside className="w-64 bg-white h-screen fixed left-0 top-0 hidden md:flex flex-col z-30 border-r border-slate-200/60 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
 
-      {/* 2. PHẦN HEADER */}
-      <div className="h-20 bg-emerald-600 px-6 flex items-center gap-3">
-        <div className="w-15 h-15 bg-white rounded-lg flex items-center justify-center text-emerald-600 font-bold shadow-sm">
-          <div className="w-15 h-15 bg-white rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
-            <img
-              src={LOGO}
-              alt="Echill Logo"
-              className="w-full h-full object-contain p-1"
-            />
-          </div>
+      {/* 💥 PHẦN HEADER CỦA SIDEBAR: Đổi sang nền trắng, chữ xanh, gọn gàng */}
+      <div className="h-20 px-6 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden bg-emerald-50 border border-emerald-100">
+          <img
+            src={LOGO}
+            alt="Echill Logo"
+            className="w-full h-full object-contain p-1.5 drop-shadow-sm"
+          />
         </div>
-        <span className="text-xl font-extrabold text-white tracking-tight">
-          Echill
+        <span className="text-2xl font-black text-emerald-600 tracking-tight">
+          Echill.
         </span>
       </div>
 
-      {/* 3. PHẦN MENU */}
-      <div className="flex-1 border-r border-slate-100 flex flex-col overflow-hidden">
-        <nav className="flex-1 px-4 space-y-2 mt-6 overflow-y-auto">
+      {/* PHẦN MENU */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <nav className="flex-1 px-4 space-y-1.5 mt-4 overflow-y-auto custom-scrollbar">
           {menuItems.map((item) => {
-            // Xử lý thay thế :id bằng ID thật của user
             const realPath = item.path.replace(':id', userId);
-
-            // QUAN TRỌNG: Phải có từ khóa return ở đây
             return (
               <SidebarLink
                 key={item.path}

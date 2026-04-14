@@ -1,17 +1,37 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from "react-router-dom";
-import { blogs } from '../../../data/mockData';
+import blogApi from '../../../api/blogApi';
 import { FiArrowLeft } from "react-icons/fi";
 import BlogContent from '../../../components/sections/student/guest/blogPage/BlogContent';
 
 const BlogDetailPage = () => {
     const { id } = useParams();
-    const blogId = parseInt(id);
-    const blog = blogs.find((b) => b.id === blogId);
+    const [blog, setBlog] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         window.scrollTo(0, 0);
+        const fetchBlog = async () => {
+            try {
+                setIsLoading(true);
+                const res = await blogApi.getById(id);
+                setBlog(res.data);
+            } catch (error) {
+                console.error("Failed to fetch blog detailing", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchBlog();
     }, [id]);
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 pt-20">
+                <p className="text-gray-500">Đang tải bài viết...</p>
+            </div>
+        );
+    }
 
     if (!blog) {
         return (

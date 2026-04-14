@@ -46,6 +46,10 @@ const userApi = {
     return axiosClient.put('/teachers/profile', data);
   },
 
+  getStudentStatisticsApi: (params) => {
+    return axiosClient.get('/teachers/student-statistics', { params });
+  },
+
 }
 
 export default userApi;

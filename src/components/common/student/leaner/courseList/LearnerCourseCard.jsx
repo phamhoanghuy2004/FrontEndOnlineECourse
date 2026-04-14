@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import ProgressBar from '../../../ProgressBar';
 import Button from '../../../Button';
 import { fadeInBottom } from '../../../../../constants/motionVariants';
+import { useAuth } from '../../../../../hooks/useAuth';
 
 // Helper format thời gian (VD: "2 giờ trước", "1 ngày trước")
 const formatTimeAgo = (dateString) => {
@@ -21,6 +22,7 @@ const formatTimeAgo = (dateString) => {
 
 const LearnerCourseCard = ({ course }) => {
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     // 💥 Tự động tính Status dựa vào progressPercent từ Backend
     const getCalculatedStatus = (progress) => {
@@ -41,7 +43,7 @@ const LearnerCourseCard = ({ course }) => {
 
     const handleLearnNow = () => {
         // Điều hướng vào học dựa theo courseId
-        navigate(`/courses/${course.courseId}`);
+        navigate(`/learner/${user.id}/study-room/${course.courseId}`);
     };
 
     return (

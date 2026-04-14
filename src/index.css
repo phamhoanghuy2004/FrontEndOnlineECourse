@@ -86,3 +86,16 @@ body {
   66% { transform: translate(-20px, 20px) scale(0.9); }
   100% { transform: translate(0px, 0px) scale(1); }
 }
+
+/* 💥 ẨN THANH CUỘN NHƯNG VẪN CHO PHÉP CUỘN (Tàng hình) */
+
+/* Dành cho Chrome, Safari và Opera */
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Dành cho IE, Edge và Firefox */
+.custom-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

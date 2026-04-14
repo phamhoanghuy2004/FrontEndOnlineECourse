@@ -30,8 +30,6 @@ const formatDate = (dateString) => {
     });
 };
 
-const MAX_ATTEMPTS = 6;
-
 const TestSetDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -106,7 +104,7 @@ const TestSetDetail = () => {
 
 
     const { title, description, year, history, maxAttempts } = testSetData;
-    const limit = maxAttempts
+    const limit = maxAttempts || 10;
     const attemptCount = history ? history.length : 0;
     const canAttempt = attemptCount < limit;
 
@@ -138,7 +136,7 @@ const TestSetDetail = () => {
                                 Bài Kiểm Tra {year ? `- ${year}` : ''}
                             </span>
                             <span className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full text-[11px] font-bold">
-                                Đã làm: {attemptCount}/{MAX_ATTEMPTS}
+                                Đã làm: {attemptCount}/{limit}
                             </span>
                         </div>
                     </div>

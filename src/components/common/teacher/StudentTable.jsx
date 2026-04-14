@@ -19,7 +19,11 @@ const StudentTable = ({ students }) => {
                             <tr key={student.id} className="hover:bg-slate-50 transition-colors">
                                 <td className="p-4">
                                     <div className="flex items-center gap-3">
-                                        <img src={student.avatar} alt={student.name} className="w-10 h-10 rounded-full bg-slate-200 object-cover" />
+                                        <img 
+                                            src={student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name || 'User')}&background=random&color=fff`} 
+                                            alt={student.name} 
+                                            className="w-10 h-10 rounded-full bg-slate-200 object-cover" 
+                                        />
                                         <div>
                                             <h4 className="font-bold text-slate-800 text-sm">{student.name}</h4>
                                             <span className="text-xs text-slate-400">{student.email}</span>

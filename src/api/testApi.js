@@ -51,14 +51,14 @@ const testApi = {
     },
 
     submitTest: (sessionId, userAnswers) => {
-        return axiosClient.post(`/quizzes/submit`, {sessionId, userAnswers});
-    },
-    
-    submitTest: (sessionId, userAnswers) => {
         return axiosClient.post(`/quizzes/submit`, {
             sessionId: sessionId, 
             answers: userAnswers // Đổi key thành 'answers' cho khớp DTO
         });
+    },
+
+    getTestReviewDetails: (id) => {
+        return axiosClient.get(`/quizzes/results/${id}/review`);
     }
     
 };

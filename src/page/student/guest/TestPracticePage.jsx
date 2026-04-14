@@ -124,7 +124,7 @@ const TestPracticePage = () => {
                         const localAnswers = JSON.parse(localStorage.getItem(STORAGE_ANSWERS_KEY) || '{}');
                         const savedSessionId = localStorage.getItem(STORAGE_SESSION_KEY);
                         if (savedSessionId) {
-                            handleFinalSubmit(savedSessionId, localAnswers); 
+                            handleFinalSubmit(savedSessionId, localAnswers);
                         } else {
                             toast.error("Không tìm thấy phiên làm bài để nộp.");
                             navigate(-1, { replace: true });
@@ -224,14 +224,19 @@ const TestPracticePage = () => {
         setShowResultModal(true);
     };
 
-    const handleFinalSubmit = async (customSessionId = sessionId, customAnswers = userAnswers) => {
+    const handleFinalSubmit = async (arg1, arg2) => {
         setIsSubmitted(true);
         setShowResultModal(false);
 
         const loadingToast = toast.loading("Đang nộp bài...");
 
         try {
-            const response = await testApi.submitTest(customSessionId, customAnswers);
+            const isReactEvent = arg1 && typeof arg1 === 'object' && arg1.nativeEvent;
+
+            const finalSessionId = (isReactEvent || !arg1) ? sessionId : arg1;
+            const finalAnswers = (isReactEvent || !arg2) ? userAnswers : arg2;
+
+            const response = await testApi.submitTest(finalSessionId, finalAnswers);
 
             localStorage.removeItem(STORAGE_ANSWERS_KEY);
             localStorage.removeItem(STORAGE_ENDTIME_KEY);
@@ -240,10 +245,12 @@ const TestPracticePage = () => {
             toast.update(loadingToast, { render: response.data?.message || "Nộp bài thành công!", type: "success", isLoading: false, autoClose: 3000 });
 
             setTestResult(response.data?.data || response.data);
+
             setShowFinalResultModal(true);
 
         } catch (error) {
-            toast.update(loadingToast, { render: error.response?.data?.message || "Mất kết nối mạng hoặc lỗi máy chủ! Vui lòng thử F5 nộp lại.", type: "error", isLoading: false, autoClose: 5000 });
+            console.log(error);
+            toast.update(loadingToast, { render: error.message || "Mất kết nối mạng hoặc lỗi máy chủ! Vui lòng thử F5 nộp lại.", type: "error", isLoading: false, autoClose: 5000 });
         }
     };
 
@@ -506,10 +513,10 @@ const TestPracticePage = () => {
                             </div>
 
                             <button
-                                onClick={() => navigate(-1)}
+                                onClick={() => navigate(`/test-results/${testResult.resultId}/review`, { state: { fromSubmit: true } })}
                                 className="w-full py-4 rounded-xl font-bold text-white bg-gray-800 hover:bg-gray-900 shadow-lg transition-all flex items-center justify-center gap-2"
                             >
-                                <FaArrowLeft /> Thoát bài kiểm tra
+                                <FaArrowLeft /> Đi đến trang xem kết quả
                             </button>
                         </div>
                     </div>

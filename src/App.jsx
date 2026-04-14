@@ -35,6 +35,7 @@ import ForgotPasswordPage from "./page/auth/ForgotPasswordPage";
 import CourseCheckoutPage from "./page/student/guest/CourseCheckoutPage";
 import PaymentResultPage from "./page/student/guest/PaymentResultPage";
 import TestSetDetail from "./page/student/guest/TestSetDetail";
+import TestReviewPage from "./page/student/guest/TestReviewPage";
 
 // --- Learner Pages ---
 import LearnerHomePage from "./page/student/learner/LearnerHomePage";
@@ -121,6 +122,12 @@ function App() {
               <Route path="/test-sets/:id" element={
                 <ProtectedRoute>
                   <TestSetDetail />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/test-results/:id/review" element={
+                <ProtectedRoute>
+                  <TestReviewPage />
                 </ProtectedRoute>
               } />
 

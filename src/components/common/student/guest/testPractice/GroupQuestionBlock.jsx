@@ -1,14 +1,11 @@
 import SingleQuestionBlock from "./SingleQuestionBlock";
 import { FaPlay } from "react-icons/fa";
 
-// 💥 ĐÃ THÊM: Nhận 2 props flaggedQuestions và onToggleFlag từ cha truyền xuống
-const GroupQuestionBlock = ({ group, type, userAnswers, flaggedQuestions, onSelect, onToggleFlag, isSubmitted }) => {
+const GroupQuestionBlock = ({ group, type, userAnswers, flaggedQuestions, onSelect, onToggleFlag, isSubmitted, isReviewMode }) => {
     return (
         <div className="flex flex-col lg:flex-row gap-8 pb-8 border-b border-gray-100 last:border-0 last:pb-0">
             {/* Box Hiển thị Nội dung Nhóm (Âm thanh / Đoạn văn) */}
-            {/* 💥 CHỐNG COPY: Thêm select-none vào khối này để không bôi đen được đoạn văn */}
-            <div className="lg:w-1/2 bg-gray-50/50 p-5 rounded-xl border border-gray-200 h-fit select-none">
-                
+            <div className={`lg:w-1/2 bg-gray-50/50 p-5 rounded-xl border border-gray-200 h-fit ${!isReviewMode ? 'select-none' : ''}`}>
                 {group.audioUrl && (
                     <div className="mb-4">
                         <div className="flex items-center gap-2 mb-2 text-sm font-bold text-gray-500 uppercase tracking-wide">
@@ -21,7 +18,6 @@ const GroupQuestionBlock = ({ group, type, userAnswers, flaggedQuestions, onSele
                 )}
                 
                 {group.imageUrl && (
-                    // 💥 CHỐNG LƯU ẢNH: Thêm pointer-events-none để cấm click chuột phải tải ảnh về
                     <div className="mb-4 rounded-lg overflow-hidden border border-gray-200 pointer-events-none">
                         <img src={group.imageUrl} alt="Group Reference" className="w-full h-auto" />
                     </div>
@@ -43,10 +39,11 @@ const GroupQuestionBlock = ({ group, type, userAnswers, flaggedQuestions, onSele
                         question={question} 
                         type={type} 
                         userAnswers={userAnswers} 
-                        flaggedQuestions={flaggedQuestions} // 💥 Truyền xuống SingleQuestionBlock
+                        flaggedQuestions={flaggedQuestions} 
                         onSelect={onSelect} 
-                        onToggleFlag={onToggleFlag}         // 💥 Truyền xuống SingleQuestionBlock
+                        onToggleFlag={onToggleFlag}         
                         isSubmitted={isSubmitted} 
+                        isReviewMode={isReviewMode} // 💥 Chuyền cờ xuống
                     />
                 ))}
             </div>

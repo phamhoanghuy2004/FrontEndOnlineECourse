@@ -30,7 +30,7 @@ const formatDate = (dateString) => {
     });
 };
 
-const MAX_ATTEMPTS = 5;
+const MAX_ATTEMPTS = 6;
 
 const TestSetDetail = () => {
     const { id } = useParams();
@@ -38,6 +38,10 @@ const TestSetDetail = () => {
 
     const [testSetData, setTestSetData] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    const STORAGE_SESSION_KEY = `echill_session_${id}`;
+    const savedSessionId = localStorage.getItem(STORAGE_SESSION_KEY);
+    const hasActiveSession = !!savedSessionId;
 
     useEffect(() => {
         const fetchTestSetDetail = async () => {
@@ -81,7 +85,6 @@ const TestSetDetail = () => {
 
     if (!testSetData) {
         return (
-            // 💥 FIX: Đổi thẻ div bọc ngoài thành flexbox căn giữa 100% chiều cao màn hình (min-h-[70vh] để né header)
             <div className="min-h-[70vh] flex flex-col items-center justify-center p-4 md:p-6 text-center text-slate-500">
                 <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 max-w-md w-full">
                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
@@ -100,13 +103,16 @@ const TestSetDetail = () => {
         );
     }
 
-    const { title, description, year, history } = testSetData;
+
+
+    const { title, description, year, history, maxAttempts } = testSetData;
+    const limit = maxAttempts
     const attemptCount = history ? history.length : 0;
-    const canAttempt = attemptCount < MAX_ATTEMPTS;
+    const canAttempt = attemptCount < limit;
 
     return (
-        // 💥 FIX CHIỀU CAO: Đổi items-start thành items-stretch để 2 cột luôn cao bằng nhau
-        <div className="max-w-7xl mx-auto p-4 md:p-6 pt-24 md:pt-28 pb-12 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
+        // 💥 FIX 1: Chỉnh lg:h-[calc(100vh-100px)] để trừ hao thanh Header ở trên, giúp không bị cuộn cả trang web
+        <div className="max-w-7xl mx-auto p-4 md:p-6 pt-24 md:pt-28 pb-8 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch lg:h-[calc(100vh-100px)] lg:min-h-[650px]">
 
             {/* ================= CỘT TRÁI: THÔNG TIN BỘ ĐỀ (Chiếm 5 phần) ================= */}
             <motion.div
@@ -117,10 +123,8 @@ const TestSetDetail = () => {
                 {/* Background trang trí */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-50 pointer-events-none"></div>
 
-                <div className="relative z-10 flex flex-col h-full">
-
-                    {/* 💥 FIX NÚT QUAY LẠI: Đưa về sát lề trái, đẩy Badges sang phải hoặc kế bên */}
-                    <div className="flex items-center gap-3 mb-6">
+                <div className="relative z-10 flex flex-col h-full overflow-hidden">
+                    <div className="flex items-center gap-3 mb-6 shrink-0">
                         <button
                             onClick={() => navigate(-1)}
                             className="flex items-center justify-center w-10 h-10 bg-slate-50 hover:bg-blue-100 text-slate-500 hover:text-blue-600 rounded-full transition-all shrink-0 border border-slate-100 hover:shadow-sm"
@@ -139,13 +143,14 @@ const TestSetDetail = () => {
                         </div>
                     </div>
 
-                    <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 mb-4 leading-snug">
+                    <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 mb-4 leading-snug shrink-0">
                         {title}
                     </h1>
 
                     {description && (
+                        // 💥 Thêm overflow-y-auto cho phần mô tả lỡ nó dài quá
                         <div
-                            className="prose prose-sm prose-slate max-w-none text-slate-600 mb-8"
+                            className="prose prose-sm prose-slate max-w-none text-slate-600 mb-6 overflow-y-auto pr-2 custom-scrollbar min-h-0"
                             dangerouslySetInnerHTML={{
                                 __html: DOMPurify.sanitize(description.replace(/&nbsp;/g, ' '))
                             }}
@@ -153,8 +158,15 @@ const TestSetDetail = () => {
                     )}
 
                     {/* Khu vực nút bấm đẩy xuống dưới cùng của Card */}
-                    <div className="mt-auto pt-6 border-t border-slate-100 flex flex-col gap-3">
-                        {canAttempt ? (
+                    <div className="mt-auto pt-6 border-t border-slate-100 flex flex-col gap-3 shrink-0">
+                        {hasActiveSession ? (
+                            <button
+                                onClick={handleStartTest}
+                                className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-bold text-[15px] shadow-lg shadow-amber-200 transform transition active:scale-95 flex items-center justify-center gap-3"
+                            >
+                                <FaClock /> TIẾP TỤC LÀM BÀI
+                            </button>
+                        ) : canAttempt ? (
                             <button
                                 onClick={handleStartTest}
                                 className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-[15px] shadow-lg shadow-blue-200 transform transition active:scale-95 flex items-center justify-center gap-3"
@@ -178,16 +190,15 @@ const TestSetDetail = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
-                // 💥 FIX CHIỀU CAO: Thêm flex flex-col h-full
-                className="lg:col-span-7 bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 flex flex-col h-full"
+                // 💥 FIX 2 (QUAN TRỌNG NHẤT): Thêm 'overflow-hidden' vào container cha này
+                className="lg:col-span-7 bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden"
             >
                 <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3 shrink-0">
                     <FaBookOpen className="text-primary" /> Lịch sử của bạn
                 </h2>
 
                 {attemptCount === 0 ? (
-                    // 💥 FIX GIAO DIỆN TRỐNG: Thêm flex-1 để nó giãn ra ép full chiều cao
-                    <div className="flex-1 flex flex-col items-center justify-center text-center py-16 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                    <div className="flex-1 flex flex-col items-center justify-center text-center py-16 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 min-h-0">
                         <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm text-slate-300">
                             <FaTrophy size={24} />
                         </div>
@@ -195,14 +206,15 @@ const TestSetDetail = () => {
                         <p className="text-sm text-slate-500">Bạn chưa làm bài kiểm tra này lần nào.</p>
                     </div>
                 ) : (
-                    // Thêm flex-1 để lấp đầy không gian
-                    <div className="flex-1 space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                    // Cục con flex-1, overflow-y-auto, min-h-0 giờ sẽ hoạt động hoàn hảo vì cha nó có overflow-hidden
+                    <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar min-h-0">
                         {history.map((result, index) => {
                             const isPassed = result.isPassed;
                             return (
                                 <div
                                     key={result.id}
-                                    className="bg-white border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all rounded-2xl p-4 md:p-5 relative group"
+                                    onClick={() => navigate(`/test-results/${result.id}/review`)}
+                                    className="bg-white border border-slate-100 hover:border-blue-200 hover:shadow-md cursor-pointer transition-all rounded-2xl p-4 md:p-5 relative group"
                                 >
                                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl ${isPassed ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
 
@@ -214,7 +226,7 @@ const TestSetDetail = () => {
                                                     <FaCalendarAlt /> {formatDate(result.createdAt)}
                                                 </div>
                                             </div>
-                                            <h4 className="text-base font-bold text-slate-800 line-clamp-2 mt-2">
+                                            <h4 className="text-base font-bold text-slate-800 line-clamp-2 mt-2 group-hover:text-blue-600 transition-colors">
                                                 {result.testTitle}
                                             </h4>
                                             <div className="flex items-center gap-1 text-[13px] text-slate-500 mt-2 bg-slate-50 w-fit px-2 py-1 rounded">

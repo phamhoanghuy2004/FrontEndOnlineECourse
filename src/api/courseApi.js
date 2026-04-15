@@ -22,6 +22,14 @@ const courseApi = {
         return axiosClient.get(`/enrollments/${courseId}/curriculum`);
     },
 
+    startLesson: (lessonId) => {
+        return axiosClient.post(`/lessons/${lessonId}/start`);
+    },
+
+    getLessonDetailForStudy: (lessonId) => {
+        return axiosClient.get(`/lessons/${lessonId}`);
+    },
+
     create: (formData) => {
         return axiosClient.post('/courses', formData, {
             headers: {

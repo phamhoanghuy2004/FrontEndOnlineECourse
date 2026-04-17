@@ -29,6 +29,40 @@ const StudyRoomPage = () => {
     const activeLesson = curriculumData?.lessons?.find(l => l.lessonId === activeLessonId);
     const activeLessonStatus = activeLesson?.status || 'NOT_STARTED';
 
+    const [realtimeProgress, setRealtimeProgress] = useState(0);
+
+    // 💥 [GÓC TECH LEAD]: Hàm hứng sự kiện "Hoàn thành 90% video" từ HlsVideoPlayer truyền lên
+    const handleVideoComplete = async (lessonId) => {
+        try {
+            // Gọi API báo BE: "Ê tao xem xong 90% video rồi nhé"
+            await courseApi.completeVideoProgress(lessonId);
+            
+            // 💥 CHECK LOGIC NGAY TRÊN FRONTEND
+            // Kiểm tra xem bài học hiện tại có bài test không (Dựa vào state hoặc detail)
+            const hasQuiz = activeLesson?.hasTest || lessonDetail?.testSet;
+
+            if (hasQuiz) {
+                // Kịch bản 1: CÓ TEST -> Chỉ thông báo xem xong video, giục làm test. KHÔNG đổi màu Sidebar.
+                toast.success("🎬 Đã xem xong Video! Hãy làm bài tập bên dưới để hoàn thành bài học nhé.");
+            } else {
+                // Kịch bản 2: KHÔNG CÓ TEST -> Xem xong video là xong bài. Bắn pháo hoa và cập nhật Sidebar.
+                toast.success("🎉 Chúc mừng! Bạn đã hoàn thành bài học này.");
+                
+                // Chỉ update icon Sidebar thành màu xanh khi thực sự đã xong bài học
+                setCurriculumData(prev => {
+                    const updated = prev.lessons.map(l => 
+                        l.lessonId === lessonId ? { ...l, status: 'COMPLETED' } : l
+                    );
+                    return { ...prev, lessons: updated };
+                });
+            }
+
+        } catch (error) {
+            // BE chửi (400 Bad Request) vì chưa đủ 90% do tua lố -> Nuốt lỗi âm thầm
+            console.warn("Chưa đủ điều kiện hoàn thành video (BE từ chối).", error);
+        }
+    };
+
     // Gọi API lấy Curriculum
     useEffect(() => {
         const fetchCurriculum = async () => {
@@ -56,28 +90,41 @@ const StudyRoomPage = () => {
         }
     }, [courseId]);
 
-    // 💥 EFFECT 2: LOGIC GỌI API LẤY CHI TIẾT BÀI HỌC (API 2)
+   // 💥 EFFECT 2: LOGIC GỌI API LẤY CHI TIẾT BÀI HỌC VÀ TIẾN ĐỘ REALTIME
     useEffect(() => {
-        const fetchLessonDetail = async () => {
+        const fetchDetailAndProgress = async () => {
             if (!activeLessonId || activeLessonStatus === 'NOT_STARTED') return;
 
             try {
                 setIsLoadingDetail(true);
-                setLessonDetail(null); // Reset data cũ trong lúc chờ
+                setLessonDetail(null);
+                setRealtimeProgress(0); // Reset tiến độ cũ
 
-                const response = await courseApi.getLessonDetailForStudy(activeLessonId);
-                const data = response.data || response;
-                console.log(data);
-                setLessonDetail(data);
+                // 💥 [GÓC TECH LEAD]: Dùng Promise.all để gọi 2 API song song cực mượt
+                // Mạng sẽ tải cả 2 cục data cùng 1 lúc -> Tiết kiệm 50% thời gian chờ
+                const [detailResponse, progressResponse] = await Promise.all([
+                    courseApi.getLessonDetailForStudy(activeLessonId),
+                    courseApi.getCurrentProgress(activeLessonId)
+                ]);
+
+                // Xử lý data Detail
+                const detailData = detailResponse.data || detailResponse;
+                setLessonDetail(detailData);
+
+                // Xử lý data Progress (Lấy từ Redis/DB)
+                const progressData = progressResponse.data || progressResponse;
+                // Nhớ check kỹ cấu trúc trả về của ApiResponse (thường data thực nằm trong property 'data')
+                setRealtimeProgress(progressData); 
+
             } catch (error) {
-                console.error("Lỗi khi tải chi tiết bài học:", error);
+                console.error("Lỗi khi tải chi tiết hoặc tiến độ:", error);
                 toast.error("Không thể tải nội dung bài học. Vui lòng thử lại!");
             } finally {
                 setIsLoadingDetail(false);
             }
         };
 
-        fetchLessonDetail();
+        fetchDetailAndProgress();
     }, [activeLessonId, activeLessonStatus]);
 
     // 💥 HIỆU ỨNG AUTO SCROLL LÊN ĐẦU KHI ĐỔI BÀI HỌC
@@ -192,7 +239,17 @@ const StudyRoomPage = () => {
                         ) : lessonDetail?.hlsUrl ? (
                             <div className="w-full aspect-video bg-black rounded-2xl shadow-lg relative overflow-hidden shrink-0 z-10 border border-slate-700/50">
                                 <div className="absolute top-0 left-0 w-full h-full">
-                                    <HlsVideoPlayer url={lessonDetail.hlsUrl} />
+                                    {/* 💥 [GÓC TECH LEAD]: TRUYỀN PROPS CHO HLS VIDEO PLAYER */}
+                                    <HlsVideoPlayer 
+                                        url={lessonDetail.hlsUrl} 
+                                        lessonId={activeLessonId}
+                                        // Lấy số giây học dở từ curriculum list hoặc DB
+                                        initialProgress={realtimeProgress}
+                                        // Truyền duration để player tính Rule 90%
+                                        duration={activeLesson?.durationSeconds || lessonDetail.durationSeconds}
+                                        // Hàm callback khi pass 90%
+                                        onComplete={handleVideoComplete}
+                                    />
                                 </div>
                             </div>
                         ) : (

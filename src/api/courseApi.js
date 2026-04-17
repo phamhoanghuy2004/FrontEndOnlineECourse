@@ -15,7 +15,9 @@ const courseApi = {
     },
 
     getMyLearningCourses: (params) => {
-        return axiosClient.get('/enrollments/my-course', { params });
+        return axiosClient.get('/enrollments/my-course', {
+            params
+        });
     },
 
     getCourseCurriculum: (courseId) => {
@@ -28,6 +30,18 @@ const courseApi = {
 
     getLessonDetailForStudy: (lessonId) => {
         return axiosClient.get(`/lessons/${lessonId}`);
+    },
+
+    syncVideoProgress: (lessonId, data) => {
+        return axiosClient.put(`/lessons/${lessonId}/progress`, data);
+    },
+
+    completeVideoProgress: (lessonId) => {
+        return axiosClient.post(`/lessons/${lessonId}/complete`);
+    },
+
+    getCurrentProgress: (lessonId) => {
+        return axiosClient.get(`/lessons/${lessonId}/progress`);
     },
 
     create: (formData) => {
@@ -51,7 +65,9 @@ const courseApi = {
     },
 
     searchCourses: (params) => {
-        return axiosClient.get('/courses/search', { params });
+        return axiosClient.get('/courses/search', {
+            params
+        });
     },
 };
 

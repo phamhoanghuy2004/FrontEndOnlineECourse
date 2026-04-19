@@ -2,6 +2,7 @@ import { Outlet, Link } from 'react-router-dom';
 import SidebarTeacher from './SidebarTeacher';
 import { FaBell, FaUserCircle } from 'react-icons/fa';
 import { useAuth } from '../../hooks/useAuth';
+import ChatBox from '../common/teacher/ChatBox';
 
 const TeacherLayout = () => {
     const { user } = useAuth();
@@ -43,8 +44,9 @@ const TeacherLayout = () => {
 
                     <Outlet />
                 </div>
-
             </div>
+            {/* Realtime Chat Box */}
+            <ChatBox />
         </div>
     );
 };

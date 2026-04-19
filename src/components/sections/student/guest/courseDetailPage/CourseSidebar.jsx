@@ -1,13 +1,41 @@
-import React from 'react';
-import { FaCheckCircle } from "react-icons/fa";
+import { FaCheckCircle, FaCommentDots } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../../../hooks/useAuth';
+import { useChat } from '../../../../../context/ChatContext';
+import chatApi from '../../../../../api/chatApi';
+import { toast } from 'react-hot-toast';
 
 const CourseSidebar = ({ course, isRegistered }) => {
     const navigate = useNavigate();
 
+    const { user } = useAuth();
+    const { setActiveConversation } = useChat();
+
     // Format tiền VND
     const formatPrice = (price) => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+    };
+
+    const handleConsultation = async () => {
+        if (!user) {
+            toast.error("Vui lòng đăng nhập để nhận tư vấn");
+            navigate('/login');
+            return;
+        }
+
+        if (!course.teacherId) {
+            toast.error("Không tìm thấy thông tin giảng viên");
+            return;
+        }
+
+        try {
+            const response = await chatApi.createOrGetConversation(course.teacherId, user.id);
+            setActiveConversation(response.data);
+            navigate(`/learner/${user.id}/chat`);
+        } catch (error) {
+            console.error("Lỗi khi kết nối tư vấn:", error);
+            toast.error("Không thể kết nối với giảng viên lúc này");
+        }
     };
 
     return (
@@ -40,6 +68,13 @@ const CourseSidebar = ({ course, isRegistered }) => {
                             Tiếp tục học thuật
                         </button>
                     )}
+                    
+                    <button 
+                        onClick={handleConsultation}
+                        className="w-full mt-3 bg-white text-emerald-600 border-2 border-emerald-600 py-3 rounded-xl font-bold text-sm shadow-sm hover:bg-emerald-50 transition-all flex items-center justify-center gap-2"
+                    >
+                        <FaCommentDots /> Nhận tư vấn từ giảng viên
+                    </button>
                     
                 </div>
 

@@ -1,6 +1,6 @@
-import { FaEnvelope } from 'react-icons/fa';
+import { FaCommentDots } from 'react-icons/fa';
 
-const StudentTable = ({ students }) => {
+const StudentTable = ({ students, onChatClick }) => {
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="overflow-x-auto">
@@ -52,8 +52,12 @@ const StudentTable = ({ students }) => {
                                     </div>
                                 </td>
                                 <td className="p-4 text-right">
-                                    <button className="p-2 rounded-full bg-slate-100 text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition">
-                                        <FaEnvelope />
+                                    <button 
+                                        onClick={() => onChatClick && onChatClick(student.studentId)}
+                                        className="p-2 rounded-full bg-slate-100 text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition shadow-sm"
+                                        title="Chat với học viên"
+                                    >
+                                        <FaCommentDots />
                                     </button>
                                 </td>
                             </tr>

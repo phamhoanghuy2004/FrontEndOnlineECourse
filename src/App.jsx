@@ -54,6 +54,7 @@ import RevenuePage from "./page/teacher/RevenuePage";
 import TeacherBlogPage from "./page/teacher/TeacherBlogPage";
 import BlogEditorPage from "./page/teacher/BlogEditorPage";
 import TeacherProfilePage from "./page/teacher/TeacherProfilePage";
+import TeacherChatPage from "./page/teacher/TeacherChatPage";
 
 
 function App() {
@@ -172,6 +173,7 @@ function App() {
               <Route path="blog/new" element={<BlogEditorPage />} />
               <Route path="blog/:id/edit" element={<BlogEditorPage />} />
               <Route path="profile" element={<TeacherProfilePage />} />
+              <Route path="chat" element={<TeacherChatPage />} />
             </Route>
 
             {/* Fallback: Nếu nhập sai đường dẫn thì về trang chủ */}

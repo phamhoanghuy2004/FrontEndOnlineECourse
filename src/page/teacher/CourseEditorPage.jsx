@@ -35,7 +35,13 @@ const CourseEditorPage = () => {
             // Append all fields from formData
             Object.keys(formData).forEach(key => {
                 if (key === 'lessons') return; // Lessons are handled separately or later
-                data.append(key, formData[key]);
+                
+                if (Array.isArray(formData[key])) {
+                    // Spring Boot nhận List bằng cách append nhiều lần cùng 1 key
+                    formData[key].forEach(val => data.append(key, val));
+                } else {
+                    data.append(key, formData[key]);
+                }
             });
 
             // Append file if exists

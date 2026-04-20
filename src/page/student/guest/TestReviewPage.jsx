@@ -5,6 +5,9 @@ import SingleQuestionBlock from '../../../components/common/student/guest/testPr
 import GroupQuestionBlock from '../../../components/common/student/guest/testPractice/GroupQuestionBlock';
 import testApi from '../../../api/testApi';
 import { toast } from 'react-toastify';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+// 🔴 [MỚI THÊM] Import axiosClient để gọi API Insights
+import axiosClient from '../../../api/axiosClient';
 
 const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -22,14 +25,30 @@ const TestReviewPage = () => {
     const [currentPartIndex, setCurrentPartIndex] = useState(0);
     const [loading, setLoading] = useState(true);
 
+    // 🔴 [MỚI THÊM] State để lưu data phân tích năng lực
+    const [insightData, setInsightData] = useState(null);
+
     useEffect(() => {
         const fetchReviewDetail = async () => {
             try {
                 setLoading(true);
                 const response = await testApi.getTestReviewDetails(id);
                 const data = response.data?.data || response.data;
-                
+
                 setReviewData(data);
+
+                // 🔴 [MỚI THÊM] Ngay sau khi có kết quả test, gọi API lấy Phân tích năng lực (Insights)
+                try {
+                    // Giả sử môn thi này thuộc nhóm tiếng Anh TOEIC
+                    const insightRes = await axiosClient.get('/users/skills/insights', {
+                        params: { group: 'ENGLISH_TOEIC' }
+                    });
+                    if (insightRes.data) {
+                        setInsightData(insightRes.data);
+                    }
+                } catch (insightErr) {
+                    console.log("User chưa có hồ sơ năng lực hoặc lỗi tải insight:", insightErr);
+                }
 
                 // Re-format các section y hệt lúc làm bài
                 let globalQuestionCounter = 1;
@@ -101,7 +120,7 @@ const TestReviewPage = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-20 pt-28">
-            
+
             {/* HEADER TỐI GIẢN */}
             <header className="sticky top-20 z-40 bg-white shadow-sm border-b border-gray-200 transition-all rounded-2xl mx-4 mt-4">
                 <div className="container mx-auto px-4 h-16 flex flex-wrap items-center justify-between">
@@ -140,45 +159,98 @@ const TestReviewPage = () => {
 
                     {/* BẢNG TÓM TẮT ĐIỂM SỐ TRƯỚC KHI VÀO ĐỀ */}
                     {currentPartIndex === 0 && (
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-wrap items-center justify-between gap-6">
-                            <div className="flex items-center gap-4">
-                                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${summary.isPassed ? 'bg-emerald-100 text-emerald-500' : 'bg-red-100 text-red-500'}`}>
-                                    <FaTrophy />
+                        <div className="space-y-6">
+
+                            {/* 🔴 [THAY ĐỔI]: Giao diện Tổng Điểm gọn gàng hơn, xóa bỏ phần Nghe/Nói/Đọc/Viết */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-wrap items-center justify-between gap-6">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${summary.isPassed ? 'bg-emerald-100 text-emerald-500' : 'bg-red-100 text-red-500'}`}>
+                                        <FaTrophy />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-500 font-bold uppercase">Tổng điểm</p>
+                                        <p className={`text-3xl font-black ${summary.isPassed ? 'text-emerald-600' : 'text-red-600'}`}>
+                                            {summary.totalScore}
+                                            <span className="text-sm font-bold text-gray-400 ml-2">({summary.isPassed ? 'ĐẠT' : 'KHÔNG ĐẠT'})</span>
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-gray-500 font-bold uppercase">Tổng điểm</p>
-                                    <p className={`text-3xl font-black ${summary.isPassed ? 'text-emerald-600' : 'text-red-600'}`}>
-                                        {summary.totalScore}
-                                        <span className="text-sm font-bold text-gray-400 ml-2">({summary.isPassed ? 'ĐẠT' : 'KHÔNG ĐẠT'})</span>
+
+                                {/* Khối Thời gian làm bài được đẩy sang phải nhờ justify-between */}
+                                <div className="text-right">
+                                    <p className="text-[11px] text-gray-400 font-bold uppercase mb-1">Thời gian làm bài</p>
+                                    <p className="text-xl font-bold text-blue-600 flex items-center gap-2 justify-end">
+                                        <FaClock /> {formatTime(summary.timeTakenSeconds)}
                                     </p>
                                 </div>
                             </div>
-                            
-                            <div className="flex gap-4 border-l border-gray-100 pl-6">
-                                <div className="text-center">
-                                    <p className="text-[11px] text-gray-400 font-bold uppercase mb-1">Nghe</p>
-                                    <p className="font-bold text-gray-700">{summary.listeningScore || 0}</p>
+
+                            {/* Khối Báo cáo Năng Lực (Radar Chart) */}
+                            {insightData && (
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 overflow-hidden">
+                                    {/* 🔴 [THAY ĐỔI Ở ĐÂY]: Đổi tên Header và thêm Disclaimer */}
+                                    <div className="mb-6">
+                                        <h3 className="text-xl font-extrabold text-blue-900 flex items-center gap-2">
+                                            <span className="w-2 h-6 bg-blue-500 rounded-full inline-block"></span>
+                                            Biểu Đồ Phân Tích Kỹ Năng 
+                                        </h3>
+                                        <p className="text-sm text-gray-400 mt-1 italic ml-4">
+                                            * Dữ liệu được tổng hợp và phân tích dựa trên lịch sử làm bài của bạn trên hệ thống Echill.
+                                        </p>
+                                    </div>
+
+                                    <div className="flex flex-col lg:flex-row gap-8 items-center">
+                                        <div className="w-full lg:w-1/2 h-[320px]">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={insightData.skills}>
+                                                    <PolarGrid stroke="#e2e8f0" />
+                                                    <PolarAngleAxis
+                                                        dataKey="tagName"
+                                                        tick={{ fill: '#475569', fontSize: 11, fontWeight: 'bold' }}
+                                                    />
+                                                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                                    <Radar
+                                                        name="Độ thành thạo (%)"
+                                                        dataKey="score"
+                                                        stroke="#3b82f6"
+                                                        strokeWidth={2}
+                                                        fill="#60a5fa"
+                                                        fillOpacity={0.4}
+                                                    />
+                                                </RadarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+
+                                        <div className="w-full lg:w-1/2 space-y-4">
+                                            <div className="bg-blue-50 p-5 rounded-xl border border-blue-100 relative">
+                                                <div className="absolute top-0 left-4 -translate-y-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                                                    Đánh giá từ Hệ Thống
+                                                </div>
+                                                <p className="text-slate-700 leading-relaxed text-sm mt-2">
+                                                    {insightData.motivationalRemark}
+                                                </p>
+                                            </div>
+
+                                            {testData.type === 'PLACEMENT_TEST' && (
+                                                <div className="bg-gradient-to-br from-emerald-50 to-green-100 p-5 rounded-xl border border-emerald-200">
+                                                    <h4 className="font-bold text-emerald-800 mb-2 flex items-center gap-2">
+                                                        🚀 Lộ trình thiết kế dành riêng cho bạn!
+                                                    </h4>
+                                                    <p className="text-sm text-emerald-700 mb-4">
+                                                        Dựa vào các lỗ hổng kiến thức trên, chúng tôi đã chuẩn bị sẵn một lộ trình giúp bạn tối ưu hóa thời gian học và nhanh chóng đạt mục tiêu.
+                                                    </p>
+                                                    <button
+                                                        onClick={() => navigate('/suggested-courses')}
+                                                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition-all shadow-md shadow-emerald-500/30 active:scale-[0.98]"
+                                                    >
+                                                        Nhận lộ trình đề xuất ngay
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-center">
-                                    <p className="text-[11px] text-gray-400 font-bold uppercase mb-1">Đọc</p>
-                                    <p className="font-bold text-gray-700">{summary.readingScore || 0}</p>
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-[11px] text-gray-400 font-bold uppercase mb-1">Nói</p>
-                                    <p className="font-bold text-gray-700">{summary.speakingScore || 0}</p>
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-[11px] text-gray-400 font-bold uppercase mb-1">Viết</p>
-                                    <p className="font-bold text-gray-700">{summary.writingScore || 0}</p>
-                                </div>
-                            </div>
-                            
-                            <div className="border-l border-gray-100 pl-6 text-center">
-                                <p className="text-[11px] text-gray-400 font-bold uppercase mb-1">Thời gian làm bài</p>
-                                <p className="font-bold text-blue-600 flex items-center gap-1 justify-center">
-                                    <FaClock /> {formatTime(summary.timeTakenSeconds)}
-                                </p>
-                            </div>
+                            )}
                         </div>
                     )}
 
@@ -197,7 +269,7 @@ const TestReviewPage = () => {
                                     group={group}
                                     type={testData.type}
                                     userAnswers={userAnswers}
-                                    isReviewMode={true} 
+                                    isReviewMode={true}
                                 />
                             ))}
                             {currentPart.questions && currentPart.questions.map((question) => (
@@ -206,7 +278,7 @@ const TestReviewPage = () => {
                                     question={question}
                                     type={testData.type}
                                     userAnswers={userAnswers}
-                                    isReviewMode={true} 
+                                    isReviewMode={true}
                                 />
                             ))}
                         </div>
@@ -258,9 +330,9 @@ const TestReviewPage = () => {
                                                 const selectedId = userAnswers?.[q.id] || userAnswers?.[q.id?.toString()];
                                                 // 💥 CHỐT CHẶN BÊN PHẢI: Bắt cả isCorrect và correct
                                                 const correctAns = q.answers?.find(a => a.isCorrect === true || a.correct === true);
-                                                
-                                                let btnClass = 'bg-gray-100 text-gray-400 border-transparent'; 
-                                                
+
+                                                let btnClass = 'bg-gray-100 text-gray-400 border-transparent';
+
                                                 if (selectedId) {
                                                     // 💥 ÉP CHUỖI ĐỂ SO SÁNH TRÁNH LỖI JS
                                                     if (correctAns && selectedId?.toString() === correctAns.id?.toString()) {

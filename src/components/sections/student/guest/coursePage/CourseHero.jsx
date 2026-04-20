@@ -1,8 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { useNavigate} from 'react-router-dom';
 import { fadeInLeft, fadeInUp, fadeInRight, floatY } from '../../../../../constants/motionVariants';
 import Button from '../../../../common/Button';
 import Title from '../../../../common/Title';
+import axiosClient from '../../../../../api/axiosClient';
 
 // 1. Thêm hàm xử lý scroll mượt
 const scrollToCourses = () => {
@@ -25,6 +28,42 @@ const scrollToCourses = () => {
 };
 
 const CourseHero = () => {
+    const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false);
+    const PLACEMENT_TEST_ID = '833713117646593268';
+
+    // 💥 Hàm xử lý click Nhận gợi ý khóa học
+    const handleGetInsights = async () => {
+        setIsLoading(true);
+        try {
+            // Gọi API bằng axiosClient đã cấu hình
+            const response = await axiosClient.get('/users/skills/insights', {
+                params: { group: 'ENGLISH_TOEIC' } // Truyền param tagGroup
+            });
+
+            // 1. NẾU THÀNH CÔNG: User đã có hồ sơ năng lực
+            console.log("Dữ liệu Insight:", response.data);
+            // TODO: Lưu vào state và mở Modal hiển thị Radar Chart & Gợi ý lộ trình
+            // toast.success("Đã phân tích xong lộ trình của bạn!");
+
+        } catch (error) {
+            // 2. NẾU THẤT BẠI: Bắt đúng mã lỗi 1067 từ Backend
+            if (error.code === 1067) {
+                console.log("User chưa có hồ sơ năng lực. Chuyển hướng sang làm bài Test...");
+                // toast.info("Bạn cần làm bài test đầu vào để chúng tôi hiểu rõ năng lực của bạn nhé!");
+                
+                // 💥 Chuyển hướng đến trang làm bài Test (Nhớ thay URL cho đúng với Route của FE bạn)
+                navigate(`/test-sets/${PLACEMENT_TEST_ID}`); 
+            } else {
+                // Các lỗi khác (Server lỗi, Mất mạng...)
+                console.error("Lỗi gọi API:", error);
+                // toast.error(error.message);
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <section className="pt-32 pb-20 bg-white overflow-hidden">
             <div className="container mx-auto px-6">
@@ -65,8 +104,12 @@ const CourseHero = () => {
                             </p>
 
                             <div className="flex flex-wrap gap-4 justify-center relative z-10">
-                                <Button onClick={() => console.log("Nhận gợi ý khóa học")} >
-                                    Nhận gợi ý khóa học
+                               {/* 💥 Gắn sự kiện onClick và trạng thái loading */}
+                                <Button 
+                                    onClick={handleGetInsights} 
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? 'Đang phân tích...' : 'Nhận gợi ý khóa học'}
                                 </Button>
 
                                 <Button onClick={scrollToCourses} variant="outline" >

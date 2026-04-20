@@ -9,10 +9,15 @@ import InputField from '../../common/InputField';
 import SelectField from '../../common/SelectField';
 import LessonList from './LessonList';
 import categoryApi from '../../../api/categoryApi';
+// 🔴 [THÊM MỚI] Import API gọi tag
+import tagApi from '../../../api/tagApi';
+
 
 const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
     const navigate = useNavigate();
     const [categories, setCategories] = useState([]);
+    // 🔴 [THÊM MỚI] State lưu danh sách tags từ API
+    const [availableTags, setAvailableTags] = useState([]);
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
     const [formData, setFormData] = useState({
@@ -22,6 +27,8 @@ const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
         price: '',
         originalPrice: '',
         categoryId: '',
+        // 🔴 [THÊM MỚI] Thêm mảng chứa ID của tags được chọn
+        tagIds: [],
         lessons: []
     });
 
@@ -36,18 +43,30 @@ const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
     };
 
     useEffect(() => {
-        const fetchCategories = async () => {
+        const fetchInitialMetadata = async () => {
+            // Luồng 1: Gọi Categories
             try {
-                const response = await categoryApi.getAll();
-                setCategories(response.data || []);
-                if (!isEditing && response.data?.length > 0) {
-                    setFormData(prev => ({ ...prev, categoryId: response.data[0].id }));
+                const catResponse = await categoryApi.getAll();
+                setCategories(catResponse.data || []);
+                if (!isEditing && catResponse.data?.length > 0) {
+                    setFormData(prev => ({ ...prev, categoryId: catResponse.data[0].id }));
                 }
             } catch (error) {
-                console.error('Error fetching categories:', error);
+                console.error('Lỗi khi tải Categories:', error);
+            }
+
+            // Luồng 2: Gọi Tags (Nếu API Tags lỗi 500, Categories vẫn hiển thị bình thường)
+            try {
+                const tagResponse = await tagApi.getAll();
+                setAvailableTags(tagResponse.data || []);
+            } catch (error) {
+                console.error('Lỗi khi tải Tags:', error);
+                // Báo lỗi nhẹ cho User biết
+                alert("Không thể tải danh sách Kỹ năng trọng tâm do lỗi máy chủ!");
             }
         };
-        fetchCategories();
+
+        fetchInitialMetadata();
     }, [isEditing]);
 
     useEffect(() => {
@@ -59,6 +78,8 @@ const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
                 price: initialData.price || '',
                 originalPrice: initialData.originalPrice || '',
                 categoryId: initialData.categoryId || (initialData.category?.id) || '',
+                // 🔴 [THÊM MỚI] Map danh sách TagResponse từ backend ra mảng ID
+                tagIds: initialData.tags ? initialData.tags.map(t => t.id) : [],
                 lessons: initialData.lessons || []
             });
             setImagePreview(initialData.imageUrl || initialData.image || '');
@@ -68,6 +89,24 @@ const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    // 🔴 [THÊM MỚI] Hàm xử lý Toggle khi click chọn/bỏ chọn Tag
+    const handleTagToggle = (tagId) => {
+        setFormData(prev => {
+            const isSelected = prev.tagIds.includes(tagId);
+            if (isSelected) {
+                // Xóa tag nếu đã chọn
+                return { ...prev, tagIds: prev.tagIds.filter(id => id !== tagId) };
+            } else {
+                // Kiểm tra giới hạn 3 tag (rào cản UI)
+                if (prev.tagIds.length >= 3) {
+                    alert("Chỉ được chọn tối đa 3 kỹ năng trọng tâm!");
+                    return prev;
+                }
+                return { ...prev, tagIds: [...prev.tagIds, tagId] };
+            }
+        });
     };
 
     const handleLessonsChange = (lessons) => {
@@ -85,6 +124,13 @@ const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // 🔴 [THÊM MỚI] Validate chặn lại lần nữa trước khi gửi (Đề phòng)
+        if (formData.tagIds.length === 0) {
+            alert("Vui lòng chọn ít nhất 1 Tag trọng tâm cho khóa học!");
+            return;
+        }
+
         onSubmit(formData, imageFile);
     };
 
@@ -175,6 +221,40 @@ const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
                                 placeholder="VD: 1000000"
                                 icon={FaDollarSign}
                             />
+                        </div>
+
+                        {/* 🔴 [THÊM MỚI] GIAO DIỆN CHỌN TAG (MULTIPLE PILLS) */}
+                        <div>
+                            <label className="text-[11px] font-bold text-slate-700 ml-1 uppercase tracking-wide block mb-2">
+                                Kỹ năng trọng tâm (Tags) <span className="text-red-500">*</span>
+                            </label>
+                            <div className="flex flex-wrap gap-2 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                                {availableTags.map(tag => {
+                                    const isSelected = formData.tagIds.includes(tag.id);
+                                    // Disable các nút chưa chọn nếu đã chọn đủ 3 tag
+                                    const isMaxReached = formData.tagIds.length >= 3 && !isSelected;
+
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={tag.id}
+                                            onClick={() => handleTagToggle(tag.id)}
+                                            disabled={isMaxReached}
+                                            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${isSelected
+                                                ? 'bg-emerald-100 text-emerald-700 border-2 border-emerald-500 shadow-sm'
+                                                : 'bg-white text-slate-600 border border-slate-300 hover:border-emerald-400 hover:text-emerald-600'
+                                                } ${isMaxReached ? 'opacity-50 cursor-not-allowed hover:border-slate-300 hover:text-slate-600' : ''}`}
+                                        >
+                                            <FaTags size={12} className={isSelected ? "text-emerald-500" : "text-slate-400"} />
+                                            {tag.name}
+                                        </button>
+                                    );
+                                })}
+                                {availableTags.length === 0 && <span className="text-sm text-slate-400">Đang tải danh sách thẻ tag...</span>}
+                            </div>
+                            <p className="text-xs font-medium text-slate-500 mt-2 ml-1">
+                                Đã chọn <span className={formData.tagIds.length === 3 ? "text-emerald-600 font-bold" : ""}>{formData.tagIds.length}/3</span> thẻ tag. Phân loại kỹ giúp thuật toán phân phối khóa học tốt hơn.
+                            </p>
                         </div>
 
                         <div>

@@ -44,6 +44,7 @@ import LearnerProgressPage from "./page/student/learner/LearnerProgressPage";
 import VirtualSpeakingPage from "./page/student/learner/VirtualSpeakingPage";
 import LearnerChatPage from "./page/student/learner/LearnerChatPage";
 import StudyGoalPage from "./page/student/learner/StudyGoalPage";
+import StudyRoomPage from "./page/student/learner/StudyRoomPage";
 
 // --- Teacher Pages ---
 import TeacherDashboard from "./page/teacher/TeacherDashboard";
@@ -150,6 +151,7 @@ function App() {
               <Route path="virtualSpeaking" element={<VirtualSpeakingPage />} />
               <Route path="chat" element={<LearnerChatPage />} />
               <Route path="study-goal" element={<StudyGoalPage />} />
+              <Route path="study-room/:courseId" element={<StudyRoomPage />} />
             </Route>
 
             {/* =========================================================

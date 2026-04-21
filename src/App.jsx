@@ -36,6 +36,7 @@ import CourseCheckoutPage from "./page/student/guest/CourseCheckoutPage";
 import PaymentResultPage from "./page/student/guest/PaymentResultPage";
 import TestSetDetail from "./page/student/guest/TestSetDetail";
 import TestReviewPage from "./page/student/guest/TestReviewPage";
+import SuggestedComboPage from "./page/student/guest/SuggestedComboPage";
 
 // --- Learner Pages ---
 import LearnerHomePage from "./page/student/learner/LearnerHomePage";
@@ -101,6 +102,7 @@ function App() {
               <Route path="/verify-otp" element={<VerifyOtpPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/payment/result" element={<PaymentResultPage />} />
+              <Route path="/course-recommendations" element={<SuggestedComboPage />} />
 
               <Route path="/complete-profile" element={
                 <ProtectedRoute>

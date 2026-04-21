@@ -240,7 +240,7 @@ const TestReviewPage = () => {
                                                         Dựa vào các lỗ hổng kiến thức trên, chúng tôi đã chuẩn bị sẵn một lộ trình giúp bạn tối ưu hóa thời gian học và nhanh chóng đạt mục tiêu.
                                                     </p>
                                                     <button
-                                                        onClick={() => navigate('/suggested-courses')}
+                                                        onClick={() =>  navigate(`/course-recommendations`)}
                                                         className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition-all shadow-md shadow-emerald-500/30 active:scale-[0.98]"
                                                     >
                                                         Nhận lộ trình đề xuất ngay

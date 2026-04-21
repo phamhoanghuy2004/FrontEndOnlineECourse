@@ -43,6 +43,7 @@ const CourseHero = () => {
 
             // 1. NẾU THÀNH CÔNG: User đã có hồ sơ năng lực
             console.log("Dữ liệu Insight:", response.data);
+            navigate(`/course-recommendations`); 
             // TODO: Lưu vào state và mở Modal hiển thị Radar Chart & Gợi ý lộ trình
             // toast.success("Đã phân tích xong lộ trình của bạn!");
 

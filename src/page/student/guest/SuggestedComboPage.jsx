@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { FaCheck, FaArrowRight, FaRoute, FaLightbulb, FaFireAlt, FaShieldAlt } from 'react-icons/fa';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
 // 💥 Import cấu hình API và AuthContext (Nhớ trỏ đúng đường dẫn của bạn)
 import courseRecommendApi from '../../../api/courseRecommendApi';
 import { useAuth } from '../../../hooks/useAuth';
 
 const SuggestedComboPage = () => {
+    const navigate = useNavigate();
+
     // 💥 Rút thông tin user từ AuthContext
     const { user } = useAuth(); 
     const studyGoal = user?.activeGoal; 
@@ -63,6 +66,18 @@ const SuggestedComboPage = () => {
         setSelectedCourses(prev => 
             prev.includes(courseId) ? prev.filter(id => id !== courseId) : [...prev, courseId]
         );
+    };
+
+    // 💥 THÊM MỚI: Hàm xử lý khi user bấm nút "Mua ngay"
+    const handleBuyNow = () => {
+        // Chắc cú chặn lại nếu không chọn khóa nào
+        if (selectedCourses.length === 0) return; 
+        
+        // Biến mảng [101, 102] thành chuỗi "101,102"
+        const idsString = selectedCourses.join(','); 
+        
+        // Chuyển hướng sang trang checkout kèm query params
+        navigate(`/checkout?ids=${idsString}`);
     };
 
     const selectedTotalPrice = recommendedCourses
@@ -204,6 +219,8 @@ const SuggestedComboPage = () => {
                                 </div>
                                 <button 
                                     disabled={selectedCourses.length === 0}
+                                    // 💥 THÊM MỚI: Bắn sự kiện onClick vào đây
+                                    onClick={handleBuyNow} 
                                     className={`py-3 px-6 rounded-xl font-bold text-white text-sm transition-all active:scale-95 group flex-shrink-0
                                         ${selectedCourses.length === 0 
                                             ? 'bg-slate-300 cursor-not-allowed' 
@@ -211,7 +228,7 @@ const SuggestedComboPage = () => {
                                         }
                                     `}
                                 >
-                                    Thanh toán <FaArrowRight className="inline ml-1 group-hover:translate-x-1 transition-transform" />
+                                    Mua ngay <FaArrowRight className="inline ml-1 group-hover:translate-x-1 transition-transform" />
                                 </button>
                             </div>
                         </div>

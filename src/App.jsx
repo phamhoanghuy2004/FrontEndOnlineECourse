@@ -116,7 +116,7 @@ function App() {
                 </ProtectedRoute>
               } />
 
-              <Route path="/checkout/course/:id" element={
+              <Route path="/checkout" element={
                 <ProtectedRoute>
                   <CourseCheckoutPage />
                 </ProtectedRoute>

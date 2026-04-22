@@ -60,7 +60,7 @@ const CourseSidebar = ({ course, isRegistered }) => {
                     </div>
 
                     {!isRegistered ? (
-                        <button onClick={() => navigate(`/checkout/course/${course.id}`)} className="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg shadow-md hover:shadow-lg hover:bg-green-600 transition-all transform hover:-translate-y-1 block">
+                        <button onClick={() => navigate(`/checkout?ids=${course.id}`)} className="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg shadow-md hover:shadow-lg hover:bg-green-600 transition-all transform hover:-translate-y-1 block">
                             Đăng ký học ngay
                         </button>
                     ) : (

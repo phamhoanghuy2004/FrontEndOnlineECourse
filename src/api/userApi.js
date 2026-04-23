@@ -50,6 +50,10 @@ const userApi = {
     return axiosClient.get('/teachers/student-statistics', { params });
   },
 
+  getAllTeachersApi: () => {
+    return axiosClient.get('/teachers/all');
+  },
+
 }
 
 export default userApi;

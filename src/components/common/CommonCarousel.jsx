@@ -26,7 +26,7 @@ const CommonCarousel = ({
             className="pb-16" 
         >
             {data.map((item, index) => (
-                <SwiperSlide key={`${item.id || index}-${index}`} className="py-4 pl-1 h-auto">
+                <SwiperSlide key={`${item.id || index}-${index}`} className="py-4 pl-1 !h-auto flex">
                     <CardComponent data={item} />
                 </SwiperSlide>
             ))}

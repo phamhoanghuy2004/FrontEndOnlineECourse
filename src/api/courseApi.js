@@ -69,6 +69,10 @@ const courseApi = {
             params
         });
     },
+
+    getAllCourses: () => {
+        return axiosClient.get('/courses/all');
+    }
 };
 
 export default courseApi;

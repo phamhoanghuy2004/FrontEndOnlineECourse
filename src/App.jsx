@@ -57,6 +57,7 @@ import TeacherBlogPage from "./page/teacher/TeacherBlogPage";
 import BlogEditorPage from "./page/teacher/BlogEditorPage";
 import TeacherProfilePage from "./page/teacher/TeacherProfilePage";
 import TeacherChatPage from "./page/teacher/TeacherChatPage";
+import VoucherManagementPage from "./page/teacher/VoucherManagementPage";
 
 
 function App() {
@@ -178,6 +179,7 @@ function App() {
               <Route path="blog/:id/edit" element={<BlogEditorPage />} />
               <Route path="profile" element={<TeacherProfilePage />} />
               <Route path="chat" element={<TeacherChatPage />} />
+              <Route path="/teacher/vouchers" element={<VoucherManagementPage />} />
             </Route>
 
             {/* Fallback: Nếu nhập sai đường dẫn thì về trang chủ */}

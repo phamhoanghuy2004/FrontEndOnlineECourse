@@ -58,7 +58,7 @@ import BlogEditorPage from "./page/teacher/BlogEditorPage";
 import TeacherProfilePage from "./page/teacher/TeacherProfilePage";
 import TeacherChatPage from "./page/teacher/TeacherChatPage";
 import VoucherManagementPage from "./page/teacher/VoucherManagementPage";
-
+import CoinPackageManagement from "./page/teacher/CoinPackageManagement";
 
 function App() {
   return (
@@ -179,7 +179,8 @@ function App() {
               <Route path="blog/:id/edit" element={<BlogEditorPage />} />
               <Route path="profile" element={<TeacherProfilePage />} />
               <Route path="chat" element={<TeacherChatPage />} />
-              <Route path="/teacher/vouchers" element={<VoucherManagementPage />} />
+              <Route path="vouchers" element={<VoucherManagementPage />} />
+              <Route path="coin-packages" element={<CoinPackageManagement />} />
             </Route>
 
             {/* Fallback: Nếu nhập sai đường dẫn thì về trang chủ */}

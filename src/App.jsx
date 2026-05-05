@@ -37,6 +37,7 @@ import PaymentResultPage from "./page/student/guest/PaymentResultPage";
 import TestSetDetail from "./page/student/guest/TestSetDetail";
 import TestReviewPage from "./page/student/guest/TestReviewPage";
 import SuggestedComboPage from "./page/student/guest/SuggestedComboPage";
+import CoinShopPage from "./page/student/guest/CoinShopPage";
 
 // --- Learner Pages ---
 import LearnerHomePage from "./page/student/learner/LearnerHomePage";
@@ -133,6 +134,12 @@ function App() {
               <Route path="/test-results/:id/review" element={
                 <ProtectedRoute>
                   <TestReviewPage />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/coinShop" element={
+                <ProtectedRoute>
+                  <CoinShopPage />
                 </ProtectedRoute>
               } />
 

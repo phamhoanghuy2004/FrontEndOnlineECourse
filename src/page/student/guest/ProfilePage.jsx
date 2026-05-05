@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
     FaUserEdit, FaCamera, FaCoins, FaHistory, FaBullseye,
     FaSave, FaTimes, FaEnvelope, FaBirthdayCake, FaSignOutAlt,
-    FaMapMarkerAlt, FaBriefcase
+    FaMapMarkerAlt, FaBriefcase, FaPlus
 } from "react-icons/fa";
 import { useAuth } from "../../../hooks/useAuth";
 import userApi from "../../../api/userApi";
@@ -68,6 +68,13 @@ const ProfilePage = () => {
     });
 
     const MAX_SIZE = 2 * 1024 * 1024;
+
+
+    useEffect(() => {
+        if (user) {
+            fetchUserProfile();
+        }
+    }, []);
 
     useEffect(() => {
         if (user) {
@@ -229,11 +236,23 @@ const ProfilePage = () => {
                             <span className="text-gray-500 text-sm mb-4">{user?.level || "None"} LEVEL</span>
 
                             <div className="grid grid-cols-2 gap-4 w-full mt-4 pt-4 border-t border-gray-100">
-                                <div className="text-center p-2">
-                                    <div className="flex items-center justify-center gap-1 text-yellow-500 font-bold text-xl">
+                                {/* 🔴 [SỬA 2]: Fix lệch xu bằng cách đưa dấu + ra absolute */}
+                                <div className="text-center p-2 flex flex-col items-center justify-center">
+                                    <button
+                                        onClick={() => navigate('/coinShop')}
+                                        // 🔴 Đổi từ flex thành inline-flex và thêm relative
+                                        className="relative inline-flex items-center justify-center gap-1 text-yellow-500 font-bold text-xl hover:text-yellow-600 transition-colors group"
+                                        title="Nạp thêm xu"
+                                    >
                                         <FaCoins /> {user?.currentCoin || 0}
-                                    </div>
-                                    <span className="text-xs text-gray-400 uppercase font-semibold">Xu hiện có</span>
+
+                                        {/* 🔴 Thêm absolute, -right-5, -top-1 để dấu + nổi lên góc trên bên phải mà không đẩy số xu lệch đi */}
+                                        <div className="absolute -right-5 -top-1 bg-yellow-500 text-white rounded-full p-[3px] text-[9px] group-hover:scale-110 transition-transform shadow-sm">
+                                            <FaPlus />
+                                        </div>
+                                    </button>
+                                    {/* 🔴 Thêm mt-1 để có khoảng trống một xíu cho dễ nhìn */}
+                                    <span className="text-xs text-gray-400 uppercase font-semibold mt-1">Xu hiện có</span>
                                 </div>
 
                                 <div

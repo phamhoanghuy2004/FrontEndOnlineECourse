@@ -1,9 +1,12 @@
 import axiosClient from "./axiosClient";
 
 const paymentApi = {
-    checkoutCourse: (courseId) => {
-        return axiosClient.post(`/payments/checkout/course/${courseId}`);
-    }
+    checkoutCourse: (data) => {
+        return axiosClient.post(`/payments/checkout/courses`, data);
+    },
+    checkoutCoinPackage: (data) => {
+        return axiosClient.post(`/payments/checkout/coinPackage`, data);
+    },
 };
 
 export default paymentApi;

@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaBookOpen, FaChartBar, FaUserGraduate, FaPenFancy, FaComments } from 'react-icons/fa';
+import { FaHome, FaBookOpen, FaChartBar, FaUserGraduate, FaPenFancy, FaComments, FaTicketAlt, FaCoins } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import logo from '../../assets/LOGO.png';
 
@@ -10,6 +10,8 @@ const menuItems = [
     { path: '/teacher/students', label: 'Học viên', icon: FaUserGraduate },
     { path: '/teacher/blog', label: 'Blog', icon: FaPenFancy },
     { path: '/teacher/chat', label: 'Tin nhắn', icon: FaComments },
+    { path: '/teacher/vouchers', label: 'Mã giảm giá', icon: FaTicketAlt },
+    { path: '/teacher/coin-packages', label: 'Quản lý gói xu', icon: FaCoins },
 ];
 
 const SidebarTeacher = () => {

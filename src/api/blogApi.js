@@ -1,8 +1,8 @@
 import axiosClient from "./axiosClient";
 
 const blogApi = {
-    getAll: () => {
-        return axiosClient.get('/blogs');
+    getAll: (params) => {
+        return axiosClient.get('/blogs', { params });
     },
 
     getMyBlogs: () => {
@@ -31,6 +31,10 @@ const blogApi = {
 
     delete: (id) => {
         return axiosClient.delete(`/blogs/${id}`);
+    },
+
+    getLatestBlogsApi: () => {
+        return axiosClient.get('/blogs/latest');
     }
 };
 

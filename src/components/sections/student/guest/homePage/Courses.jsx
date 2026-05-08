@@ -1,15 +1,33 @@
-import { courses } from '../../../../../data/mockData';
+import { useState, useEffect } from 'react';
+import courseApi from '../../../../../api/courseApi';
 import SectionHeader from '../../../../common/SectionHeader';
 import CommonCarousel from '../../../../common/CommonCarousel';
 import { useNavigate } from 'react-router-dom';
 import CourseCard from '../../../../common/student/guest/course/CourseCard';
 import Button from '../../../../common/Button';
+import { Skeleton } from 'antd';
 
 
 const Courses = () => {
-    // Nhân đôi data để demo slide
-    const sliderData = courses;
+    const [sliderData, setSliderData] = useState([]);
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                const response = await courseApi.getAllCourses();
+                if (response.data) {
+                    setSliderData(response.data);
+                }
+            } catch (error) {
+                console.error("Lỗi khi lấy danh sách khóa học:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCourses();
+    }, []);
 
     const handleNavigateToCourses = () => {
         console.log("Đang chuyển hướng đến danh sách khóa học...");
@@ -28,10 +46,20 @@ const Courses = () => {
                 />
 
                 {/* --- COMMON CAROUSEL --- */}
-                <CommonCarousel
-                    data={sliderData}
-                    CardComponent={CourseCard}
-                />
+                {loading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="bg-gray-50 p-4 rounded-xl">
+                                <Skeleton active />
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <CommonCarousel
+                        data={sliderData}
+                        CardComponent={CourseCard}
+                    />
+                )}
 
                 {/* Button khám phá tất cả */}
                 <div className="mt-8 flex justify-center">

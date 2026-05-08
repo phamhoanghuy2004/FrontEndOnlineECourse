@@ -58,8 +58,14 @@ import TeacherBlogPage from "./page/teacher/TeacherBlogPage";
 import BlogEditorPage from "./page/teacher/BlogEditorPage";
 import TeacherProfilePage from "./page/teacher/TeacherProfilePage";
 import TeacherChatPage from "./page/teacher/TeacherChatPage";
+import AdminLayout from "./components/layout/AdminLayout";
+import AdminDashboard from "./page/admin/AdminDashboard";
+import AdminTestSetPage from "./page/admin/AdminTestSetPage";
+import AdminTestSetDetailPage from "./page/admin/AdminTestSetDetailPage";
+import AdminTestDetailPage from "./page/admin/AdminTestDetailPage";
 import VoucherManagementPage from "./page/teacher/VoucherManagementPage";
 import CoinPackageManagement from "./page/teacher/CoinPackageManagement";
+
 
 function App() {
   return (
@@ -188,6 +194,22 @@ function App() {
               <Route path="chat" element={<TeacherChatPage />} />
               <Route path="vouchers" element={<VoucherManagementPage />} />
               <Route path="coin-packages" element={<CoinPackageManagement />} />
+            </Route>
+
+            {/* =========================================================
+              GROUP 4: ADMIN ROUTES
+              Sử dụng AdminLayout
+              Truy cập qua: /admin/...
+            ========================================================= */}
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <AdminLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<AdminDashboard />} />
+              <Route path="test-sets" element={<AdminTestSetPage />} />
+              <Route path="test-sets/:id" element={<AdminTestSetDetailPage />} />
+              <Route path="tests/:id" element={<AdminTestDetailPage />} />
             </Route>
 
             {/* Fallback: Nếu nhập sai đường dẫn thì về trang chủ */}

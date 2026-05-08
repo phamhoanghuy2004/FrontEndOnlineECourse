@@ -52,15 +52,19 @@ const testApi = {
 
     submitTest: (sessionId, userAnswers) => {
         return axiosClient.post(`/quizzes/submit`, {
-            sessionId: sessionId, 
+            sessionId: sessionId,
             answers: userAnswers // Đổi key thành 'answers' cho khớp DTO
         });
     },
 
     getTestReviewDetails: (id) => {
         return axiosClient.get(`/quizzes/results/${id}/review`);
+    },
+
+    getRecommendations: () => {
+        return axiosClient.get(`/test-sets/recommendations`);
     }
-    
+
 };
 
 export default testApi;

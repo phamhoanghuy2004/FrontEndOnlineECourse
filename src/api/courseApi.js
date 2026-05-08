@@ -69,6 +69,12 @@ const courseApi = {
             params
         });
     },
+
+    pingStudyTime: (data) => {
+        return axiosClient.post(`/students/ping`, data);
+    }
+
+
 };
 
 export default courseApi;

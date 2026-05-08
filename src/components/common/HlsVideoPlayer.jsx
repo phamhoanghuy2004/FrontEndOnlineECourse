@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import courseApi from '../../api/courseApi';
-import { toast } from 'react-toastify'; // 💥 Nhớ import toast để hiện thông báo phạt
+// 🔴 Đã xóa import axiosClient vì bây giờ ta gọi qua courseApi
+import { toast } from 'react-toastify';
 
 const HlsVideoPlayer = ({ url, lessonId, initialProgress = 0, duration = 0, onComplete }) => {
     const videoRef = useRef(null);
@@ -9,88 +10,106 @@ const HlsVideoPlayer = ({ url, lessonId, initialProgress = 0, duration = 0, onCo
 
     const heartbeatIntervalRef = useRef(null);
     const currentSecondRef = useRef(initialProgress);
-
-    // 💥 [GÓC TECH LEAD]: Thêm Ref để lưu mốc an toàn cuối cùng.
-    // Dùng để giật lùi video về đây nếu phát hiện tua láo.
     const lastValidSecondRef = useRef(initialProgress);
 
     // ==========================================
-    // 💥 [GÓC TECH LEAD]: HÀM BẮN API LƯU TIẾN ĐỘ
+    // 🔴 [GÓC TECH LEAD]: BỘ ĐẾM THỜI GIAN THỰC TẾ
     // ==========================================
+    const accumulatedStudySecondsRef = useRef(0); // Tích lũy số giây học thực tế
+    const studyTimerIntervalRef = useRef(null);   // Bộ đếm mỗi 1 giây
+
     const syncProgress = async (isBeacon = false) => {
         if (!lessonId) return;
         const currentSec = Math.floor(currentSecondRef.current);
-        
-        // Tránh lưu 0 giây nếu chưa xem gì
-        if (currentSec <= 0) return; 
-
-        // 💥 LẤY TỐC ĐỘ HIỆN TẠI (Mặc định là 1.0 nếu không lấy được)
         const currentSpeed = videoRef.current ? videoRef.current.playbackRate : 1.0;
 
-        // 💥 Đóng gói payload mới
-        const payload = { 
-            currentSecond: currentSec,
-            playbackSpeed: currentSpeed 
-        };
+        // Lấy số giây học tích lũy được kể từ lần đồng bộ trước
+        const addedSeconds = accumulatedStudySecondsRef.current;
+        
+        // Reset ngay lập tức để đếm lại vòng mới
+        if (addedSeconds > 0) {
+            accumulatedStudySecondsRef.current = 0; 
+        }
 
-        if (isBeacon) {
-            // Trường hợp 4 & 5: Tắt trình duyệt hoặc Chuyển bài (Unmount)
-            const token = localStorage.getItem('token'); // Hoặc 'access_token' tùy project của bạn
-            
-            fetch(`http://localhost:8080/lessons/${lessonId}/progress`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                // 💥 Truyền payload mới có speed
-                body: JSON.stringify(payload),
-                keepalive: true 
-            }).catch(e => console.log("Lỗi gửi progress ngầm", e));
-        } else {
-            // Trường hợp 1, 2, 3: Đang xem bình thường
-            try {
-                // 💥 Gọi API với payload mới
-                await courseApi.syncVideoProgress(lessonId, payload);
-                console.log(`📡 Heartbeat: Đã lưu mốc ${currentSec}s (Tốc độ: ${currentSpeed}x)`);
-                
-                // 💥 BE GẬT ĐẦU -> CẬP NHẬT LẠI MỐC AN TOÀN
-                lastValidSecondRef.current = currentSec;
+        // --- 1. LUỒNG CŨ: LƯU MỐC VIDEO (Giữ nguyên) ---
+        if (currentSec > 0) {
+            const payload = { currentSecond: currentSec, playbackSpeed: currentSpeed };
 
-            } catch (error) {
-                console.error("Lỗi đồng bộ tiến độ, BE đã từ chối:", error);
-                
-                // 💥 HÌNH PHẠT DÀNH CHO HACKER TUA LÁO
-                const status = error.code;
-                if (status === 1066) {
-                    // Cảnh cáo vào mặt
-                    toast.error("🚨 Phát hiện tua video không hợp lệ! Đã trả về vị trí an toàn.");
-                    
-                    // Giật lùi video ngay lập tức về mốc hợp lệ gần nhất
-                    if (videoRef.current) {
-                        videoRef.current.currentTime = lastValidSecondRef.current;
+            if (isBeacon) {
+                const token = localStorage.getItem('token'); 
+                fetch(`http://localhost:8080/lessons/${lessonId}/progress`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload),
+                    keepalive: true 
+                }).catch(e => console.log("Lỗi gửi progress ngầm", e));
+            } else {
+                try {
+                    await courseApi.syncVideoProgress(lessonId, payload);
+                    lastValidSecondRef.current = currentSec;
+                } catch (error) {
+                    console.error("Lỗi đồng bộ tiến độ:", error);
+                    if (error.code === 1066) {
+                        toast.error("🚨 Phát hiện tua video không hợp lệ! Đã trả về vị trí an toàn.");
+                        if (videoRef.current) {
+                            videoRef.current.currentTime = lastValidSecondRef.current;
+                        }
                     }
                 }
             }
         }
+
+        // --- 2. 🔴 LUỒNG MỚI: BẮN API CỘNG THỜI GIAN HỌC ---
+        if (addedSeconds > 0) {
+            const studyPayload = { addedSeconds };
+
+            if (isBeacon) {
+                // Bắn ngầm khi tắt trình duyệt
+                const token = localStorage.getItem('token'); 
+                // 🔴 Đã sửa URL fetch thành /students/ping cho đồng bộ với API mới của bạn
+                fetch(`http://localhost:8080/students/ping`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(studyPayload),
+                    keepalive: true 
+                }).catch(e => console.log("Lỗi gửi study time ngầm", e));
+            } else {
+                // 🔴 Gọi API bình qua courseApi thay vì axiosClient
+                courseApi.pingStudyTime(studyPayload)
+                    .catch(e => console.error("Lỗi đồng bộ thống kê thời gian học", e));
+            }
+        }
     };
 
-    // ==========================================
-    // 💥 CÀI ĐẶT CÁC SỰ KIỆN VIDEO (Giữ nguyên)
-    // ==========================================
     useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
 
         const handlePlay = () => {
+            // 1. Luồng cũ
             clearInterval(heartbeatIntervalRef.current);
             heartbeatIntervalRef.current = setInterval(() => {
                 syncProgress(false);
             }, 30000); 
+
+            // 2. Luồng đếm giây thực tế
+            clearInterval(studyTimerIntervalRef.current);
+            studyTimerIntervalRef.current = setInterval(() => {
+                if (!document.hidden) {
+                    accumulatedStudySecondsRef.current += 1;
+                }
+            }, 1000);
         };
 
         const handlePauseOrEnded = () => {
             clearInterval(heartbeatIntervalRef.current);
+            clearInterval(studyTimerIntervalRef.current);
             syncProgress(false);
         };
 
@@ -101,15 +120,11 @@ const HlsVideoPlayer = ({ url, lessonId, initialProgress = 0, duration = 0, onCo
 
         const handleTimeUpdate = async () => { 
             currentSecondRef.current = video.currentTime;
-
             if (!isCompleted && duration > 0) {
                 const percent = (video.currentTime / duration) * 100;
-                
                 if (percent >= 90) {
                     setIsCompleted(true); 
-           
                     await syncProgress(false); 
-                    
                     onComplete(lessonId); 
                 }
             }
@@ -131,7 +146,9 @@ const HlsVideoPlayer = ({ url, lessonId, initialProgress = 0, duration = 0, onCo
             video.removeEventListener('seeked', handleSeeked);
             video.removeEventListener('timeupdate', handleTimeUpdate);
             window.removeEventListener('beforeunload', handleBeforeUnload);
+            
             clearInterval(heartbeatIntervalRef.current);
+            clearInterval(studyTimerIntervalRef.current);
 
             syncProgress(true);
         };

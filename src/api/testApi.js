@@ -46,8 +46,12 @@ const testApi = {
         return axiosClient.put(`/quizzes/questions/${questionId}`, data);
     },
 
-    getRandomTest: (testSetId) => {
-        return axiosClient.get(`/quizzes/test-set/practice/${testSetId}`);
+    getRandomTest: (testSetId, testId = null) => {
+        return axiosClient.get(`/quizzes/test-set/practice/${testSetId}`, {
+            params: testId ? {
+                testId
+            } : {}
+        });
     },
 
     submitTest: (sessionId, userAnswers) => {
@@ -63,8 +67,21 @@ const testApi = {
 
     getRecommendations: () => {
         return axiosClient.get(`/test-sets/recommendations`);
-    }
+    },
 
+    getAllTestSets: (params) => {
+        return axiosClient.get(`/test-sets`, {
+            params: params
+        });
+    },
+
+    getAllowedTestTypes: () => {
+        return axiosClient.get(`/test-sets/types`);
+    },
+
+    getTestSetDetail: (testSetId) => {
+        return axiosClient.get(`/test-sets/${testSetId}`);
+    }
 };
 
 export default testApi;

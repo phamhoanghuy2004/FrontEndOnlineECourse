@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FiArrowUpRight } from "react-icons/fi";
 import { RiCoinFill } from "react-icons/ri";
 import { Link } from 'react-router-dom';
+import ToeicTestSet from '../../../../../assets/ToeicTestSet.jpg'
 
 const TestSetCard = ({ data }) => {
     return (
@@ -15,7 +16,7 @@ const TestSetCard = ({ data }) => {
                 {/* 1. IMAGE AREA */}
                 <div className="relative overflow-hidden rounded-xl h-52 mb-4">
                     <img
-                        src={data.image}
+                        src={ToeicTestSet}
                         alt={data.title}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />

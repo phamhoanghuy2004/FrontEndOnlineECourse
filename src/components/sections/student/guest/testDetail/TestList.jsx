@@ -4,7 +4,7 @@ import { FaListOl } from "react-icons/fa";
 import TestRowItem from '../../../../common/student/guest/testDetail/TestRowItem';
 import PartSelectionModal from '../../../../common/student/guest/testDetail/PartSelectionModal';
 
-const TestListSection = ({ tests, coins }) => {
+const TestListSection = ({ tests }) => {
     const [selectedTest, setSelectedTest] = useState(null); // Lưu bài test đang chọn để hiện modal
     const hasData = tests && tests.length > 0;
 
@@ -16,6 +16,11 @@ const TestListSection = ({ tests, coins }) => {
     // Hàm đóng modal
     const handleCloseModal = () => {
         setSelectedTest(null);
+    };
+
+    // Hàm xử lý khi bấm nút "Xem lịch sử" (Bổ sung thêm)
+    const handleViewHistory = (test) => {
+        console.log("Mở trang xem lịch sử của bài test ID:", test.id);
     };
 
     return (
@@ -67,8 +72,8 @@ const TestListSection = ({ tests, coins }) => {
                                     key={test.id} 
                                     test={test} 
                                     index={index} 
-                                    coins={coins}
                                     onStartClick={() => handleOpenModal(test)} // Truyền hàm mở modal xuống
+                                    onHistoryClick={() => handleViewHistory(test)}
                                 />
                             ))}
                         </div>

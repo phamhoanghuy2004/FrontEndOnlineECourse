@@ -4,10 +4,12 @@ import { FaChevronDown } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import categoryApi from "../../api/categoryApi";
+import testApi from "../../api/testApi";
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
     const [categories, setCategories] = useState([]);
+    const [testTypes, setTestTypes] = useState([]);
     const { user } = useAuth();
 
     // Xử lý hiệu ứng scroll
@@ -17,29 +19,49 @@ const Navbar = () => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    // 💥 CALL API BẰNG CATEGORY API
+    // 💥 CALL API SONG SONG (TỐI ƯU HIỆU NĂNG)
     useEffect(() => {
-        const fetchCategories = async () => {
+        const fetchNavbarData = async () => {
             try {
-                // Gọi qua file trung gian, code cực kỳ gọn gàng
-                const response = await categoryApi.getAll();
+                // Dùng Promise.all để gọi 2 API cùng một lúc thay vì phải chờ đợi nhau
+                const [categoryRes, testTypeRes] = await Promise.all([
+                    categoryApi.getAll(),
+                    testApi.getAllowedTestTypes()
+                ]);
 
-                // Nhờ interceptor của bạn, response lúc này chính là cục ApiResponse
-                if (response && response.data) {
-                    setCategories(response.data);
+                // Xử lý dữ liệu Khóa học
+                if (categoryRes && categoryRes.data) {
+                    setCategories(categoryRes.data);
                 }
+
+                // 🟢 Xử lý dữ liệu Luyện đề (Trả về mảng ["TOEIC", "IELTS",...])
+                // Đảm bảo cấu trúc response khớp với file testApi.js của bạn
+                if (testTypeRes && testTypeRes.data) {
+                    // Tùy vào format bọc ApiResponse, có thể là testTypeRes.data hoặc testTypeRes.data.data
+                    setTestTypes(testTypeRes.data || testTypeRes.data.data || []);
+                }
+
             } catch (error) {
-                console.error("Lỗi khi tải danh mục khóa học:", error);
+                console.error("Lỗi khi tải dữ liệu Navbar:", error.message);
             }
         };
-        fetchCategories();
+        fetchNavbarData();
     }, []);
 
 
+    // 🟢 CẬP NHẬT: Build cây Navigation tự động
     const navLinks = useMemo(() => {
+        
+        // 1. Map dữ liệu Khóa học
         const dynamicCourseDropdown = categories.map(cat => ({
             name: cat.name,
             href: `/courses?category=${cat.id}`
+        }));
+
+        // 2. Map dữ liệu Luyện đề (Chứng chỉ)
+        const dynamicTestDropdown = testTypes.map(type => ({
+            name: type, // VD: "TOEIC"
+            href: `/tests?type=${type}` // Gắn luôn query params để click vào là lọc sẵn type đó
         }));
 
         return [
@@ -55,17 +77,8 @@ const Navbar = () => {
             {
                 name: "Luyện đề",
                 href: "/tests",
-                dropdown: [
-                    { name: "TOEIC", href: "/tests" },
-                    {
-                        name: "Luyện đề nâng cao",
-                        href: "/tests",
-                        dropdown: [
-                            { name: "TOEIC", href: "/tests" },
-                            { name: "IELTS", href: "/tests" },
-                        ],
-                    },
-                ],
+                // Gắn dropdown tự động sinh ra từ API vào đây
+                dropdown: dynamicTestDropdown.length > 0 ? dynamicTestDropdown : null,
             },
             {
                 name: "Blog",
@@ -76,7 +89,7 @@ const Navbar = () => {
                 href: "/consultation",
             },
         ];
-    }, [categories]);
+    }, [categories, testTypes]); // 🔴 Nhớ thêm testTypes vào dependency array
 
     // Kiểm tra Role
     const isStudent = user?.roles?.includes('STUDENT') || user?.roles?.includes('LEARNER');

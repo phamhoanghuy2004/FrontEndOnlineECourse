@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { FaClock, FaCheckCircle, FaArrowLeft, FaChevronLeft, FaChevronRight, FaSpinner } from "react-icons/fa";
 import SingleQuestionBlock from '../../../components/common/student/guest/testPractice/SingleQuestionBlock';
 import GroupQuestionBlock from '../../../components/common/student/guest/testPractice/GroupQuestionBlock';
@@ -15,7 +15,13 @@ const formatTime = (seconds) => {
 const TestPracticePage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const testId = id;
+
+    // 🟢 DÙNG useSearchParams ĐỂ LẤY testId (Tùy chọn)
+    const [searchParams] = useSearchParams();
+
+   // 🟢 REFACTOR TÊN BIẾN CHO CHUẨN XÁC
+    const testSetId = id; 
+    const specificTestId = searchParams.get("testId"); // Sẽ là null nếu không truyền trên URL
 
     const [testData, setTestData] = useState(null);
     const [filteredParts, setFilteredParts] = useState([]);
@@ -35,14 +41,15 @@ const TestPracticePage = () => {
     const [showFinalResultModal, setShowFinalResultModal] = useState(false);
     const [testResult, setTestResult] = useState(null);
 
-    const STORAGE_ANSWERS_KEY = `echill_answers_${testId}`;
-    const STORAGE_ENDTIME_KEY = `echill_endtime_${testId}`;
-    const STORAGE_SESSION_KEY = `echill_session_${testId}`;
+    // 🟢 ĐỔI KEY STORAGE THEO testSetId (Nếu muốn lưu riêng rẽ từng bài test thì nối thêm specificTestId)
+    const STORAGE_ANSWERS_KEY = `echill_answers_${testSetId}`;
+    const STORAGE_ENDTIME_KEY = `echill_endtime_${testSetId}`;
+    const STORAGE_SESSION_KEY = `echill_session_${testSetId}`;
 
     useEffect(() => {
         let isMounted = true;
 
-        if (!testId) {
+        if (!testSetId) {
             navigate(-1, { replace: true });
             return;
         }
@@ -50,8 +57,10 @@ const TestPracticePage = () => {
         const fetchTestPractice = async () => {
             try {
                 setLoading(true);
-                const response = await testApi.getRandomTest(testId);
-                const beTest = response.data.data || response.data;
+
+                // 🟢 TRUYỀN THÊM specificTestId XUỐNG API
+                const response = await testApi.getRandomTest(testSetId, specificTestId); 
+                const beTest = response.data?.data || response.data;
 
                 if (beTest && isMounted) {
                     setTestData(beTest);
@@ -127,12 +136,27 @@ const TestPracticePage = () => {
                             handleFinalSubmit(savedSessionId, localAnswers);
                         } else {
                             toast.error("Không tìm thấy phiên làm bài để nộp.");
-                            navigate(-1, { replace: true });
+                            // Delay 2s để user kịp thấy thông báo trước khi văng
+                            setTimeout(() => navigate(-1, { replace: true }), 2000);
                         }
-                    } else {
+                    } 
+                    else if (error?.code === 1068 || error?.response?.data?.code === 1068) {
+                        // Ưu tiên lấy error.data, nếu không có thì lấy message mặc định
+                        const errorMsg = error?.data || error?.response?.data?.message || error?.message || "Bạn đang có bài thi khác chưa hoàn thành!";
+                        toast.error(errorMsg, { autoClose: 4000 }); // Cho hiển thị lâu hơn xíu để đọc
+                        
+                        // Trì hoãn 3.5 giây để user đọc kịp tên bài thi cũ đang làm dở
+                        setTimeout(() => {
+                            navigate(-1, { replace: true });
+                        }, 3500);
+                    }
+                    else {
                         console.error("Lỗi tải đề thi:", error);
                         toast.error(error?.message || "Không thể vào thi. Vui lòng thử lại sau!");
-                        navigate(-1, { replace: true });
+                        // Trì hoãn 2.5 giây trước khi văng ra ngoài
+                        setTimeout(() => {
+                            navigate(-1, { replace: true });
+                        }, 2500);
                     }
                 }
             } finally {
@@ -148,7 +172,7 @@ const TestPracticePage = () => {
             isMounted = false;
         };
 
-    }, [testId, navigate]);
+    }, [testSetId, specificTestId, navigate]);
 
 
     useEffect(() => {

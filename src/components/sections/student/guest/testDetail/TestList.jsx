@@ -4,7 +4,7 @@ import { FaListOl } from "react-icons/fa";
 import TestRowItem from '../../../../common/student/guest/testDetail/TestRowItem';
 import PartSelectionModal from '../../../../common/student/guest/testDetail/PartSelectionModal';
 
-const TestListSection = ({ tests }) => {
+const TestListSection = ({ tests, testSetId }) => {
     const [selectedTest, setSelectedTest] = useState(null); // Lưu bài test đang chọn để hiện modal
     const hasData = tests && tests.length > 0;
 
@@ -85,7 +85,7 @@ const TestListSection = ({ tests }) => {
             {/* --- MODAL CHỌN PART --- */}
             <AnimatePresence>
                 {selectedTest && (
-                    <PartSelectionModal test={selectedTest} onClose={handleCloseModal} />
+                    <PartSelectionModal test={selectedTest} onClose={handleCloseModal} testSetId={testSetId} />
                 )}
             </AnimatePresence>
 

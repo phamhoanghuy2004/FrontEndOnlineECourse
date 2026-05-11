@@ -46,11 +46,12 @@ const testApi = {
         return axiosClient.put(`/quizzes/questions/${questionId}`, data);
     },
 
-    getRandomTest: (testSetId, testId = null) => {
+    getRandomTest: (testSetId, testId = null, selectedParts = null) => {
         return axiosClient.get(`/quizzes/test-set/practice/${testSetId}`, {
-            params: testId ? {
-                testId
-            } : {}
+            params: {
+                testId: testId,
+                selectedParts: selectedParts 
+            }
         });
     },
 
@@ -81,6 +82,10 @@ const testApi = {
 
     getTestSetDetail: (testSetId) => {
         return axiosClient.get(`/test-sets/${testSetId}`);
+    },
+
+    getTestSections: (testId) => {
+        return axiosClient.get(`/quizzes/${testId}/sections`);
     }
 };
 

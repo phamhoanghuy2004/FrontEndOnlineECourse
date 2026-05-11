@@ -19,6 +19,10 @@ const TestPracticePage = () => {
     // 🟢 DÙNG useSearchParams ĐỂ LẤY testId (Tùy chọn)
     const [searchParams] = useSearchParams();
 
+    // 🔴 1. HỨNG DỮ LIỆU selectedParts TỪ MODAL TRUYỀN SANG
+    const location = useLocation();
+    const selectedParts = location.state?.selectedParts || [];
+
    // 🟢 REFACTOR TÊN BIẾN CHO CHUẨN XÁC
     const testSetId = id; 
     const specificTestId = searchParams.get("testId"); // Sẽ là null nếu không truyền trên URL
@@ -58,8 +62,12 @@ const TestPracticePage = () => {
             try {
                 setLoading(true);
 
-                // 🟢 TRUYỀN THÊM specificTestId XUỐNG API
-                const response = await testApi.getRandomTest(testSetId, specificTestId); 
+                // 🔴 2. BIẾN MẢNG [1, 2] THÀNH CHUỖI "1,2" ĐỂ GỬI LÊN BACKEND
+                const partsParam = selectedParts.length > 0 ? selectedParts.join(',') : null;
+
+                // 🔴 3. TRUYỀN THÊM partsParam VÀO HÀM GỌI API
+                const response = await testApi.getRandomTest(testSetId, specificTestId, partsParam);
+
                 const beTest = response.data?.data || response.data;
 
                 if (beTest && isMounted) {

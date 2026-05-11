@@ -80,7 +80,7 @@ const TestDetailPage = () => {
                 
                 <TestDetailHero data={data} />
                 
-                <TestListSection tests={data.tests} />
+                <TestListSection tests={data.tests} testSetId={data.id} />
                 
             </div>
 

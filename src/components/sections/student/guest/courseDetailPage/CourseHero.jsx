@@ -7,9 +7,9 @@ const CourseHero = ({ course }) => {
     const [isSticky, setIsSticky] = useState(false);
 
     // Dữ liệu giả định (Sau này thay bằng data từ course object)
-    const rating = 4.8;
-    const reviewCount = "1,250";
-    const studentCount = "5,430";
+    const rating = course?.averageRating || 0;
+    const studentCount = course?.studentCount || 0;
+    const reviewCount = course?.reviewCount || 0;
     
     const teacherName = course?.teacherName || "Giảng viên Echill";
     const teacherAvatar = course?.teacherAvatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(teacherName)}&background=random&color=fff`;
@@ -57,7 +57,7 @@ const CourseHero = ({ course }) => {
                                         <FaStar key={i} className={i < Math.floor(rating) ? "text-amber-500" : "text-slate-200"} />
                                     ))}
                                 </div>
-                                <span className="text-slate-500 underline decoration-dashed underline-offset-4 ml-1">
+                                <span className="text-slate-500 decoration-dashed underline-offset-4 ml-1">
                                     ({reviewCount} đánh giá)
                                 </span>
                             </div>
@@ -131,7 +131,7 @@ const CourseHero = ({ course }) => {
                                     </div>
                                     
                                     <div className="flex items-center gap-1 text-amber-500 text-xs font-bold bg-amber-50 px-2 py-0.5 rounded-md">
-                                        {rating} <FaStar size={10} />
+                                        {rating?.toFixed(1)} <FaStar size={10} />
                                     </div>
                                 </div>
                             </div>

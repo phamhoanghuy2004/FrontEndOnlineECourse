@@ -8,6 +8,7 @@ import CourseTOC from "../../../components/sections/student/guest/courseDetailPa
 import { useAuth } from "../../../hooks/useAuth"; 
 import courseApi from "../../../api/courseApi"; 
 import CourseDescription from "../../../components/sections/student/guest/courseDetailPage/CourseDescription";
+import ReviewSection from "../../../components/sections/student/guest/courseDetailPage/ReviewSection";
 
 const CourseDetailPage = () => {
     const { id } = useParams();
@@ -75,6 +76,7 @@ const CourseDetailPage = () => {
                         <CourseHero course={course} />
                         <CourseDescription description={course.description} />
                         <CourseContent lessons={course.lessons} isRegistered={isRegistered} />
+                        <ReviewSection courseId={id} />
                     </div>
 
                     {/* CỘT PHẢI: MUA KHÓA HỌC (Luôn giữ nguyên 3 cột) */}

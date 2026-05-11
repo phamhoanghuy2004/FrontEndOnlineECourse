@@ -186,7 +186,7 @@ function App() {
               <Route path="courses/:id" element={<CourseEditorPage />} />
               <Route path="courses/:id/edit" element={<CourseEditorPage />} />
               <Route path="students" element={<StudentManagementPage />} />
-              <Route path="revenue" element={<RevenuePage />} />
+              <Route path="revenue" element={<Navigate to="/teacher" replace />} />
               <Route path="blog" element={<TeacherBlogPage />} />
               <Route path="blog/new" element={<BlogEditorPage />} />
               <Route path="blog/:id/edit" element={<BlogEditorPage />} />

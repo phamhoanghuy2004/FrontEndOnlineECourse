@@ -4,9 +4,8 @@ import { motion } from 'framer-motion';
 import logo from '../../assets/LOGO.png';
 
 const menuItems = [
-    { path: '/teacher', label: 'Tổng quan', icon: FaHome },
+    { path: '/teacher', label: 'Thống kê', icon: FaChartBar },
     { path: '/teacher/courses', label: 'Quản lý khóa học', icon: FaBookOpen },
-    { path: '/teacher/revenue', label: 'Doanh thu', icon: FaChartBar },
     { path: '/teacher/students', label: 'Học viên', icon: FaUserGraduate },
     { path: '/teacher/blog', label: 'Blog', icon: FaPenFancy },
     { path: '/teacher/chat', label: 'Tin nhắn', icon: FaComments },

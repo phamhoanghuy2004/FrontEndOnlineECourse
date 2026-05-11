@@ -56,14 +56,14 @@ const CourseTable = ({ courses, onDelete, isDeleting }) => {
                                         </span>
                                     </td>
                                     <td className="p-4 font-semibold text-slate-700">
-                                        {course.price}
+                                        {new Intl.NumberFormat('vi-VN').format(course.price)} đ
                                     </td>
                                     <td className="p-4 text-slate-600">
-                                        {course.students}
+                                        {course.studentCount || 0}
                                     </td>
                                     <td className="p-4">
                                         <div className="flex items-center gap-1 text-yellow-500 font-bold text-sm">
-                                            <FaStar /> {course.rating}
+                                            <FaStar /> {course.averageRating?.toFixed(1) || '0.0'}
                                         </div>
                                     </td>
                                     <td className="p-4">

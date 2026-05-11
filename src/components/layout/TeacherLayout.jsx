@@ -20,7 +20,7 @@ const TeacherLayout = () => {
                     {/* Topbar */}
                     <header className="flex justify-between items-center mb-8">
                         <h1 className="text-2xl font-bold text-slate-800">
-                            Teacher Dashboard
+                            Thống kê & Báo cáo
                         </h1>
                         <div className="flex items-center gap-4">
                             <button className="relative p-2 rounded-full bg-white shadow-sm text-slate-500 hover:text-blue-600 transition">

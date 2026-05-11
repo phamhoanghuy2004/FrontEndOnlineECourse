@@ -74,15 +74,16 @@ const CourseCard = ({ data }) => {
                     Khóa học {data.categoryName} chất lượng cao được thiết kế chuyên biệt bởi giảng viên {data.teacherName}.
                 </p>
 
-                {/* Rating */}
                 <div className="flex items-center gap-2 mb-6">
-                    <span className="text-primary font-bold text-sm">5.0</span>
+                    <span className="text-primary font-bold text-sm">
+                        {data.averageRating?.toFixed(1) || '0.0'}
+                    </span>
                     <div className="flex text-yellow-400 text-sm">
                         {[...Array(5)].map((_, i) => (
-                            <FaStar key={i} className="text-yellow-400" />
+                            <FaStar key={i} className={i < Math.floor(data.averageRating || 0) ? "text-yellow-400" : "text-gray-200"} />
                         ))}
                     </div>
-                    <span className="text-gray-400 text-xs">(0)</span>
+                    <span className="text-gray-400 text-xs">({data.reviewCount || 0})</span>
                 </div>
 
                 {/* Footer Card */}
@@ -100,7 +101,7 @@ const CourseCard = ({ data }) => {
                                 <h4 className="font-bold text-sm text-gray-900 truncate" title={data.teacherName}>
                                     {data.teacherName}
                                 </h4>
-                                <p className="text-xs text-gray-500">0 người học</p>
+                                <p className="text-xs text-gray-500">{data.studentCount || 0} người học</p>
                             </div>
                         </div>
 

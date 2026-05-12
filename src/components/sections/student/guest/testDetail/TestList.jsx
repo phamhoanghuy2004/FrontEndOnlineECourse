@@ -3,8 +3,12 @@ import { AnimatePresence } from 'framer-motion';
 import { FaListOl } from "react-icons/fa";
 import TestRowItem from '../../../../common/student/guest/testDetail/TestRowItem';
 import PartSelectionModal from '../../../../common/student/guest/testDetail/PartSelectionModal';
+import { useAuth } from '../../../../../hooks/useAuth';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const TestListSection = ({ tests, testSetId }) => {
+    const navigate = useNavigate();
+    const { user } = useAuth();
     const [selectedTest, setSelectedTest] = useState(null); // Lưu bài test đang chọn để hiện modal
     const hasData = tests && tests.length > 0;
 
@@ -30,9 +34,16 @@ const TestListSection = ({ tests, testSetId }) => {
         setSelectedTest(null);
     };
 
-    // Hàm xử lý khi bấm nút "Xem lịch sử" (Bổ sung thêm)
+   // 🔴 CẬP NHẬT HÀM XỬ LÝ XEM LỊCH SỬ
     const handleViewHistory = (test) => {
-        console.log("Mở trang xem lịch sử của bài test ID:", test.id);
+        // Điều hướng sang trang tiến độ của user cụ thể
+        navigate(`/learner/${user.id}/progresss`, {
+            // 🔴 TRUYỀN DỮ LIỆU QUA STATE (Không hiện trên URL cho sạch)
+            state: {
+                filterTestId: test.id,
+                filterTestTitle: test.title // Truyền title để hiển thị lên ô search cho đẹp
+            }
+        });
     };
 
     return (

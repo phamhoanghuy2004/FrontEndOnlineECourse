@@ -1,22 +1,20 @@
 import axiosClient from "./axiosClient";
 
 const reviewApi = {
-    submitReview: (data) => {
-        return axiosClient.post('/reviews', data);
+    getFeaturedReviewsApi: () => {
+        return axiosClient.get('/reviews/featured');
     },
 
-    getMyReview: (courseId) => {
-        return axiosClient.get(`/reviews/my-review/${courseId}`);
-    },
-
-    getCourseReviews: (courseId) => {
+    getCourseReviewsApi: (courseId) => {
         return axiosClient.get(`/reviews/course/${courseId}`);
     },
 
-    getPaginatedCourseReviews: (courseId, page = 1, size = 5) => {
-        return axiosClient.get(`/reviews/course/${courseId}/paginated`, {
-            params: { page, size }
-        });
+    createOrUpdateReviewApi: (data) => {
+        return axiosClient.post('/reviews', data);
+    },
+
+    getMyReviewByCourseApi: (courseId) => {
+        return axiosClient.get(`/reviews/my-review/${courseId}`);
     }
 };
 

@@ -37,7 +37,13 @@ const TestDetailHero = ({ data }) => {
 
     // Hàm cuộn xuống danh sách
     const scrollToTestList = () => {
-        const element = document.getElementById('test-list-section');
+       // 1. Ưu tiên tìm phần "Tiếp tục làm bài" trước
+        let element = document.getElementById('continue-test-section');
+        
+        // 2. Nếu không có phần tiếp tục (user chưa làm dở bài nào), thì tìm phần Danh sách
+        if (!element) {
+            element = document.getElementById('test-list-section');
+        }
         if (element) {
             const headerOffset = 80; 
             const elementPosition = element.getBoundingClientRect().top;

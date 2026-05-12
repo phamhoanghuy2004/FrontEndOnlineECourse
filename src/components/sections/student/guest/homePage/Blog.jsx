@@ -92,8 +92,8 @@ const Blog = () => {
                     {/* LEFT COLUMN: Danh sách bài viết nhỏ */}
                     <div className="flex flex-col gap-10">
                         {leftBlogs.map((item) => (
-                            <div 
-                                key={item.id} 
+                            <div
+                                key={item.id}
                                 className="group flex flex-col sm:flex-row gap-6 items-start cursor-pointer"
                                 onClick={() => navigate(`/blog/${item.id}`)}
                             >
@@ -129,7 +129,7 @@ const Blog = () => {
 
                     {/* RIGHT COLUMN: Bài viết nổi bật (Featured Post) */}
                     {featuredBlog && (
-                        <div 
+                        <div
                             className="group cursor-pointer flex flex-col h-full"
                             onClick={() => navigate(`/blog/${featuredBlog.id}`)}
                         >

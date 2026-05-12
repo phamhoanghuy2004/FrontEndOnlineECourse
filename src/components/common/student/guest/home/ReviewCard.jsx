@@ -25,7 +25,12 @@ const ReviewCard = ({ data }) => (
 
     {/* Footer: Stars */}
     <div className="flex text-yellow-400 text-sm gap-1">
-      {[...Array(5)].map((_, i) => <FaStar key={i} />)}
+      {[...Array(5)].map((_, i) => (
+        <FaStar 
+          key={i} 
+          className={i < (data.rating || 5) ? "text-yellow-400" : "text-gray-200"} 
+        />
+      ))}
     </div>
   </motion.div>
 );

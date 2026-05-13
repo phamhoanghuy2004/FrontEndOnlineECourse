@@ -26,6 +26,7 @@ const TeacherDashboard = () => {
                 ]);
                 setMyCourses(coursesRes.data);
                 setTopCourses(topRes.data);
+                console.log(topCourses.map(c => c.courseId));
             } catch (error) {
                 console.error('Error fetching initial dashboard data:', error);
                 toast.error('Không thể tải danh sách khóa học');

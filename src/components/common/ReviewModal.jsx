@@ -25,7 +25,7 @@ const ReviewModal = ({ isOpen, onClose, courseId, courseName, onReviewSuccess })
     const fetchMyReview = async () => {
         try {
             setFetching(true);
-            const response = await reviewApi.getMyReview(courseId);
+            const response = await reviewApi.getMyReviewByCourseApi(courseId);
             if (response && response.data) {
                 setRating(response.data.rating);
                 setContent(response.data.content);
@@ -46,7 +46,7 @@ const ReviewModal = ({ isOpen, onClose, courseId, courseName, onReviewSuccess })
 
         try {
             setLoading(true);
-            await reviewApi.submitReview({
+            await reviewApi.createOrUpdateReviewApi({
                 courseId,
                 rating,
                 content: content.trim()

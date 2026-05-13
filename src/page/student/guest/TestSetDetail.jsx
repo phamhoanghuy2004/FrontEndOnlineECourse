@@ -37,9 +37,18 @@ const TestSetDetail = () => {
     const [testSetData, setTestSetData] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const STORAGE_SESSION_KEY = `echill_session_${id}`;
-    const savedSessionId = localStorage.getItem(STORAGE_SESSION_KEY);
-    const hasActiveSession = !!savedSessionId;
+    // 🟢 THAY BẰNG LOGIC CHECK GLOBAL (TOÀN CỤC)
+    let activeTestSetId = null;
+    let hasActiveSession = false;
+
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('echill_session_')) {
+            hasActiveSession = true;
+            activeTestSetId = key.replace('echill_session_', '');
+            break; // Tìm thấy thì dừng luôn cho tối ưu hiệu năng
+        }
+    }
 
     useEffect(() => {
         const fetchTestSetDetail = async () => {
@@ -62,14 +71,22 @@ const TestSetDetail = () => {
         }
     }, [id]);
 
+    // 🔴 CẬP NHẬT LẠI HÀM ĐIỀU HƯỚNG
     const handleStartTest = () => {
-        navigate(`/test-practice/${id}`, {
-            state: {
-                testId: id,
-                selectedParts: null,
-                mode: 'full_test'
-            }
-        });
+        if (hasActiveSession && activeTestSetId) {
+            // 🟢 TRƯỜNG HỢP 1: ĐANG CÓ BÀI LÀM DỞ
+            // Chuyển hướng thẳng về bài cũ, không truyền state gì thêm để luồng bên kia tự fetch lại
+            navigate(`/test-practice/${activeTestSetId}`);
+        } else {
+            // 🟢 TRƯỜNG HỢP 2: KHÔNG CÓ BÀI NÀO DỞ DANG
+            // Bắt đầu làm bài mới toanh cho bộ đề hiện tại (id)
+            navigate(`/test-practice/${id}`, {
+                state: {
+                    selectedParts: null,
+                    mode: 'full'
+                }
+            });
+        }
     };
 
     if (loading) {
@@ -158,12 +175,25 @@ const TestSetDetail = () => {
                     {/* Khu vực nút bấm đẩy xuống dưới cùng của Card */}
                     <div className="mt-auto pt-6 border-t border-slate-100 flex flex-col gap-3 shrink-0">
                         {hasActiveSession ? (
-                            <button
-                                onClick={handleStartTest}
-                                className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-bold text-[15px] shadow-lg shadow-amber-200 transform transition active:scale-95 flex items-center justify-center gap-3"
-                            >
-                                <FaClock /> TIẾP TỤC LÀM BÀI
-                            </button>
+                            // 🟢 Bọc thêm 1 div bên ngoài để gộp dòng chữ và button lại
+                            <div className="flex flex-col gap-2.5 w-full">
+                                {/* 🟢 Dòng thông báo có hiệu ứng chấm nhấp nháy */}
+                                <div className="flex items-center justify-center gap-2 text-sm font-bold text-amber-600 bg-amber-50 py-2 px-3 rounded-lg border border-amber-100">
+                                    <span className="relative flex h-2.5 w-2.5">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                                    </span>
+                                    Bạn đang có bài kiểm tra dang dở!
+                                </div>
+
+                                {/* Button cũ của bạn giữ nguyên */}
+                                <button
+                                    onClick={handleStartTest}
+                                    className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-bold text-[15px] shadow-lg shadow-amber-200 transform transition active:scale-95 flex items-center justify-center gap-3"
+                                >
+                                    <FaClock /> TIẾP TỤC LÀM BÀI
+                                </button>
+                            </div>
                         ) : canAttempt ? (
                             <button
                                 onClick={handleStartTest}

@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FaArrowRight, FaStar, FaShieldAlt } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi";
+import defaultCoverImg from '../../../../../assets/ToeicTestSet.jpg';
 
 // --- ANIMATION VARIANTS ---
 const fadeInUp = {
@@ -24,16 +25,26 @@ const floatingIcon = {
 
 const TestDetailHero = ({ data }) => {
     if (!data) return null;
-    const title = data.title || "ETS 2024 Test";
+    
+    // Tự động chia tiêu đề ra làm 2 phần để render màu khác nhau (VD: "ETS" và "2024")
+    const title = data.title || "ETS 2024";
     const titleList = title.split(" ");
     const firstPart = titleList[0];
     const secondPart = titleList.slice(1).join(" ");
 
+    // 🟢 Ảnh mặc định hiển thị nếu Backend chưa có trường image cho TestSet
+    const DEFAULT_COVER = defaultCoverImg; // Bạn có thể đổi URL ảnh khác hoặc đường dẫn local '/images/default-ets.png'
+
     // Hàm cuộn xuống danh sách
     const scrollToTestList = () => {
-        const element = document.getElementById('test-list-section');
+       // 1. Ưu tiên tìm phần "Tiếp tục làm bài" trước
+        let element = document.getElementById('continue-test-section');
+        
+        // 2. Nếu không có phần tiếp tục (user chưa làm dở bài nào), thì tìm phần Danh sách
+        if (!element) {
+            element = document.getElementById('test-list-section');
+        }
         if (element) {
-            // Offset để tránh header che mất (nếu header fixed)
             const headerOffset = 80; 
             const elementPosition = element.getBoundingClientRect().top;
             const offsetPosition = elementPosition + window.scrollY - headerOffset;
@@ -46,13 +57,7 @@ const TestDetailHero = ({ data }) => {
     };
 
     return (
-        // --- CHỈNH SỬA TẠI ĐÂY ---
-        // 1. h-screen: Chiều cao cứng bằng 100% màn hình (Full Screen)
-        // 2. bg-transparent: Trong suốt để thấy nền Global ở trang cha
         <section className="relative w-full h-screen flex items-center justify-center bg-transparent overflow-hidden">
-
-            {/* Container nội dung */}
-            {/* pt-20: Padding top để tránh bị Navbar che mất nội dung */}
             <div className="container mx-auto px-6 pt-20 relative z-10">
                 <div className="flex flex-col-reverse md:flex-row items-center justify-center gap-12 lg:gap-24">
                     
@@ -69,7 +74,7 @@ const TestDetailHero = ({ data }) => {
                             </span>
                         </motion.h1>
 
-                        {/* Mô tả */}
+                        {/* Mô tả từ DB */}
                         <motion.p variants={fadeInUp} className="text-slate-600 text-base md:text-lg leading-relaxed text-justify md:pr-10">
                             {data.description || "Bộ đề thi được cập nhật mới nhất, bám sát cấu trúc thực tế. Giúp bạn rèn luyện kỹ năng làm bài, tối ưu hóa thời gian và bứt phá điểm số."}
                         </motion.p>
@@ -101,7 +106,8 @@ const TestDetailHero = ({ data }) => {
                             {/* Glass Effect Container */}
                             <div className="absolute inset-2 bg-white/20 backdrop-blur-md border border-white/40 rounded-[2.5rem] flex items-center justify-center overflow-hidden">
                                 <img 
-                                    src={data.image} alt={title} 
+                                    src={data.image || DEFAULT_COVER} 
+                                    alt={title} 
                                     className="h-full w-auto object-cover drop-shadow-[0_25px_50px_rgba(0,0,0,0.3)] hover:scale-105 transition-transform duration-700 rounded-2xl" 
                                 />
                                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/30 to-transparent opacity-50 pointer-events-none"></div>

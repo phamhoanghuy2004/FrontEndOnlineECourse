@@ -54,6 +54,10 @@ const userApi = {
     return axiosClient.get('/teachers/all');
   },
 
+  getMyTransactions: (data) => {
+    return axiosClient.get('/transactions/my-history', { params: data })
+  }
+
 }
 
 export default userApi;

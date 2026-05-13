@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom'; // 🔴 1. Import useNavigate
 import SidebarLearner from './SidebarLearner';
 import Footer from './Footer';
 import { FaBell } from 'react-icons/fa';
@@ -7,11 +7,19 @@ import { useAuth } from '../../hooks/useAuth';
 
 const LearnerLayout = () => {
   const { user } = useAuth();
+  const navigate = useNavigate(); // 🔴 2. Khởi tạo hook navigate
 
   // Helper: Lấy chữ cái đầu tiên của tên (VD: "Phạm Hoàng Huy" -> "P")
   const getInitial = (name) => {
     if (!name) return "H";
     return name.charAt(0).toUpperCase();
+  };
+
+  // 🔴 3. Hàm xử lý chuyển hướng khi click vào User Pill
+  const handleProfileClick = () => {
+    if (user?.id) {
+      navigate(`/learner/${user.id}/profile`);
+    }
   };
 
   return (
@@ -38,7 +46,11 @@ const LearnerLayout = () => {
             </button>
 
             {/* User Pill (Viên thuốc) */}
-            <div className="flex items-center gap-3 cursor-pointer bg-white border border-slate-200 shadow-sm py-1.5 px-1.5 pr-4 rounded-full transition-all hover:border-emerald-300 hover:shadow-md">
+            {/* 🔴 4. Thêm sự kiện onClick vào thẻ div bọc ngoài User Pill */}
+            <div 
+              onClick={handleProfileClick}
+              className="flex items-center gap-3 cursor-pointer bg-white border border-slate-200 shadow-sm py-1.5 px-1.5 pr-4 rounded-full transition-all hover:border-emerald-300 hover:shadow-md"
+            >
 
               {/* Avatar hoặc Chữ cái đầu */}
               <div className="w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center overflow-hidden font-bold text-sm">

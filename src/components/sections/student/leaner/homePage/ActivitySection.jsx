@@ -2,11 +2,19 @@ import React, { useState, useMemo, useEffect } from "react";
 import Title from "../../../../common/Title";
 import { fadeInUp } from "../../../../../constants/motionVariants";
 import { FaCalendarAlt } from "react-icons/fa";
-import SelectField from "../../../../common/SelectField"; 
+import SelectField from "../../../../common/SelectField";
 import CalendarGrid from "../../../../common/student/leaner/dashboard/CalendarGrid";
-import WeeklyGoal from "../../../../common/student/leaner/dashboard/WeeklyGoal"; // <--- Import component mới
+import WeeklyGoal from "../../../../common/student/leaner/dashboard/WeeklyGoal";
+import studyAnalyticsApi from "../../../../../api/studyAnalyticsApi";
+import toast from "react-hot-toast";
 
-const ActivitySection = () => {
+// 🔴 1. Import useAuth để dùng fetchUserProfile
+import { useAuth } from '../../../../../hooks/useAuth';
+
+const ActivitySection = ({ studyTimeData }) => {
+    // 🔴 2. Lấy hàm fetchUserProfile từ Context
+    const { fetchUserProfile } = useAuth();
+
     // ... (Giữ nguyên phần 1. Logic tạo danh sách 3 tháng)
     const getLast3Months = () => {
         const today = new Date();
@@ -37,66 +45,84 @@ const ActivitySection = () => {
         label: m.isCurrent ? `${m.label} (Hiện tại)` : m.label
     }));
 
-    // ... (Phần 2. Logic Data)
+    // ... (Phần 2. Logic gọi API dữ liệu tháng giữ nguyên như tôi đã hướng dẫn ở các bài trước)
     const [activityData, setActivityData] = useState({});
 
+    // 🔴 GỌI API KHI CHUYỂN THÁNG
+    // 🔴 GỌI API KHI CHUYỂN THÁNG
     useEffect(() => {
-        const mockData = {};
-        const { year, monthIndex } = selectedMonthObj;
-        const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+        const fetchMonthlyData = async () => {
+            try {
+                const { year, monthIndex } = selectedMonthObj;
+                // JS month là 0-11, Backend cần 1-12 nên phải + 1
+                const apiMonth = monthIndex + 1;
 
-        for (let d = 1; d <= daysInMonth; d++) {
-            const key = `${year}-${monthIndex}-${d}`;
-            const rand = Math.random();
-            let hours = 0;
-            if (rand > 0.4) hours = rand > 0.7 ? 2.5 : 0.5;
-            mockData[key] = hours;
-        }
-        setActivityData(mockData);
+                const response = await studyAnalyticsApi.getMonthlyActivity(year, apiMonth);
+
+                // Dữ liệu BE trả về: { "1": 3600, "5": 7200 } (Đơn vị: Giây)
+                const rawData = response.data?.dailyData || {};
+
+                const formattedData = {};
+
+                // 🔴 BÍ QUYẾT TẠO KEY: Quét qua các ngày có dữ liệu từ BE, ráp lại thành Key cũ
+                Object.keys(rawData).forEach(day => {
+                    const totalSeconds = rawData[day];
+
+                    // 💥 Áp dụng ý tưởng của bạn: Dùng Math.ceil (Làm tròn LÊN)
+                    // Công thức: (19s / 3600) * 10 = 0.0527 -> Math.ceil(0.0527) = 1 -> 1 / 10 = 0.1 giờ
+                    const hours = Math.ceil((totalSeconds / 3600) * 10) / 10;
+
+                    // Khôi phục Key gốc của bạn: year-monthIndex-day
+                    const fullKey = `${year}-${monthIndex}-${day}`;
+
+                    // Gán vào data để vẽ Lịch
+                    formattedData[fullKey] = hours;
+                });
+
+                // Cập nhật State cho Grid Lịch vẽ
+                setActivityData(formattedData);
+            } catch (err) {
+                console.error("Lỗi lấy lịch sử học tháng:", err);
+                // toast.error("Không thể tải dữ liệu lịch học.");
+            }
+        };
+
+        fetchMonthlyData();
     }, [selectedMonthObj]);
 
+    // --- 3. 🔴 FIX LOGIC HIỂN THỊ GIỜ & NHẬN THƯỞNG ---
 
-    // --- 3. LOGIC MỚI: TÍNH TỔNG GIỜ HỌC TRONG TUẦN HIỆN TẠI ---
-    const [weeklyHours, setWeeklyHours] = useState(0);
-    const [isClaimed, setIsClaimed] = useState(false); // State lưu trạng thái đã nhận thưởng chưa
+    // Dùng Math.floor để cắt bỏ phần thừa (Ví dụ: 9.95 -> Math.floor(99.5)/10 -> 9.9)
+    // Giúp UI hiển thị đúng số giờ học, không bị làm tròn "ăn gian"
+    const currentHours = studyTimeData?.currentSeconds
+        ? Math.floor((studyTimeData.currentSeconds / 3600) * 10) / 10
+        : 0;
+
+    const targetHours = studyTimeData?.targetSeconds
+        ? Math.floor((studyTimeData.targetSeconds / 3600) * 10) / 10
+        : 10;
+
+    // 🔴 Biến quyết định nút sáng hay tắt (So sánh số GIÂY tuyệt đối, không so sánh số GIỜ)
+    const isGoalMet = (studyTimeData?.currentSeconds || 0) >= (studyTimeData?.targetSeconds || 36000);
+
+    const isClaimedInit = studyTimeData?.isClaimed || false;
+    const [isClaimed, setIsClaimed] = useState(isClaimedInit);
 
     useEffect(() => {
-        // Chỉ tính toán nếu đang xem tháng hiện tại
-        if (!selectedMonthObj.isCurrent) {
-            setWeeklyHours(0);
-            return;
+        if (studyTimeData !== null && studyTimeData !== undefined) {
+            setIsClaimed(studyTimeData.isClaimed);
         }
+    }, [studyTimeData]);
 
-        const today = new Date();
-        const currentDay = today.getDay(); // 0 (CN) -> 6 (T7)
-        // Tính ngày thứ 2 của tuần này (Monday)
-        // Nếu hôm nay là CN (0), thì thứ 2 là today - 6 ngày. Nếu không thì là today - (currentDay - 1)
-        const diff = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1); 
-        
-        const monday = new Date(today.setDate(diff));
-        
-        let total = 0;
-        // Loop từ Thứ 2 đến Chủ Nhật (7 ngày)
-        for (let i = 0; i < 7; i++) {
-            const tempDate = new Date(monday);
-            tempDate.setDate(monday.getDate() + i);
-
-            // Kiểm tra xem ngày này có nằm trong tháng hiện tại không
-            if (tempDate.getMonth() === selectedMonthObj.monthIndex) {
-                const key = `${tempDate.getFullYear()}-${tempDate.getMonth()}-${tempDate.getDate()}`;
-                if (activityData[key]) {
-                    total += activityData[key];
-                }
-            }
+    const handleClaimReward = async () => {
+        try {
+            await studyAnalyticsApi.claimWeeklyReward();
+            toast.success("Chúc mừng! Bạn đã nhận được 10 xu.");
+            setIsClaimed(true);
+            fetchUserProfile(); // 🔴 Hàm này giờ đã chạy bình thường
+        } catch (err) {
+            toast.error(err.message || "Có lỗi xảy ra");
         }
-        setWeeklyHours(total);
-    }, [activityData, selectedMonthObj]);
-
-    // Hàm xử lý khi bấm nhận thưởng
-    const handleClaimReward = () => {
-        alert("Chúc mừng! Bạn đã nhận được 10 xu vào tài khoản.");
-        setIsClaimed(true);
-        // Ở đây bạn có thể gọi API cập nhật xu cho user
     };
 
     return (
@@ -121,21 +147,23 @@ const ActivitySection = () => {
                         />
                     </div>
                 </div>
-                
-                {/* --- WEEKLY GOAL (Chỉ hiện khi xem Tháng Hiện Tại) --- */}
+
+                {/* --- WEEKLY GOAL --- */}
                 {selectedMonthObj.isCurrent && (
-                     <WeeklyGoal 
-                        currentHours={weeklyHours} 
-                        targetHours={10} 
+                    <WeeklyGoal
+                        currentHours={currentHours}
+                        targetHours={targetHours}
                         isClaimed={isClaimed}
+                        // 🔴 Truyền cờ này xuống cho WeeklyGoal để render nút Đã nhận / Nhận ngay
+                        isGoalMet={isGoalMet}
                         onClaim={handleClaimReward}
-                     />
+                    />
                 )}
 
                 {/* --- CALENDAR COMPONENT --- */}
-                <CalendarGrid 
-                    selectedMonth={selectedMonthObj} 
-                    activityData={activityData} 
+                <CalendarGrid
+                    selectedMonth={selectedMonthObj}
+                    activityData={activityData}
                 />
             </div>
         </section>

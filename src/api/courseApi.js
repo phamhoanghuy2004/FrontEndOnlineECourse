@@ -70,6 +70,11 @@ const courseApi = {
         });
     },
 
+    pingStudyTime: (data) => {
+        return axiosClient.post(`/students/ping`, data);
+    },
+
+
     getAllCourses: () => {
         return axiosClient.get('/courses/all');
     }

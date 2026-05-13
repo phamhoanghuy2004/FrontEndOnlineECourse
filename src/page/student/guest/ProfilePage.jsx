@@ -3,17 +3,10 @@ import { useNavigate } from "react-router-dom";
 import {
     FaUserEdit, FaCamera, FaCoins, FaHistory, FaBullseye,
     FaSave, FaTimes, FaEnvelope, FaBirthdayCake, FaSignOutAlt,
-    FaMapMarkerAlt, FaBriefcase, FaPlus
+    FaMapMarkerAlt, FaBriefcase, FaPlus, FaSpinner, FaChevronLeft, FaChevronRight // 🔴 [THÊM MỚI]: Import icon Loading & Phân trang
 } from "react-icons/fa";
 import { useAuth } from "../../../hooks/useAuth";
 import userApi from "../../../api/userApi";
-
-const MOCK_TRANSACTIONS = [
-    { id: 1, date: "2023-10-25", desc: "Nạp xu qua Momo", amount: 500, type: "deposit", status: "Success" },
-    { id: 2, date: "2023-10-26", desc: "Đăng ký khóa học IELTS Speaking", amount: -200, type: "payment", status: "Success" },
-    { id: 3, date: "2023-11-02", desc: "Thưởng hoàn thành bài tập", amount: 50, type: "reward", status: "Success" },
-    { id: 4, date: "2023-11-10", desc: "Mua tài liệu Reading", amount: -30, type: "payment", status: "Success" },
-];
 
 const validateProfile = (data) => {
     const errors = {};
@@ -46,6 +39,31 @@ const validateProfile = (data) => {
     };
 };
 
+// 🔴 [THÊM MỚI]: Hàm lấy dải ngày của tuần hiện tại (Thứ 2 -> Chủ Nhật)
+const getCurrentWeekRange = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0: CN, 1: T2...
+
+    // Tính toán ngày Thứ 2
+    const diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+    const monday = new Date(new Date().setDate(diffToMonday));
+
+    // Tính toán ngày Chủ Nhật
+    const sunday = new Date(new Date(monday).setDate(monday.getDate() + 6));
+
+    const formatDate = (date) => {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    };
+
+    return {
+        start: formatDate(monday),
+        end: formatDate(sunday)
+    };
+};
+
 const ProfilePage = () => {
     const { user, logout, fetchUserProfile } = useAuth();
     const navigate = useNavigate();
@@ -69,6 +87,18 @@ const ProfilePage = () => {
 
     const MAX_SIZE = 2 * 1024 * 1024;
 
+    // 🔴 [THÊM MỚI]: Khai báo State cho Lịch sử giao dịch
+    const [transactions, setTransactions] = useState([]);
+    const [transLoading, setTransLoading] = useState(false);
+    const [transPage, setTransPage] = useState(1);
+    const [transTotalPages, setTransTotalPages] = useState(1);
+
+    // 🔴 [THÊM MỚI]: State cho bộ lọc
+    const defaultRange = getCurrentWeekRange();
+    const [transType, setTransType] = useState("");
+    const [transStartDate, setTransStartDate] = useState(defaultRange.start);
+    const [transEndDate, setTransEndDate] = useState(defaultRange.end);
+
 
     useEffect(() => {
         if (user) {
@@ -88,6 +118,46 @@ const ProfilePage = () => {
             setPreviewAvatar(user.avatarUrl);
         }
     }, [user]);
+
+    // 🔴 [THÊM MỚI]: Cập nhật useEffect gọi API để nhận thêm tham số lọc
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchTransactions = async () => {
+            if (activeTab !== "history") return;
+
+            try {
+                setTransLoading(true);
+                // Truyền toàn bộ filter xuống API qua params
+                const response = await userApi.getMyTransactions({
+                    page: transPage,
+                    size: 10,
+                    type: transType || undefined, // Nếu rỗng thì gửi undefined để axios bỏ qua key này
+                    startDate: transStartDate || undefined,
+                    endDate: transEndDate || undefined
+                });
+
+                if (isMounted && response.data) {
+                    setTransactions(response.data.content || []);
+                    setTransTotalPages(response.data.totalPages || 1);
+                }
+            } catch (error) {
+                if (isMounted) console.error("Lỗi fetch transactions:", error);
+            } finally {
+                if (isMounted) setTransLoading(false);
+            }
+        };
+
+        fetchTransactions();
+        return () => { isMounted = false; };
+        // 🔴 [THÊM MỚI]: Chạy lại Effect khi bất kỳ bộ lọc nào thay đổi
+    }, [activeTab, transPage, transType, transStartDate, transEndDate]);
+
+    // 🔴 [THÊM MỚI]: Hàm reset về trang 1 khi thay đổi bất kỳ filter nào
+    const handleFilterChange = (setter, value) => {
+        setter(value);
+        setTransPage(1);
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -195,6 +265,12 @@ const ProfilePage = () => {
         if (!url) return "https://via.placeholder.com/150";
         // Ép HTTP thành HTTPS để không bị trình duyệt chặn
         return url.replace(/^http:\/\//i, 'https://');
+    };
+
+    // 🔴 [THÊM MỚI]: Hàm Helper format tiền VNĐ
+    const formatCurrency = (amount) => {
+        if (!amount) return "-";
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
     };
 
     return (
@@ -400,40 +476,165 @@ const ProfilePage = () => {
                             </div>
                         )}
 
+                        {/* 🔴 [SỬA]: TAB HISTORY - Bọc Loader, Empty State, và Map Data thật */}
                         {activeTab === "history" && (
                             <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 animate-fade-in-up">
                                 <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                                     <FaHistory className="text-gray-400" /> Lịch sử biến động số dư
                                 </h3>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="text-gray-500 text-sm border-b border-gray-100">
-                                                <th className="py-4 font-semibold">Thời gian</th>
-                                                <th className="py-4 font-semibold">Nội dung</th>
-                                                <th className="py-4 font-semibold text-right">Số xu</th>
-                                                <th className="py-4 font-semibold text-right">Trạng thái</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {MOCK_TRANSACTIONS.map((trans) => (
-                                                <tr key={trans.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
-                                                    <td className="py-4 text-gray-600">{trans.date}</td>
-                                                    <td className="py-4 text-gray-800 font-medium">{trans.desc}</td>
-                                                    <td className={`py-4 text-right font-bold ${trans.amount > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                                                        {trans.amount > 0 ? `+${trans.amount}` : trans.amount}
-                                                    </td>
-                                                    <td className="py-4 text-right">
-                                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${trans.status === 'Success' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
-                                                            {trans.status}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+
+                                {/* 🔴 [THÊM MỚI]: THANH BỘ LỌC (FILTER BAR) */}
+                                <div className="flex flex-col md:flex-row gap-4 mb-8 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                    {/* Lọc theo Loại */}
+                                    <div className="flex-1">
+                                        <label className="block text-[11px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Loại giao dịch</label>
+                                        <select
+                                            value={transType}
+                                            onChange={(e) => handleFilterChange(setTransType, e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                                        >
+                                            <option value="">Tất cả loại</option>
+                                            <option value="TEST_PAYMENT">Làm test</option>
+                                            <option value="VNPAY">Thanh toán</option>
+                                            <option value="SYSTEM_BONUS">Thưởng</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Lọc theo Từ ngày */}
+                                    <div className="flex-1">
+                                        <label className="block text-[11px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Từ ngày</label>
+                                        <input
+                                            type="date"
+                                            value={transStartDate}
+                                            onChange={(e) => handleFilterChange(setTransStartDate, e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 outline-none focus:border-emerald-500 transition-all"
+                                        />
+                                    </div>
+
+                                    {/* Lọc theo Đến ngày */}
+                                    <div className="flex-1">
+                                        <label className="block text-[11px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Đến ngày</label>
+                                        <input
+                                            type="date"
+                                            value={transEndDate}
+                                            onChange={(e) => handleFilterChange(setTransEndDate, e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 outline-none focus:border-emerald-500 transition-all"
+                                        />
+                                    </div>
+
+                                    {/* Nút Xóa nhanh bộ lọc (Chỉ hiện khi có filter) */}
+                                    {(transType || transStartDate || transEndDate) && (
+                                        <div className="flex items-end">
+                                            <button
+                                                onClick={() => {
+                                                    setTransType("");
+                                                    setTransStartDate("");
+                                                    setTransEndDate("");
+                                                    setTransPage(1);
+                                                }}
+                                                className="px-4 py-2.5 text-red-500 hover:bg-red-50 rounded-xl text-sm font-bold transition-colors flex items-center gap-2"
+                                            >
+                                                <FaTimes size={12} /> Xóa lọc
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                                {MOCK_TRANSACTIONS.length === 0 && <p className="text-center text-gray-500 py-8">Bạn chưa có giao dịch nào.</p>}
+                                {transLoading ? (
+                                    <div className="flex flex-col justify-center items-center py-12 text-emerald-500 gap-3">
+                                        <FaSpinner className="animate-spin text-3xl" />
+                                        <span className="text-sm font-medium text-slate-400">Đang tải dữ liệu...</span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="overflow-x-auto relative">
+                                            <table className="w-full text-left border-collapse whitespace-nowrap">
+                                                <thead>
+                                                    <tr className="text-gray-500 text-sm border-b border-gray-100">
+                                                        <th className="py-4 font-semibold pr-4">Thời gian</th>
+                                                        <th className="py-4 font-semibold pr-4">Nội dung</th>
+                                                        <th className="py-4 font-semibold text-right pr-4">Tiền thanh toán</th> {/* 🔴 Thêm cột */}
+                                                        <th className="py-4 font-semibold text-right pr-4">Biến động xu</th>
+                                                        <th className="py-4 font-semibold text-right pr-4">Số dư sau GD</th>    {/* 🔴 Thêm cột */}
+                                                        <th className="py-4 font-semibold text-right">Trạng thái</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {transactions.map((trans) => (
+                                                        <tr key={trans.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors text-sm">
+                                                            {/* Cột 1: Thời gian */}
+                                                            <td className="py-4 text-gray-600 pr-4">
+                                                                {new Date(trans.createdAt).toLocaleString('vi-VN')}
+                                                            </td>
+
+                                                            {/* Cột 2: Nội dung */}
+                                                            <td className="py-4 text-gray-800 font-medium pr-4 max-w-[200px] truncate" title={trans.description}>
+                                                                {trans.description}
+                                                            </td>
+
+                                                            {/* 🔴 Cột 3 (Mới): Tiền thanh toán */}
+                                                            <td className="py-4 text-right text-gray-500 font-medium pr-4">
+                                                                {formatCurrency(trans.totalAmount)}
+                                                            </td>
+
+                                                            {/* Cột 4: Biến động xu (+/-) */}
+                                                            <td className={`py-4 text-right font-bold pr-4 ${trans.totalCoinsChanged > 0 ? 'text-emerald-500' : trans.totalCoinsChanged < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                                                                {trans.totalCoinsChanged > 0 ? `+${trans.totalCoinsChanged}` : trans.totalCoinsChanged} <FaCoins className="inline-block text-[10px] mb-0.5 ml-0.5" />
+                                                            </td>
+
+                                                            {/* 🔴 Cột 5 (Mới): Số dư sau giao dịch */}
+                                                            <td className="py-4 text-right text-yellow-500 font-bold pr-4">
+                                                                {trans.balanceAfter} <FaCoins className="inline-block text-[10px] mb-0.5 ml-0.5" />
+                                                            </td>
+
+                                                            {/* Cột 6: Trạng thái (Map Enum sang Badge) */}
+                                                            <td className="py-4 text-right">
+                                                                <span className={`px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase ${trans.status === 'SUCCESS' ? 'bg-emerald-100 text-emerald-600' :
+                                                                    trans.status === 'PENDING' ? 'bg-orange-100 text-orange-600' :
+                                                                        'bg-red-100 text-red-600'
+                                                                    }`}>
+                                                                    {trans.status}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+
+                                            {/* 🔴 Empty State */}
+                                            {transactions.length === 0 && (
+                                                <div className="flex flex-col items-center justify-center py-10 opacity-60">
+                                                    <div className="text-4xl mb-2 grayscale">📂</div>
+                                                    <p className="text-gray-500 text-sm font-medium">Bạn chưa có giao dịch nào.</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* 🔴 Phân trang */}
+                                        {transTotalPages > 1 && (
+                                            <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-2">
+                                                <span className="text-xs text-slate-400 font-medium">
+                                                    Trang <strong className="text-slate-600">{transPage}</strong> / {transTotalPages}
+                                                </span>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        disabled={transPage === 1}
+                                                        onClick={() => setTransPage(p => p - 1)}
+                                                        className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                    >
+                                                        <FaChevronLeft size={12} />
+                                                    </button>
+                                                    <button
+                                                        disabled={transPage === transTotalPages}
+                                                        onClick={() => setTransPage(p => p + 1)}
+                                                        className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                    >
+                                                        <FaChevronRight size={12} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>

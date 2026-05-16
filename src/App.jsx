@@ -65,6 +65,7 @@ import AdminTestSetDetailPage from "./page/admin/AdminTestSetDetailPage";
 import AdminTestDetailPage from "./page/admin/AdminTestDetailPage";
 import VoucherManagementPage from "./page/teacher/VoucherManagementPage";
 import CoinPackageManagement from "./page/teacher/CoinPackageManagement";
+import ConsultationManagement from "./page/admin/ConsultationManagement";
 
 
 function App() {
@@ -210,6 +211,7 @@ function App() {
               <Route path="test-sets" element={<AdminTestSetPage />} />
               <Route path="test-sets/:id" element={<AdminTestSetDetailPage />} />
               <Route path="tests/:id" element={<AdminTestDetailPage />} />
+              <Route path="consultations" element={<ConsultationManagement />} />
             </Route>
 
             {/* Fallback: Nếu nhập sai đường dẫn thì về trang chủ */}

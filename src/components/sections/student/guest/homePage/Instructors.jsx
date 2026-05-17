@@ -18,7 +18,7 @@ const Instructors = () => {
     useEffect(() => {
         const fetchTeachers = async () => {
             try {
-                const response = await userApi.getAllTeachersApi();
+                const response = await userApi.getRandomTeachersApi();
                 if (response.data) {
                     const mappedData = response.data.map(teacher => ({
                         id: teacher.id,

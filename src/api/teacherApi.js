@@ -14,8 +14,19 @@ const teacherApi = {
     getTopCourses: () => {
         return axiosClient.get('/teachers/analytics/top-courses');
     },
+    getTopCoursesDetail: (fromDate, toDate) => {
+        return axiosClient.get('/teachers/analytics/top-courses/detail', {
+            params: { fromDate, toDate }
+        });
+    },
     getMyCoursesBasic: () => {
         return axiosClient.get('/teachers/analytics/my-courses-basic');
+    },
+    getAllTeachers: () => {
+        return axiosClient.get('/teachers/all');
+    },
+    getRandomTeachers: () => {
+        return axiosClient.get('/teachers/random');
     }
 };
 

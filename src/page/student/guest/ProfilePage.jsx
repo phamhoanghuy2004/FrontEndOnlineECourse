@@ -3,10 +3,15 @@ import { useNavigate } from "react-router-dom";
 import {
     FaUserEdit, FaCamera, FaCoins, FaHistory, FaBullseye,
     FaSave, FaTimes, FaEnvelope, FaBirthdayCake, FaSignOutAlt,
-    FaMapMarkerAlt, FaBriefcase, FaPlus, FaSpinner, FaChevronLeft, FaChevronRight // 🔴 [THÊM MỚI]: Import icon Loading & Phân trang
+    FaMapMarkerAlt, FaBriefcase, FaPlus, FaSpinner, FaChevronLeft, FaChevronRight,
+    FaCertificate, FaExternalLinkAlt // 🔴 [THÊM MỚI]: Icons cho chứng chỉ
 } from "react-icons/fa";
 import { useAuth } from "../../../hooks/useAuth";
 import userApi from "../../../api/userApi";
+import certificateApi from "../../../api/certificateApi"; // 🔴 [THÊM MỚI]: API chứng chỉ
+import CertificateModal from "../../../components/common/teacher/CertificateModal"; // 🔴 [THÊM MỚI]: Modal dùng chung
+import ConfirmationModal from "../../../components/common/ConfirmationModal";
+import { toast } from "react-hot-toast"; // 🔴 [THÊM MỚI]: Thông báo
 
 const validateProfile = (data) => {
     const errors = {};
@@ -99,6 +104,14 @@ const ProfilePage = () => {
     const [transStartDate, setTransStartDate] = useState(defaultRange.start);
     const [transEndDate, setTransEndDate] = useState(defaultRange.end);
 
+    // 🔴 [THÊM MỚI]: State cho Chứng chỉ
+    const [certificates, setCertificates] = useState([]);
+    const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+    const [editingCert, setEditingCert] = useState(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [certToDelete, setCertToDelete] = useState(null);
+    const [isDeletingCert, setIsDeletingCert] = useState(false);
+
 
     useEffect(() => {
         if (user) {
@@ -152,6 +165,78 @@ const ProfilePage = () => {
         return () => { isMounted = false; };
         // 🔴 [THÊM MỚI]: Chạy lại Effect khi bất kỳ bộ lọc nào thay đổi
     }, [activeTab, transPage, transType, transStartDate, transEndDate]);
+
+    // 🔴 [THÊM MỚI]: Effect lấy danh sách chứng chỉ
+    useEffect(() => {
+        if (activeTab === "certificates") {
+            fetchCertificates();
+        }
+    }, [activeTab]);
+
+    const fetchCertificates = async () => {
+        try {
+            const response = await certificateApi.getMyCertificates();
+            if (response.data) {
+                setCertificates(response.data);
+            }
+        } catch (error) {
+            console.error("Lỗi lấy danh sách chứng chỉ:", error);
+        }
+    };
+
+    // 🔴 [THÊM MỚI]: Các hàm xử lý chứng chỉ
+    const handleOpenAddCert = () => {
+        setEditingCert(null);
+        setIsCertModalOpen(true);
+    };
+
+    const handleOpenEditCert = (e, cert) => {
+        e.stopPropagation();
+        setEditingCert(cert);
+        setIsCertModalOpen(true);
+    };
+
+    const handleOpenDeleteCert = (e, cert) => {
+        e.stopPropagation();
+        setCertToDelete(cert);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleSaveCertificate = async (formData, id) => {
+        try {
+            if (id) {
+                await certificateApi.updateCertificate(id, formData);
+                toast.success("Cập nhật chứng chỉ thành công!");
+            } else {
+                await certificateApi.createCertificate(formData);
+                toast.success("Thêm chứng chỉ thành công!");
+            }
+            fetchCertificates();
+            // Cập nhật lại user profile để đồng bộ certificates nếu cần
+            fetchUserProfile(user.roles);
+        } catch (error) {
+            console.error("Lỗi lưu chứng chỉ:", error);
+            toast.error(error.message || "Có lỗi xảy ra khi lưu chứng chỉ");
+            throw error;
+        }
+    };
+
+    const confirmDeleteCertificate = async () => {
+        if (!certToDelete) return;
+        setIsDeletingCert(true);
+        try {
+            await certificateApi.deleteCertificate(certToDelete.id);
+            toast.success("Xóa chứng chỉ thành công!");
+            fetchCertificates();
+            fetchUserProfile(user.roles);
+            setIsDeleteModalOpen(false);
+        } catch (error) {
+            console.error("Lỗi xóa chứng chỉ:", error);
+            toast.error("Không thể xóa chứng chỉ");
+        } finally {
+            setIsDeletingCert(false);
+        }
+    };
 
     // 🔴 [THÊM MỚI]: Hàm reset về trang 1 khi thay đổi bất kỳ filter nào
     const handleFilterChange = (setter, value) => {
@@ -363,6 +448,9 @@ const ProfilePage = () => {
                             </button>
                             <button onClick={() => setActiveTab("history")} className={`pb-3 font-semibold text-lg transition-all ${activeTab === "history" ? "text-emerald-500 border-b-2 border-emerald-500" : "text-gray-500 hover:text-gray-800"}`}>
                                 Lịch sử giao dịch
+                            </button>
+                            <button onClick={() => setActiveTab("certificates")} className={`pb-3 font-semibold text-lg transition-all ${activeTab === "certificates" ? "text-emerald-500 border-b-2 border-emerald-500" : "text-gray-500 hover:text-gray-800"}`}>
+                                Chứng chỉ
                             </button>
                         </div>
 
@@ -637,9 +725,129 @@ const ProfilePage = () => {
                                 )}
                             </div>
                         )}
+
+                        {/* 🔴 [THÊM MỚI]: TAB CHỨNG CHỈ */}
+                        {activeTab === "certificates" && (
+                            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 animate-fade-in-up">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                        <FaCertificate className="text-yellow-500" /> Bằng cấp & Chứng chỉ
+                                    </h3>
+                                    <button 
+                                        onClick={handleOpenAddCert}
+                                        className="text-emerald-600 font-bold text-sm hover:bg-emerald-50 px-4 py-2 rounded-xl transition-all flex items-center gap-2 border border-emerald-100"
+                                    >
+                                        <FaPlus className="text-xs" /> Thêm mới
+                                    </button>
+                                </div>
+
+                                {certificates && certificates.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {certificates.map((cert) => (
+                                            <div key={cert.id} className="p-5 border border-gray-100 rounded-2xl bg-gray-50 hover:bg-white hover:shadow-md hover:border-emerald-100 transition-all group relative">
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
+                                                        {cert.certType}
+                                                    </span>
+                                                    <div className="flex items-center gap-2">
+                                                        <button 
+                                                            onClick={(e) => handleOpenEditCert(e, cert)}
+                                                            className="p-2 bg-white shadow-sm rounded-lg text-gray-400 hover:text-blue-500 hover:shadow transition-all"
+                                                            title="Sửa"
+                                                        >
+                                                            <FaUserEdit className="text-sm" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={(e) => handleOpenDeleteCert(e, cert)}
+                                                            className="p-2 bg-white shadow-sm rounded-lg text-gray-400 hover:text-rose-500 hover:shadow transition-all"
+                                                            title="Xóa"
+                                                        >
+                                                            <FaTimes className="text-sm" />
+                                                        </button>
+                                                        <a 
+                                                            href={cert.evidenceUrl} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer" 
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="p-2 bg-white shadow-sm rounded-lg text-gray-400 hover:text-emerald-600 hover:shadow transition-all" 
+                                                            title="Xem minh chứng"
+                                                        >
+                                                            <FaExternalLinkAlt className="text-xs" />
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                                <h4 className="font-bold text-gray-800 mb-1">{cert.certType}</h4>
+                                                <div className="flex items-end justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-gray-400 mb-1 uppercase tracking-tight">Ngày cấp: {cert.issuedDate}</p>
+                                                        <div className="flex gap-2">
+                                                            <span className="text-emerald-600 font-bold text-2xl">{cert.totalScore}</span>
+                                                            <span className="text-gray-400 text-[10px] self-end mb-1 uppercase">Total Score</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <div className="flex flex-col items-center">
+                                                            <span className="text-[8px] text-gray-400 uppercase">L</span>
+                                                            <span className="text-xs font-bold text-gray-600">{cert.listeningScore}</span>
+                                                        </div>
+                                                        <div className="flex flex-col items-center ml-1">
+                                                            <span className="text-[8px] text-gray-400 uppercase">R</span>
+                                                            <span className="text-xs font-bold text-gray-600">{cert.readingScore}</span>
+                                                        </div>
+                                                        {cert.certType !== "TOEIC_LR" && (
+                                                            <>
+                                                                <div className="flex flex-col items-center ml-1">
+                                                                    <span className="text-[8px] text-gray-400 uppercase">S</span>
+                                                                    <span className="text-xs font-bold text-gray-600">{cert.speakingScore}</span>
+                                                                </div>
+                                                                <div className="flex flex-col items-center ml-1">
+                                                                    <span className="text-[8px] text-gray-400 uppercase">W</span>
+                                                                    <span className="text-xs font-bold text-gray-600">{cert.writingScore}</span>
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-16 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+                                        <FaCertificate className="text-6xl text-gray-200 mx-auto mb-4" />
+                                        <p className="text-gray-400 font-medium">Bạn chưa cập nhật chứng chỉ nào.</p>
+                                        <button 
+                                            onClick={handleOpenAddCert}
+                                            className="mt-4 text-emerald-600 font-bold text-sm hover:underline"
+                                        >
+                                            Thêm chứng chỉ đầu tiên
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* 🔴 [THÊM MỚI]: Modals */}
+            <CertificateModal 
+                isOpen={isCertModalOpen}
+                onClose={() => setIsCertModalOpen(false)}
+                onSave={handleSaveCertificate}
+                editingCert={editingCert}
+            />
+
+            <ConfirmationModal 
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDeleteCertificate}
+                title="Xóa chứng chỉ"
+                message={`Bạn có chắc chắn muốn xóa chứng chỉ ${certToDelete?.certType} này không? Hành động này không thể hoàn tác.`}
+                confirmText="Xóa ngay"
+                cancelText="Hủy"
+                variant="danger"
+                isLoading={isDeletingCert}
+            />
         </div>
     );
 };

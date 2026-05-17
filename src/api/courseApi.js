@@ -77,6 +77,10 @@ const courseApi = {
 
     getAllCourses: () => {
         return axiosClient.get('/courses/all');
+    },
+
+    getTopPurchasedCourses: () => {
+        return axiosClient.get('/courses/top-purchased');
     }
 };
 

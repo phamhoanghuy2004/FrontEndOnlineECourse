@@ -53,6 +53,10 @@ const userApi = {
   getAllTeachersApi: () => {
     return axiosClient.get('/teachers/all');
   },
+  
+  getRandomTeachersApi: () => {
+    return axiosClient.get('/teachers/random');
+  },
 
   getMyTransactions: (data) => {
     return axiosClient.get('/transactions/my-history', { params: data })

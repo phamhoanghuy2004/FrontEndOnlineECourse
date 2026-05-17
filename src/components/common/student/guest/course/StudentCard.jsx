@@ -32,27 +32,17 @@ const StudentCard = ({ data }) => {
             {/* Tên học viên */}
             <h4 className="font-bold text-gray-900 text-lg mb-4">{data.name}</h4>
 
-            {/* --- 3. BẢNG ĐIỂM (Đã chỉnh căn trái) --- */}
+            {/* --- 3. BẢNG ĐIỂM (Chỉ có R và L cho TOEIC) --- */}
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 w-full px-4 mb-4">
                 {/* Reading */}
-                <div className="flex items-center gap-2 text-sm">
-                    <span className="font-bold text-gray-600 w-5 text-left">R:</span> {/* w-5 để căn thẳng cột */}
-                    <span className="font-extrabold text-orange-500 text-base">{data.scores.reading}</span>
+                <div className="flex items-center justify-center gap-2 text-sm">
+                    <span className="font-bold text-gray-600 w-5 text-left">R:</span>
+                    <span className="font-extrabold text-orange-500 text-base">{data.scores?.reading || 0}</span>
                 </div>
                 {/* Listening */}
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center justify-center gap-2 text-sm">
                     <span className="font-bold text-gray-600 w-5 text-left">L:</span>
-                    <span className="font-extrabold text-orange-500 text-base">{data.scores.listening}</span>
-                </div>
-                {/* Speaking */}
-                <div className="flex items-center gap-2 text-sm">
-                    <span className="font-bold text-gray-600 w-5 text-left">S:</span>
-                    <span className="font-extrabold text-orange-500 text-base">{data.scores.speaking}</span>
-                </div>
-                {/* Writing */}
-                <div className="flex items-center gap-2 text-sm">
-                    <span className="font-bold text-gray-600 w-5 text-left">W:</span>
-                    <span className="font-extrabold text-orange-500 text-base">{data.scores.writing}</span>
+                    <span className="font-extrabold text-orange-500 text-base">{data.scores?.listening || 0}</span>
                 </div>
             </div>
 

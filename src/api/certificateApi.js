@@ -24,6 +24,10 @@ const certificateApi = {
     deleteCertificate: (id) => {
         return axiosClient.delete(`/certificates/${id}`);
     },
+
+    getTopToeicCertificates: () => {
+        return axiosClient.get("/certificates/top-toeic");
+    },
 };
 
 export default certificateApi;

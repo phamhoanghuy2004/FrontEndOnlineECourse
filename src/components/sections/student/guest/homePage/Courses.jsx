@@ -16,7 +16,7 @@ const Courses = () => {
     useEffect(() => {
         const fetchCourses = async () => {
             try {
-                const response = await courseApi.getAllCourses();
+                const response = await courseApi.getTopPurchasedCourses();
                 if (response.data) {
                     setSliderData(response.data);
                 }

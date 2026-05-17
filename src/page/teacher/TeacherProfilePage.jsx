@@ -479,14 +479,18 @@ const TeacherProfilePage = () => {
                                                                 <span className="text-[8px] text-slate-400 uppercase">R</span>
                                                                 <span className="text-xs font-bold text-slate-600">{cert.readingScore}</span>
                                                             </div>
-                                                            <div className="flex flex-col items-center ml-2">
-                                                                <span className="text-[8px] text-slate-400 uppercase">S</span>
-                                                                <span className="text-xs font-bold text-slate-600">{cert.speakingScore}</span>
-                                                            </div>
-                                                            <div className="flex flex-col items-center ml-2">
-                                                                <span className="text-[8px] text-slate-400 uppercase">W</span>
-                                                                <span className="text-xs font-bold text-slate-600">{cert.writingScore}</span>
-                                                            </div>
+                                                            {cert.certType !== "TOEIC_LR" && (
+                                                                <>
+                                                                    <div className="flex flex-col items-center ml-2">
+                                                                        <span className="text-[8px] text-slate-400 uppercase">S</span>
+                                                                        <span className="text-xs font-bold text-slate-600">{cert.speakingScore}</span>
+                                                                    </div>
+                                                                    <div className="flex flex-col items-center ml-2">
+                                                                        <span className="text-[8px] text-slate-400 uppercase">W</span>
+                                                                        <span className="text-xs font-bold text-slate-600">{cert.writingScore}</span>
+                                                                    </div>
+                                                                </>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>

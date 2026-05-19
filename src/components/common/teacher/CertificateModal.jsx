@@ -4,9 +4,9 @@ import { toast } from "react-hot-toast";
 
 const CertificateModal = ({ isOpen, onClose, onSave, editingCert }) => {
     const [formData, setFormData] = useState({
-        certType: "IELTS",
-        listeningScore: 0,
-        readingScore: 0,
+        certType: "TOEIC_LR",
+        listeningScore: 10,
+        readingScore: 10,
         speakingScore: 0,
         writingScore: 0,
         issuedDate: new Date().toISOString().split("T")[0],
@@ -15,7 +15,7 @@ const CertificateModal = ({ isOpen, onClose, onSave, editingCert }) => {
     const [previewUrl, setPreviewUrl] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const certTypes = ["TOEIC_LR", "TOEIC_SW", "IELTS"];
+    const certTypes = ["TOEIC_LR"];
 
     useEffect(() => {
         if (editingCert) {
@@ -31,7 +31,7 @@ const CertificateModal = ({ isOpen, onClose, onSave, editingCert }) => {
             setSelectedFile(null);
         } else {
             setFormData({
-                certType: "IELTS",
+                certType: "TOEIC_LR",
                 listeningScore: 0,
                 readingScore: 0,
                 speakingScore: 0,
@@ -61,6 +61,12 @@ const CertificateModal = ({ isOpen, onClose, onSave, editingCert }) => {
         
         if (!editingCert && !selectedFile) {
             toast.error("Vui lòng tải lên ảnh minh chứng!");
+            return;
+        }
+
+        if (formData.listeningScore < 10 || formData.listeningScore > 495 ||
+            formData.readingScore < 10 || formData.readingScore > 495) {
+            toast.error("Điểm Nghe và Đọc phải nằm trong khoảng 10 - 495!");
             return;
         }
 
@@ -99,8 +105,8 @@ const CertificateModal = ({ isOpen, onClose, onSave, editingCert }) => {
 
                 <form onSubmit={handleSubmit} className="p-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        {/* Cert Type */}
-                        <div>
+                        {/* Cert Type (Hidden since it's only one type) */}
+                        <div className="hidden">
                             <label className="block text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Loại chứng chỉ</label>
                             <select
                                 name="certType"
@@ -112,6 +118,14 @@ const CertificateModal = ({ isOpen, onClose, onSave, editingCert }) => {
                                     <option key={type} value={type}>{type}</option>
                                 ))}
                             </select>
+                        </div>
+
+                        {/* Display Type Information */}
+                        <div className="col-span-2 md:col-span-1">
+                            <label className="block text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Loại chứng chỉ</label>
+                            <div className="w-full px-4 py-3 rounded-2xl border border-transparent bg-slate-50 text-slate-600 font-bold">
+                                TOEIC Listening & Reading
+                            </div>
                         </div>
 
                         {/* Issued Date */}
@@ -127,50 +141,40 @@ const CertificateModal = ({ isOpen, onClose, onSave, editingCert }) => {
                         </div>
 
                         {/* Scores */}
-                        <div className="col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-slate-500 text-[10px] font-bold uppercase mb-1">Listening</label>
-                                <input
-                                    type="number"
-                                    step="0.5"
-                                    name="listeningScore"
-                                    value={formData.listeningScore}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 transition-all outline-none"
-                                />
+                                <label className="block text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Điểm Nghe (Listening)</label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        min="10"
+                                        max="495"
+                                        step="5"
+                                        name="listeningScore"
+                                        value={formData.listeningScore}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 transition-all outline-none font-bold text-lg text-emerald-600"
+                                    />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs">/ 495</span>
+                                </div>
+                                <p className="text-[10px] text-slate-400 mt-1 ml-1">Khoảng điểm: 10 - 495</p>
                             </div>
                             <div>
-                                <label className="block text-slate-500 text-[10px] font-bold uppercase mb-1">Reading</label>
-                                <input
-                                    type="number"
-                                    step="0.5"
-                                    name="readingScore"
-                                    value={formData.readingScore}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 transition-all outline-none"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-slate-500 text-[10px] font-bold uppercase mb-1">Speaking</label>
-                                <input
-                                    type="number"
-                                    step="0.5"
-                                    name="speakingScore"
-                                    value={formData.speakingScore}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 transition-all outline-none"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-slate-500 text-[10px] font-bold uppercase mb-1">Writing</label>
-                                <input
-                                    type="number"
-                                    step="0.5"
-                                    name="writingScore"
-                                    value={formData.writingScore}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 transition-all outline-none"
-                                />
+                                <label className="block text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Điểm Đọc (Reading)</label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        min="10"
+                                        max="495"
+                                        step="5"
+                                        name="readingScore"
+                                        value={formData.readingScore}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 transition-all outline-none font-bold text-lg text-emerald-600"
+                                    />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs">/ 495</span>
+                                </div>
+                                <p className="text-[10px] text-slate-400 mt-1 ml-1">Khoảng điểm: 10 - 495</p>
                             </div>
                         </div>
 

@@ -94,6 +94,8 @@ function App() {
               GROUP 1: GUEST ROUTES
               Sử dụng GuestLayout (Navbar + Footer truyền thống)
             ========================================================= */}
+            <Route path="/level-test" element={<LevelTestPage />} />
+
             <Route element={<GuestLayout />}>
               <Route path="/" element={<HomePage />} />
               <Route path="/courses" element={<CoursePage />} />
@@ -103,7 +105,6 @@ function App() {
               <Route path="/consultation" element={<ConsulationPage />} />
               <Route path="/tests" element={<TestSetPage />} />
               <Route path="/tests/:id" element={<TestDetailPage />} />
-              <Route path="/level-test" element={<LevelTestPage />} />
               <Route path="/test-practice/:id" element={<TestPracticePage />} />
 
               <Route path="/login" element={<LoginPage />} />

@@ -67,6 +67,23 @@ const adminApi = {
             },
         });
     },
+
+    // Analytics
+    getAdminSummary: () => {
+        return axiosClient.get('/admins/analytics/summary');
+    },
+    getAdminRevenueChart: (params) => {
+        return axiosClient.get('/admins/analytics/revenue-chart', { params });
+    },
+    getTeacherRankings: () => {
+        return axiosClient.get('/admins/analytics/teacher-rankings');
+    },
+    getCourseRankings: () => {
+        return axiosClient.get('/admins/analytics/course-rankings');
+    },
+    getAdminFiltersData: () => {
+        return axiosClient.get('/admins/analytics/filters');
+    },
 };
 
 export default adminApi;

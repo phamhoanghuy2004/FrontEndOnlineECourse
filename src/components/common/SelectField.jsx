@@ -21,13 +21,13 @@ const SelectField = ({
             </label>
             <div className="relative group">
                 {/* Icon bên trái */}
-                <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs group-focus-within:text-emerald-500 transition-colors pointer-events-none" />
+                {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs group-focus-within:text-emerald-500 transition-colors pointer-events-none" />}
 
                 <select
                     name={name}
                     value={value}
                     onChange={onChange}
-                    className={`w-full pl-9 pr-8 ${inputPadding} text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all font-medium text-slate-700 appearance-none cursor-pointer`}
+                    className={`w-full ${Icon ? 'pl-9' : 'pl-3'} pr-8 ${inputPadding} text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all font-medium text-slate-700 appearance-none cursor-pointer`}
                 >
                     {options.map((opt) => (
                         <option key={opt.value} value={opt.value}>

@@ -30,7 +30,11 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPersonalizingOverlay, setShowPersonalizingOverlay] = useState(false);
+<<<<<<< HEAD
 
+=======
+
+>>>>>>> origin/main
   // Local score/level tracking as a robust fallback
   const [skillLevels, setSkillLevels] = useState({
     Grammar: 3,
@@ -152,7 +156,11 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
         onFinish(finalScores);
       } else {
         const mappedNextQ = mapBackendQuestionToFrontend(nextStep.nextQuestion);
+<<<<<<< HEAD
 
+=======
+
+>>>>>>> origin/main
         // Show AI personalizing animation when transitioning to a new skill
         const skillChanged = mappedNextQ.skill !== currentQuestion.skill;
 
@@ -182,7 +190,11 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (showPersonalizingOverlay || isSubmitting || initialLoading) return;
+<<<<<<< HEAD
 
+=======
+
+>>>>>>> origin/main
       const key = e.key.toUpperCase();
       if (key === "A") setSelectedOption(0);
       if (key === "B") setSelectedOption(1);
@@ -246,9 +258,14 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
             disabled={selectedOption === null || isSubmitting}
             whileHover={selectedOption !== null && !isSubmitting ? { scale: 1.02 } : {}}
             whileTap={selectedOption !== null && !isSubmitting ? { scale: 0.98 } : {}}
+<<<<<<< HEAD
             className={`px-8 py-3.5 rounded-2xl font-bold flex items-center gap-2 cursor-pointer shadow-md transition-all ${selectedOption === null || isSubmitting
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-                : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200/50"
+=======
+            className={`px-8 py-3.5 rounded-2xl font-bold flex items-center gap-2 cursor-pointer shadow-md transition-all ${
+              selectedOption === null || isSubmitting
+>>>>>>> origin/main
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+              : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200/50"
               }`}
           >
             {isSubmitting ? (

@@ -4,128 +4,184 @@ import ProgressHeader from "../../../../components/sections/student/guest/levelT
 import QuestionCard from "../../../../components/sections/student/guest/levelTestPage/QuestionCard";
 import AnswerOption from "../../../../components/sections/student/guest/levelTestPage/AnswerOption";
 import AdaptiveLoading from "../../../../components/sections/student/guest/levelTestPage/AdaptiveLoading";
-import { placementTestData } from "../../../../data/placementTestData";
-import { ArrowRight } from "lucide-react";
+import { placementTestApi } from "../../../../api/placementTestApi";
+import { ArrowRight, Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 
-const SKILLS = ["Grammar", "Vocabulary", "Reading", "Listening"];
+const mapSkill = (skillType) => {
+  if (!skillType) return "Grammar";
+  const upper = skillType.toUpperCase();
+  if (upper.includes("GRAMMAR")) return "Grammar";
+  if (upper.includes("VOCABULARY") || upper.includes("VOCAB")) return "Vocabulary";
+  if (upper.includes("READING") || upper.includes("READ")) return "Reading";
+  if (upper.includes("LISTENING") || upper.includes("LISTEN")) return "Listening";
+  return skillType;
+};
 
 const AdaptiveTestPage = ({ onFinish, onCancel }) => {
   // Navigation states
-  const [activeSkillIdx, setActiveSkillIdx] = useState(0);
-  const [currentLevel, setCurrentLevel] = useState(3);
-  const [questionIndexInSkill, setQuestionIndexInSkill] = useState(0);
   const [totalAnswersCount, setTotalAnswersCount] = useState(0);
 
-  // Tracking questions used to prevent duplicates
-  const [usedQuestionIds, setUsedQuestionIds] = useState([]);
-
-  // Active question state
+  // Active question states
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
 
-  // Session stats
-  const [timeLeftSeconds, setTimeLeftSeconds] = useState(480); // 8 minutes
+  // Loading and flow states
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPersonalizingOverlay, setShowPersonalizingOverlay] = useState(false);
-  const [finishedSkillsLevels, setFinishedSkillsLevels] = useState({
+  
+  // Local score/level tracking as a robust fallback
+  const [skillLevels, setSkillLevels] = useState({
     Grammar: 3,
     Vocabulary: 3,
     Reading: 3,
     Listening: 3
   });
 
-  const currentSkill = SKILLS[activeSkillIdx];
+  // Session stats
+  const [timeLeftSeconds, setTimeLeftSeconds] = useState(480); // 8 minutes
 
-  // Helper: Retrieve next unused question at a given skill + level
-  const getNextUnusedQuestion = useCallback((skill, level, usedIds) => {
-    const list = placementTestData[skill]?.[level] || [];
-    const available = list.filter((q) => !usedIds.includes(q.id));
-    return available[0] || list[0] || null;
+  // Map backend question response to our frontend expected structure
+  const mapBackendQuestionToFrontend = useCallback((bq) => {
+    if (!bq) return null;
+    
+    let options = [];
+    let answerIds = [];
+    
+    if (bq.answers && Array.isArray(bq.answers)) {
+      options = bq.answers.map(a => a.content || a);
+      answerIds = bq.answers.map(a => a.id);
+    } else if (bq.options && Array.isArray(bq.options)) {
+      options = bq.options.map(o => o.content || o);
+      answerIds = bq.options.map(o => o.id || o);
+    }
+
+    return {
+      id: bq.id,
+      skill: mapSkill(bq.skillType || bq.skill),
+      level: bq.level || bq.difficulty || 3,
+      question: bq.content || bq.question || "",
+      options: options,
+      answerIds: answerIds,
+      audio: bq.audioUrl || bq.audio || "",
+      passage: bq.sharedContent || bq.passage || "",
+      transcript: bq.transcript || "",
+      originalAnswers: bq.answers || []
+    };
   }, []);
 
-  // Initialize first question
+  // 1. Initial mounting: Call startTest API
   useEffect(() => {
-    const q = getNextUnusedQuestion(currentSkill, currentLevel, usedQuestionIds);
-    setCurrentQuestion(q);
-    setSelectedOption(null);
-  }, [activeSkillIdx, currentLevel, currentSkill, getNextUnusedQuestion, usedQuestionIds]);
+    let isMounted = true;
 
-  // Timer countdown
+    const initTest = async () => {
+      try {
+        setInitialLoading(true);
+        const res = await placementTestApi.startTest();
+        const nextStep = res.data;
+
+        if (isMounted) {
+          if (nextStep.isFinished || !nextStep.nextQuestion) {
+            // Already finished
+            const finalScores = nextStep.scores || nextStep.skillLevels || nextStep.results || skillLevels;
+            onFinish(finalScores);
+          } else {
+            const mappedQ = mapBackendQuestionToFrontend(nextStep.nextQuestion);
+            setCurrentQuestion(mappedQ);
+            setSelectedOption(null);
+            setTotalAnswersCount(0);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error("Lỗi khi bắt đầu bài thi:", err);
+          toast.error(err.message || "Không thể kết nối đến máy chủ để bắt đầu bài thi!");
+        }
+      } finally {
+        if (isMounted) {
+          setInitialLoading(false);
+        }
+      }
+    };
+
+    initTest();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [onFinish, mapBackendQuestionToFrontend]);
+
+  // Keep track of skill levels as they are presented
   useEffect(() => {
+    if (currentQuestion) {
+      setSkillLevels(prev => ({
+        ...prev,
+        [currentQuestion.skill]: currentQuestion.level
+      }));
+    }
+  }, [currentQuestion]);
+
+  // 2. Timer countdown
+  useEffect(() => {
+    if (initialLoading) return;
     if (timeLeftSeconds <= 0) {
-      onFinish(finishedSkillsLevels);
+      onFinish(skillLevels);
       return;
     }
     const timer = setInterval(() => {
       setTimeLeftSeconds((prev) => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeftSeconds, onFinish, finishedSkillsLevels]);
+  }, [timeLeftSeconds, initialLoading, onFinish, skillLevels]);
 
-  const handleNext = useCallback(() => {
-    if (selectedOption === null || !currentQuestion) return;
+  // 3. Submit option and fetch next question
+  const handleNext = useCallback(async () => {
+    if (selectedOption === null || !currentQuestion || isSubmitting) return;
 
-    const isCorrect = selectedOption === currentQuestion.correct;
-    let nextLevel = currentLevel;
+    // Retrieve the actual selected answer's ID
+    const selectedAnswerId = currentQuestion.answerIds[selectedOption] || null;
 
-    if (isCorrect) {
-      nextLevel = Math.min(5, currentLevel + 1);
-    } else {
-      nextLevel = currentLevel - 1;
-    }
+    try {
+      setIsSubmitting(true);
+      const res = await placementTestApi.submitAnswer(currentQuestion.id, selectedAnswerId);
+      const nextStep = res.data;
 
-    const updatedUsedIds = [...usedQuestionIds, currentQuestion.id];
-    setUsedQuestionIds(updatedUsedIds);
-
-    const nextQIndexInSkill = questionIndexInSkill + 1;
-    const newTotalAnswersCount = totalAnswersCount + 1;
-    setTotalAnswersCount(newTotalAnswersCount);
-
-    const isBranchFinished = nextLevel === 0 || nextQIndexInSkill >= 5;
-
-    if (isBranchFinished) {
-      let finalLevel = 1;
-      if (nextLevel > 0) {
-        finalLevel = isCorrect ? currentLevel : Math.max(1, currentLevel - 1);
-      }
-
-      const updatedFinishedLevels = {
-        ...finishedSkillsLevels,
-        [currentSkill]: finalLevel
-      };
-      setFinishedSkillsLevels(updatedFinishedLevels);
-
-      if (activeSkillIdx < SKILLS.length - 1) {
-        setShowPersonalizingOverlay(true);
-        setTimeout(() => {
-          setActiveSkillIdx((prev) => prev + 1);
-          setCurrentLevel(3);
-          setQuestionIndexInSkill(0);
-          setShowPersonalizingOverlay(false);
-        }, 1500);
+      if (nextStep.isFinished || !nextStep.nextQuestion) {
+        const finalScores = nextStep.scores || nextStep.skillLevels || nextStep.results || skillLevels;
+        onFinish(finalScores);
       } else {
-        onFinish(updatedFinishedLevels);
+        const mappedNextQ = mapBackendQuestionToFrontend(nextStep.nextQuestion);
+        
+        // Show AI personalizing animation when transitioning to a new skill
+        const skillChanged = mappedNextQ.skill !== currentQuestion.skill;
+
+        if (skillChanged) {
+          setShowPersonalizingOverlay(true);
+          setTimeout(() => {
+            setCurrentQuestion(mappedNextQ);
+            setSelectedOption(null);
+            setTotalAnswersCount(prev => prev + 1);
+            setShowPersonalizingOverlay(false);
+          }, 1500);
+        } else {
+          setCurrentQuestion(mappedNextQ);
+          setSelectedOption(null);
+          setTotalAnswersCount(prev => prev + 1);
+        }
       }
-    } else {
-      setCurrentLevel(nextLevel);
-      setQuestionIndexInSkill(nextQIndexInSkill);
+    } catch (err) {
+      console.error("Lỗi khi nộp câu trả lời:", err);
+      toast.error(err.message || "Có lỗi xảy ra khi nộp bài!");
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [
-    selectedOption,
-    currentQuestion,
-    currentLevel,
-    usedQuestionIds,
-    questionIndexInSkill,
-    totalAnswersCount,
-    finishedSkillsLevels,
-    currentSkill,
-    activeSkillIdx,
-    onFinish
-  ]);
+  }, [selectedOption, currentQuestion, isSubmitting, skillLevels, onFinish, mapBackendQuestionToFrontend]);
 
   // Keyboard accessibility listeners (A, B, C, D to choose, Enter to continue)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (showPersonalizingOverlay) return;
+      if (showPersonalizingOverlay || isSubmitting || initialLoading) return;
       
       const key = e.key.toUpperCase();
       if (key === "A") setSelectedOption(0);
@@ -140,9 +196,18 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedOption, handleNext, showPersonalizingOverlay]);
+  }, [selectedOption, handleNext, showPersonalizingOverlay, isSubmitting, initialLoading]);
 
   const minutesLeft = Math.ceil(timeLeftSeconds / 60);
+
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-emerald-600">
+        <Loader2 className="animate-spin text-5xl mb-4 text-emerald-500" />
+        <span className="font-bold text-lg text-gray-600">Đang tải câu hỏi từ hệ thống AI...</span>
+      </div>
+    );
+  }
 
   if (!currentQuestion) return null;
 
@@ -160,7 +225,7 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
       />
 
       <main className="max-w-5xl w-full mx-auto px-4 sm:px-6 mt-8 flex-1 flex flex-col justify-center">
-        <QuestionCard question={currentQuestion} currentSkill={currentSkill}>
+        <QuestionCard question={currentQuestion} currentSkill={currentQuestion.skill}>
           <div className="grid grid-cols-1 gap-3">
             {currentQuestion.options.map((opt, idx) => (
               <AnswerOption
@@ -168,7 +233,7 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
                 option={opt}
                 index={idx}
                 isSelected={selectedOption === idx}
-                onClick={() => setSelectedOption(idx)}
+                onClick={() => !isSubmitting && setSelectedOption(idx)}
               />
             ))}
           </div>
@@ -178,17 +243,26 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
           <motion.button
             type="button"
             onClick={handleNext}
-            disabled={selectedOption === null}
-            whileHover={selectedOption !== null ? { scale: 1.02 } : {}}
-            whileTap={selectedOption !== null ? { scale: 0.98 } : {}}
+            disabled={selectedOption === null || isSubmitting}
+            whileHover={selectedOption !== null && !isSubmitting ? { scale: 1.02 } : {}}
+            whileTap={selectedOption !== null && !isSubmitting ? { scale: 0.98 } : {}}
             className={`px-8 py-3.5 rounded-2xl font-bold flex items-center gap-2 cursor-pointer shadow-md transition-all ${
-              selectedOption === null
+              selectedOption === null || isSubmitting
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
                 : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200/50"
             }`}
           >
-            Tiếp tục
-            <ArrowRight className="w-4 h-4" />
+            {isSubmitting ? (
+              <>
+                Đang xử lý...
+                <Loader2 className="w-4 h-4 animate-spin" />
+              </>
+            ) : (
+              <>
+                Tiếp tục
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </motion.button>
         </div>
       </main>

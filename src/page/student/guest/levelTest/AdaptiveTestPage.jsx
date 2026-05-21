@@ -39,8 +39,7 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
     Listening: 3
   });
 
-  // Session stats
-  const [timeLeftSeconds, setTimeLeftSeconds] = useState(480); // 8 minutes
+
 
   // Map backend question response to our frontend expected structure
   const mapBackendQuestionToFrontend = useCallback((bq) => {
@@ -122,18 +121,7 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
     }
   }, [currentQuestion]);
 
-  // 2. Timer countdown
-  useEffect(() => {
-    if (initialLoading) return;
-    if (timeLeftSeconds <= 0) {
-      onFinish(skillLevels);
-      return;
-    }
-    const timer = setInterval(() => {
-      setTimeLeftSeconds((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeftSeconds, initialLoading, onFinish, skillLevels]);
+
 
   // 3. Submit option and fetch next question
   const handleNext = useCallback(async () => {
@@ -198,7 +186,7 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedOption, handleNext, showPersonalizingOverlay, isSubmitting, initialLoading]);
 
-  const minutesLeft = Math.ceil(timeLeftSeconds / 60);
+
 
   if (initialLoading) {
     return (
@@ -219,8 +207,6 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
 
       <ProgressHeader
         currentQuestion={totalAnswersCount + 1}
-        totalQuestions={20}
-        timeLeft={minutesLeft}
         onExit={onCancel}
       />
 

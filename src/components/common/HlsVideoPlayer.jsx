@@ -13,7 +13,16 @@ const HlsVideoPlayer = ({ url, lessonId, initialProgress = 0, duration = 0, onCo
     const lastValidSecondRef = useRef(initialProgress);
 
     // ==========================================
-    // 🔴 [GÓC TECH LEAD]: BỘ ĐẾM THỜI GIAN THỰC TẾ
+    // 🔴 [GÓC TECH LEAD]: BẢO ĐẢM REF LUÔN ĐƯỢC CẬP NHẬT
+    // Tránh trường hợp React chậm 1 nhịp làm Ref giữ giá trị cũ (ví dụ 16s)
+    // ==========================================
+    useEffect(() => {
+        currentSecondRef.current = initialProgress;
+        lastValidSecondRef.current = initialProgress;
+    }, [initialProgress]);
+
+    // ==========================================
+    // BỘ ĐẾM THỜI GIAN THỰC TẾ
     // ==========================================
     const accumulatedStudySecondsRef = useRef(0); // Tích lũy số giây học thực tế
     const studyTimerIntervalRef = useRef(null);   // Bộ đếm mỗi 1 giây

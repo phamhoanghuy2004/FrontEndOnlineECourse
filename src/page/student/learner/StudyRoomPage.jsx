@@ -50,13 +50,13 @@ const StudyRoomPage = () => {
                 setCurriculumData(prev => {
                     // Cẩn thận: Tránh trường hợp prev bị null gây crash app
                     if (!prev || !prev.lessons) return prev;
-                    
-                    const updatedLessons = prev.lessons.map(lesson => 
-                        lesson.lessonId === lessonId 
+
+                    const updatedLessons = prev.lessons.map(lesson =>
+                        lesson.lessonId === lessonId
                             ? { ...lesson, status: 'COMPLETED' } // Chỉ sửa thằng nào trùng ID
                             : lesson // Giữ nguyên các bài khác
                     );
-                    
+
                     return { ...prev, lessons: updatedLessons };
                 });
             } else {
@@ -292,6 +292,7 @@ const StudyRoomPage = () => {
                                 <div className="w-full aspect-video bg-black rounded-2xl shadow-lg relative overflow-hidden shrink-0 z-10 border border-slate-700/50">
                                     <div className="absolute top-0 left-0 w-full h-full">
                                         <HlsVideoPlayer
+                                            key={activeLessonId}
                                             url={lessonDetail.hlsUrl}
                                             lessonId={activeLessonId}
                                             initialProgress={progressStatus.currentSecond}
@@ -393,7 +394,16 @@ const StudyRoomPage = () => {
                     <CurriculumSidebar
                         curriculum={curriculumData}
                         activeLessonId={activeLessonId}
-                        onLessonSelect={(id) => setActiveLessonId(id)}
+                        onLessonSelect={(id) => {
+                            if (id !== activeLessonId) {
+                                // 🔴 [GÓC TECH LEAD]: Reset đồng bộ State NGAY LẬP TỨC!
+                                // Đảm bảo Component Video Player cũ bị gỡ ra ngay (unmount)
+                                // Không để lọt khe 1 nhịp render nào mang progress 16s đi sang bài mới.
+                                setActiveLessonId(id);
+                                setLessonDetail(null); 
+                                setProgressStatus({ currentSecond: 0, isVideoWatched: false, isQuizPassed: false });
+                            }
+                        }}
                     />
                 </div>
             </div>

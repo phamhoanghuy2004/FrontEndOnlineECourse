@@ -301,7 +301,7 @@ const SuggestedComboPage = () => {
 
                                                 <div className="flex-1 w-full">
                                                     <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-600 text-[11px] font-extrabold rounded-full uppercase tracking-wider mb-2 border border-emerald-100">
-                                                        Giai đoạn {index + 1}
+                                                        Khóa học {index + 1}
                                                     </span>
 
                                                     <h3 className="text-lg font-bold text-slate-800 mb-2 leading-tight group-hover:text-emerald-600 transition-colors line-clamp-2">

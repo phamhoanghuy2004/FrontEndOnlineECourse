@@ -6,6 +6,7 @@ import logo from '../../assets/LOGO.png';
 const menuItems = [
     { path: '/admin', label: 'Dashboard', icon: FaHome },
     { path: '/admin/test-sets', label: 'Quản lý bộ đề', icon: FaClipboardList },
+    { path: '/admin/consultations', label: 'Yêu cầu tư vấn', icon: FaClipboardList },
 ];
 
 const SidebarAdmin = () => {

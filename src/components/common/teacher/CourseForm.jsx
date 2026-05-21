@@ -9,15 +9,11 @@ import InputField from '../../common/InputField';
 import SelectField from '../../common/SelectField';
 import LessonList from './LessonList';
 import categoryApi from '../../../api/categoryApi';
-// 🔴 [THÊM MỚI] Import API gọi tag
-import tagApi from '../../../api/tagApi';
 
 
 const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
     const navigate = useNavigate();
     const [categories, setCategories] = useState([]);
-    // 🔴 [THÊM MỚI] State lưu danh sách tags từ API
-    const [availableTags, setAvailableTags] = useState([]);
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
     const [formData, setFormData] = useState({
@@ -27,8 +23,6 @@ const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
         price: '',
         originalPrice: '',
         categoryId: '',
-        // 🔴 [THÊM MỚI] Thêm mảng chứa ID của tags được chọn
-        tagIds: [],
         lessons: []
     });
 
@@ -55,15 +49,7 @@ const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
                 console.error('Lỗi khi tải Categories:', error);
             }
 
-            // Luồng 2: Gọi Tags (Nếu API Tags lỗi 500, Categories vẫn hiển thị bình thường)
-            try {
-                const tagResponse = await tagApi.getAll();
-                setAvailableTags(tagResponse.data || []);
-            } catch (error) {
-                console.error('Lỗi khi tải Tags:', error);
-                // Báo lỗi nhẹ cho User biết
-                alert("Không thể tải danh sách Kỹ năng trọng tâm do lỗi máy chủ!");
-            }
+            // Luồng 2: Gọi Tags không còn cần thiết cho khóa học
         };
 
         fetchInitialMetadata();
@@ -78,8 +64,6 @@ const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
                 price: initialData.price || '',
                 originalPrice: initialData.originalPrice || '',
                 categoryId: initialData.categoryId || (initialData.category?.id) || '',
-                // 🔴 [THÊM MỚI] Map danh sách TagResponse từ backend ra mảng ID
-                tagIds: initialData.tags ? initialData.tags.map(t => t.id) : [],
                 lessons: initialData.lessons || []
             });
             setImagePreview(initialData.imageUrl || initialData.image || '');
@@ -91,23 +75,7 @@ const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // 🔴 [THÊM MỚI] Hàm xử lý Toggle khi click chọn/bỏ chọn Tag
-    const handleTagToggle = (tagId) => {
-        setFormData(prev => {
-            const isSelected = prev.tagIds.includes(tagId);
-            if (isSelected) {
-                // Xóa tag nếu đã chọn
-                return { ...prev, tagIds: prev.tagIds.filter(id => id !== tagId) };
-            } else {
-                // Kiểm tra giới hạn 3 tag (rào cản UI)
-                if (prev.tagIds.length >= 3) {
-                    alert("Chỉ được chọn tối đa 3 kỹ năng trọng tâm!");
-                    return prev;
-                }
-                return { ...prev, tagIds: [...prev.tagIds, tagId] };
-            }
-        });
-    };
+
 
     const handleLessonsChange = (lessons) => {
         setFormData(prev => ({ ...prev, lessons }));
@@ -124,79 +92,7 @@ const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        // 🔴 [THÊM MỚI] Validate chặn lại lần nữa trước khi gửi (Đề phòng)
-        if (formData.tagIds.length === 0) {
-            alert("Vui lòng chọn ít nhất 1 Tag trọng tâm cho khóa học!");
-            return;
-        }
-
         onSubmit(formData, imageFile);
-    };
-
-    // Group availableTags by parentName
-    const groupedTags = availableTags.reduce((acc, tag) => {
-        const groupName = tag.parentName || "Khác";
-        if (!acc[groupName]) {
-            acc[groupName] = [];
-        }
-        acc[groupName].push(tag);
-        return acc;
-    }, {});
-
-    const getGroupConfig = (parentName) => {
-        switch (parentName) {
-            case 'Grammar':
-                return {
-                    title: 'Ngữ Pháp (Grammar)',
-                    bgColor: 'bg-indigo-50/40',
-                    borderColor: 'border-indigo-100',
-                    badgeColor: 'bg-indigo-100 text-indigo-700',
-                    pillSelectedColor: 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-600/10',
-                    pillHoverColor: 'hover:border-indigo-400 hover:text-indigo-600',
-                    textColor: 'text-indigo-800'
-                };
-            case 'Vocabulary':
-                return {
-                    title: 'Từ Vựng (Vocabulary)',
-                    bgColor: 'bg-amber-50/40',
-                    borderColor: 'border-amber-100',
-                    badgeColor: 'bg-amber-100 text-amber-700',
-                    pillSelectedColor: 'bg-amber-600 text-white border-amber-600 shadow-sm shadow-amber-600/10',
-                    pillHoverColor: 'hover:border-amber-400 hover:text-amber-600',
-                    textColor: 'text-amber-800'
-                };
-            case 'Listening Comprehension':
-                return {
-                    title: 'Nghe Hiểu (Listening)',
-                    bgColor: 'bg-purple-50/40',
-                    borderColor: 'border-purple-100',
-                    badgeColor: 'bg-purple-100 text-purple-700',
-                    pillSelectedColor: 'bg-purple-600 text-white border-purple-600 shadow-sm shadow-purple-600/10',
-                    pillHoverColor: 'hover:border-purple-400 hover:text-purple-600',
-                    textColor: 'text-purple-800'
-                };
-            case 'Reading Comprehension':
-                return {
-                    title: 'Đọc Hiểu (Reading)',
-                    bgColor: 'bg-rose-50/40',
-                    borderColor: 'border-rose-100',
-                    badgeColor: 'bg-rose-100 text-rose-700',
-                    pillSelectedColor: 'bg-rose-600 text-white border-rose-600 shadow-sm shadow-rose-600/10',
-                    pillHoverColor: 'hover:border-rose-400 hover:text-rose-600',
-                    textColor: 'text-rose-800'
-                };
-            default:
-                return {
-                    title: parentName,
-                    bgColor: 'bg-slate-50/40',
-                    borderColor: 'border-slate-100',
-                    badgeColor: 'bg-slate-100 text-slate-700',
-                    pillSelectedColor: 'bg-slate-800 text-white border-slate-800',
-                    pillHoverColor: 'hover:border-slate-400 hover:text-slate-800',
-                    textColor: 'text-slate-800'
-                };
-        }
     };
 
     return (
@@ -289,58 +185,7 @@ const CourseForm = ({ initialData, onSubmit, isEditing, isSubmitting }) => {
                             />
                         </div>
 
-                        {/* 🔴 [THÊM MỚI] GIAO DIỆN CHỌN TAG ĐÃ GOM NHÓM THEO TAG CHA */}
-                        <div>
-                            <label className="text-[11px] font-bold text-slate-700 ml-1 uppercase tracking-wide block mb-2">
-                                Kỹ năng trọng tâm (Tags) <span className="text-red-500">*</span>
-                            </label>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                                {Object.entries(groupedTags).map(([parentName, tags]) => {
-                                    const config = getGroupConfig(parentName);
-                                    return (
-                                        <div key={parentName} className={`p-4 rounded-xl border ${config.borderColor} ${config.bgColor} flex flex-col justify-between`}>
-                                            <div>
-                                                <div className="flex items-center justify-between mb-3 border-b border-dashed border-slate-200 pb-2">
-                                                    <span className={`text-xs font-extrabold uppercase px-2 py-0.5 rounded-md ${config.badgeColor}`}>
-                                                        {config.title}
-                                                    </span>
-                                                </div>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {tags.map(tag => {
-                                                        const isSelected = formData.tagIds.includes(tag.id);
-                                                        const isMaxReached = formData.tagIds.length >= 3 && !isSelected;
 
-                                                        return (
-                                                            <button
-                                                                type="button"
-                                                                key={tag.id}
-                                                                onClick={() => handleTagToggle(tag.id)}
-                                                                disabled={isMaxReached}
-                                                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${isSelected
-                                                                    ? config.pillSelectedColor
-                                                                    : 'bg-white text-slate-600 border border-slate-200 shadow-xs ' + config.pillHoverColor
-                                                                    } ${isMaxReached ? 'opacity-40 cursor-not-allowed hover:border-slate-200 hover:text-slate-600' : ''}`}
-                                                            >
-                                                                <FaTags size={10} className={isSelected ? "text-white" : "text-slate-400"} />
-                                                                {tag.name}
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                                {availableTags.length === 0 && (
-                                    <div className="col-span-full py-6 text-center">
-                                        <span className="text-sm text-slate-400 font-medium">Đang tải danh sách thẻ tag...</span>
-                                    </div>
-                                )}
-                            </div>
-                            <p className="text-xs font-medium text-slate-500 mt-2 ml-1">
-                                Đã chọn <span className={formData.tagIds.length === 3 ? "text-emerald-600 font-bold" : ""}>{formData.tagIds.length}/3</span> thẻ tag. Phân loại kỹ giúp thuật toán phân phối khóa học tốt hơn.
-                            </p>
-                        </div>
 
                         <div>
                             <label className="text-[11px] font-bold text-slate-700 ml-1 uppercase tracking-wide block mb-1">

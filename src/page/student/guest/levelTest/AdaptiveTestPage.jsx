@@ -30,11 +30,7 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPersonalizingOverlay, setShowPersonalizingOverlay] = useState(false);
-<<<<<<< HEAD
-
-=======
-
->>>>>>> origin/main
+  
   // Local score/level tracking as a robust fallback
   const [skillLevels, setSkillLevels] = useState({
     Grammar: 3,
@@ -49,10 +45,10 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
   // Map backend question response to our frontend expected structure
   const mapBackendQuestionToFrontend = useCallback((bq) => {
     if (!bq) return null;
-
+    
     let options = [];
     let answerIds = [];
-
+    
     if (bq.answers && Array.isArray(bq.answers)) {
       options = bq.answers.map(a => a.content || a);
       answerIds = bq.answers.map(a => a.id);
@@ -156,11 +152,7 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
         onFinish(finalScores);
       } else {
         const mappedNextQ = mapBackendQuestionToFrontend(nextStep.nextQuestion);
-<<<<<<< HEAD
-
-=======
-
->>>>>>> origin/main
+        
         // Show AI personalizing animation when transitioning to a new skill
         const skillChanged = mappedNextQ.skill !== currentQuestion.skill;
 
@@ -190,17 +182,13 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (showPersonalizingOverlay || isSubmitting || initialLoading) return;
-<<<<<<< HEAD
-
-=======
-
->>>>>>> origin/main
+      
       const key = e.key.toUpperCase();
       if (key === "A") setSelectedOption(0);
       if (key === "B") setSelectedOption(1);
       if (key === "C") setSelectedOption(2);
       if (key === "D") setSelectedOption(3);
-
+      
       if (e.key === "Enter" && selectedOption !== null) {
         handleNext();
       }
@@ -258,15 +246,11 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
             disabled={selectedOption === null || isSubmitting}
             whileHover={selectedOption !== null && !isSubmitting ? { scale: 1.02 } : {}}
             whileTap={selectedOption !== null && !isSubmitting ? { scale: 0.98 } : {}}
-<<<<<<< HEAD
-            className={`px-8 py-3.5 rounded-2xl font-bold flex items-center gap-2 cursor-pointer shadow-md transition-all ${selectedOption === null || isSubmitting
-=======
             className={`px-8 py-3.5 rounded-2xl font-bold flex items-center gap-2 cursor-pointer shadow-md transition-all ${
               selectedOption === null || isSubmitting
->>>>>>> origin/main
-              ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-              : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200/50"
-              }`}
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200/50"
+            }`}
           >
             {isSubmitting ? (
               <>

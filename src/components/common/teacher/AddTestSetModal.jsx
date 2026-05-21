@@ -11,7 +11,8 @@ const AddTestSetModal = ({ isOpen, onClose, lessonId, onSuccess }) => {
         description: '',
         isPublic: true,
         year: new Date().getFullYear(),
-        lessonId: lessonId
+        lessonId: lessonId,
+        type: 'PRACTICE'
     });
 
     const [isSaving, setIsSaving] = useState(false);

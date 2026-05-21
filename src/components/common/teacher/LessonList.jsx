@@ -2,13 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import {
     FaTrash, FaVideo, FaFileAlt, FaPlus,
     FaChevronDown, FaChevronUp, FaUpload, FaSave, FaSpinner,
-    FaSortNumericDown, FaPaperclip, FaFilePdf, FaFileWord, FaBookOpen
+    FaSortNumericDown, FaPaperclip, FaFilePdf, FaFileWord, FaBookOpen,
+    FaTags
 } from 'react-icons/fa';
 import Hls from 'hls.js';
 import Button from '../Button';
 import ConfirmationModal from '../ConfirmationModal';
 import InputField from '../InputField';
 import lessonApi from '../../../api/lessonApi';
+import tagApi from '../../../api/tagApi';
 import axios from 'axios';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
@@ -18,10 +20,65 @@ import TestSetDetailModal from './TestSetDetailModal';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
+const getGroupConfig = (parentName) => {
+    switch (parentName) {
+        case 'Grammar':
+            return {
+                title: 'Ngữ Pháp (Grammar)',
+                bgColor: 'bg-indigo-50/40',
+                borderColor: 'border-indigo-100',
+                badgeColor: 'bg-indigo-100 text-indigo-700',
+                pillSelectedColor: 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-600/10',
+                pillHoverColor: 'hover:border-indigo-400 hover:text-indigo-600',
+                textColor: 'text-indigo-800'
+            };
+        case 'Vocabulary':
+            return {
+                title: 'Từ Vựng (Vocabulary)',
+                bgColor: 'bg-amber-50/40',
+                borderColor: 'border-amber-100',
+                badgeColor: 'bg-amber-100 text-amber-700',
+                pillSelectedColor: 'bg-amber-600 text-white border-amber-600 shadow-sm shadow-amber-600/10',
+                pillHoverColor: 'hover:border-amber-400 hover:text-amber-600',
+                textColor: 'text-amber-800'
+            };
+        case 'Listening Comprehension':
+            return {
+                title: 'Nghe Hiểu (Listening)',
+                bgColor: 'bg-purple-50/40',
+                borderColor: 'border-purple-100',
+                badgeColor: 'bg-purple-100 text-purple-700',
+                pillSelectedColor: 'bg-purple-600 text-white border-purple-600 shadow-sm shadow-purple-600/10',
+                pillHoverColor: 'hover:border-purple-400 hover:text-purple-600',
+                textColor: 'text-purple-800'
+            };
+        case 'Reading Comprehension':
+            return {
+                title: 'Đọc Hiểu (Reading)',
+                bgColor: 'bg-rose-50/40',
+                borderColor: 'border-rose-100',
+                badgeColor: 'bg-rose-100 text-rose-700',
+                pillSelectedColor: 'bg-rose-600 text-white border-rose-600 shadow-sm shadow-rose-600/10',
+                pillHoverColor: 'hover:border-rose-400 hover:text-rose-600',
+                textColor: 'text-rose-800'
+            };
+        default:
+            return {
+                title: parentName,
+                bgColor: 'bg-slate-50/40',
+                borderColor: 'border-slate-100',
+                badgeColor: 'bg-slate-100 text-slate-700',
+                pillSelectedColor: 'bg-slate-800 text-white border-slate-800',
+                pillHoverColor: 'hover:border-slate-400 hover:text-slate-800',
+                textColor: 'text-slate-800'
+            };
+    }
+};
+
 // ==========================================
 // COMPONENT CON: QUẢN LÝ TỪNG BÀI HỌC
 // ==========================================
-const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
+const LessonItem = ({ index, lesson, courseId, availableTags, onUpdateLocal, onDelete }) => {
     const isNewLesson = String(lesson.id).startsWith('temp_');
     const [expanded, setExpanded] = useState(isNewLesson);
     const itemRef = useRef(null);
@@ -43,7 +100,8 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
         title: lesson.title || '',
         content: lesson.content || '',
         isPreview: lesson.isPreview || false,
-        displayOrder: lesson.displayOrder !== undefined ? lesson.displayOrder : index
+        displayOrder: lesson.displayOrder !== undefined ? lesson.displayOrder : index,
+        tagIds: lesson.tags ? lesson.tags.map(t => t.id) : []
     });
 
     const [isSavingText, setIsSavingText] = useState(false);
@@ -174,6 +232,17 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
 
     // --- HANDLERS TEXT & VIDEO ---
     const handleTextChange = (field, value) => { setFormData(prev => ({ ...prev, [field]: value })); };
+
+    const handleTagToggle = (tagId) => {
+        setFormData(prev => {
+            const isSelected = (prev.tagIds || []).includes(tagId);
+            if (isSelected) {
+                return { ...prev, tagIds: (prev.tagIds || []).filter(id => id !== tagId) };
+            } else {
+                return { ...prev, tagIds: [...(prev.tagIds || []), tagId] };
+            }
+        });
+    };
 
     const handleSaveDetails = async () => {
         setIsSavingText(true);
@@ -306,6 +375,15 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
         }
     };
 
+    const groupedTags = (availableTags || []).reduce((acc, tag) => {
+        const groupName = tag.parentName || "Khác";
+        if (!acc[groupName]) {
+            acc[groupName] = [];
+        }
+        acc[groupName].push(tag);
+        return acc;
+    }, {});
+
     return (
         <div ref={itemRef} className="border border-slate-200 rounded-xl bg-slate-50 overflow-hidden mb-3">
             {/* --- HEADER --- */}
@@ -320,6 +398,15 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
                     </span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-400">
+                    {lesson.tags?.length > 0 && (
+                        <div className="hidden sm:flex flex-wrap gap-1 mr-2">
+                            {lesson.tags.map(t => (
+                                <span key={t.id} className="text-[10px] bg-slate-100 text-slate-600 font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-slate-200">
+                                    <FaTags size={8} className="text-slate-400" /> {t.name}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                     {lesson.documents?.length > 0 && <span className="text-xs bg-indigo-100 text-indigo-600 font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><FaPaperclip size={10} /> {lesson.documents.length}</span>}
                     {testSet && <span className="text-xs bg-emerald-100 text-emerald-600 font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><FaBookOpen size={10} /> {testSet.title}</span>}
                     {lesson.videoStatus === 'READY' && <FaVideo title="Đã có video" className="text-emerald-500 ml-1" />}
@@ -362,7 +449,7 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
                             </label>
                         </div>
 
-                        <div>
+                        <div className="mb-4">
                             <label className="text-[11px] font-bold text-slate-700 ml-1 uppercase tracking-wide block mb-1">Nội dung / Mô tả *</label>
                             <div className="relative group">
                                 <div className="bg-white rounded-lg">
@@ -375,6 +462,55 @@ const LessonItem = ({ index, lesson, courseId, onUpdateLocal, onDelete }) => {
                                     />
                                 </div>
                             </div>
+                        </div>
+
+                        <div>
+                            <label className="text-[11px] font-bold text-slate-700 ml-1 uppercase tracking-wide block mb-2">
+                                Kỹ năng trọng tâm (Tags)
+                            </label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                                {Object.entries(groupedTags).map(([parentName, tags]) => {
+                                    const config = getGroupConfig(parentName);
+                                    return (
+                                        <div key={parentName} className={`p-4 rounded-xl border ${config.borderColor} ${config.bgColor} flex flex-col justify-between`}>
+                                            <div>
+                                                <div className="flex items-center justify-between mb-3 border-b border-dashed border-slate-200 pb-2">
+                                                    <span className={`text-xs font-extrabold uppercase px-2 py-0.5 rounded-md ${config.badgeColor}`}>
+                                                        {config.title}
+                                                    </span>
+                                                </div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {tags.map(tag => {
+                                                        const isSelected = (formData.tagIds || []).includes(tag.id);
+                                                        return (
+                                                            <button
+                                                                type="button"
+                                                                key={tag.id}
+                                                                onClick={() => handleTagToggle(tag.id)}
+                                                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${isSelected
+                                                                    ? config.pillSelectedColor
+                                                                    : 'bg-white text-slate-600 border border-slate-200 shadow-xs ' + config.pillHoverColor
+                                                                    }`}
+                                                            >
+                                                                <FaTags size={10} className={isSelected ? "text-white" : "text-slate-400"} />
+                                                                {tag.name}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                {availableTags.length === 0 && (
+                                    <div className="col-span-full py-6 text-center">
+                                        <span className="text-sm text-slate-400 font-medium">Đang tải danh sách thẻ tag...</span>
+                                    </div>
+                                )}
+                            </div>
+                            <p className="text-xs font-medium text-slate-500 mt-2 ml-1">
+                                Đã chọn <span className="text-emerald-600 font-bold">{(formData.tagIds || []).length}</span> thẻ tag. Bạn có thể chọn nhiều tag cho một bài học.
+                            </p>
                         </div>
                     </div>
 
@@ -505,11 +641,26 @@ const LessonList = ({ lessons, onChange, courseId }) => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedLessonId, setSelectedLessonId] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [availableTags, setAvailableTags] = useState([]);
+
+    useEffect(() => {
+        const fetchTags = async () => {
+            try {
+                const response = await tagApi.getAll();
+                // Chỉ lấy các tag con (có parentId !== null)
+                const childTags = (response.data || []).filter(t => t.parentId !== null);
+                setAvailableTags(childTags);
+            } catch (error) {
+                console.error("Lỗi khi tải danh sách tags bài học:", error);
+            }
+        };
+        fetchTags();
+    }, []);
 
     const handleAddLesson = () => {
         const hasUnsavedLesson = lessons.some(l => String(l.id).startsWith('temp_'));
         if (hasUnsavedLesson) return alert("Vui lòng lưu bài mới trước!");
-        onChange([...lessons, { id: `temp_${Date.now()}`, title: '', content: '', isPreview: false, videoStatus: 'NONE', displayOrder: lessons.length + 1, documents: [] }]);
+        onChange([...lessons, { id: `temp_${Date.now()}`, title: '', content: '', isPreview: false, videoStatus: 'NONE', displayOrder: lessons.length + 1, documents: [], tags: [] }]);
     };
 
     const handleDeleteClick = (id) => { setSelectedLessonId(id); setIsDeleteModalOpen(true); };
@@ -547,7 +698,7 @@ const LessonList = ({ lessons, onChange, courseId }) => {
             </div>
             <div className="space-y-3">
                 {lessons.map((lesson, index) => (
-                    <LessonItem key={lesson.id} index={index} lesson={lesson} courseId={courseId} onUpdateLocal={handleUpdateSingleLesson} onDelete={handleDeleteClick} />
+                    <LessonItem key={lesson.id} index={index} lesson={lesson} courseId={courseId} availableTags={availableTags} onUpdateLocal={handleUpdateSingleLesson} onDelete={handleDeleteClick} />
                 ))}
             </div>
             <ConfirmationModal

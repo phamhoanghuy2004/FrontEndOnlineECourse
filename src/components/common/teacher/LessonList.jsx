@@ -239,6 +239,10 @@ const LessonItem = ({ index, lesson, courseId, availableTags, onUpdateLocal, onD
             if (isSelected) {
                 return { ...prev, tagIds: (prev.tagIds || []).filter(id => id !== tagId) };
             } else {
+                if ((prev.tagIds || []).length >= 3) {
+                    alert("Chỉ được chọn tối đa 3 kỹ năng trọng tâm!");
+                    return prev;
+                }
                 return { ...prev, tagIds: [...(prev.tagIds || []), tagId] };
             }
         });
@@ -482,13 +486,18 @@ const LessonItem = ({ index, lesson, courseId, availableTags, onUpdateLocal, onD
                                                 <div className="flex flex-wrap gap-2">
                                                     {tags.map(tag => {
                                                         const isSelected = (formData.tagIds || []).includes(tag.id);
+                                                        const isLimitReached = (formData.tagIds || []).length >= 3;
+                                                        const isDisabled = !isSelected && isLimitReached;
                                                         return (
                                                             <button
                                                                 type="button"
                                                                 key={tag.id}
+                                                                disabled={isDisabled}
                                                                 onClick={() => handleTagToggle(tag.id)}
                                                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${isSelected
                                                                     ? config.pillSelectedColor
+                                                                    : isDisabled
+                                                                    ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60'
                                                                     : 'bg-white text-slate-600 border border-slate-200 shadow-xs ' + config.pillHoverColor
                                                                     }`}
                                                             >
@@ -509,7 +518,7 @@ const LessonItem = ({ index, lesson, courseId, availableTags, onUpdateLocal, onD
                                 )}
                             </div>
                             <p className="text-xs font-medium text-slate-500 mt-2 ml-1">
-                                Đã chọn <span className="text-emerald-600 font-bold">{(formData.tagIds || []).length}</span> thẻ tag. Bạn có thể chọn nhiều tag cho một bài học.
+                                Đã chọn <span className="text-emerald-600 font-bold">{(formData.tagIds || []).length}/3</span> thẻ tag. Chỉ được chọn tối đa 3 kỹ năng trọng tâm cho một bài học.
                             </p>
                         </div>
                     </div>

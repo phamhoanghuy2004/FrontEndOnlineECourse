@@ -67,6 +67,7 @@ import VoucherManagementPage from "./page/teacher/VoucherManagementPage";
 import CoinPackageManagement from "./page/teacher/CoinPackageManagement";
 import ConsultationManagement from "./page/admin/ConsultationManagement";
 import UserManagementPage from "./page/admin/UserManagementPage";
+import AdminCoursesPage from "./page/admin/AdminCoursesPage";
 
 function App() {
   return (
@@ -214,6 +215,7 @@ function App() {
               <Route path="vouchers" element={<VoucherManagementPage />} />
               <Route path="coin-packages" element={<CoinPackageManagement />} />
               <Route path="users" element={<UserManagementPage />} />
+              <Route path="courses" element={<AdminCoursesPage />} />
             </Route>
 
             {/* Fallback: Nếu nhập sai đường dẫn thì về trang chủ */}

@@ -98,6 +98,17 @@ const adminApi = {
     unblockUser: (id) => {
         return axiosClient.patch(`/admins/users/${id}/unblock`);
     },
+
+    // Course Management
+    getCourses: (params) => {
+        return axiosClient.get('/admins/courses', { params });
+    },
+    getCourseDetail: (id) => {
+        return axiosClient.get(`/admins/courses/${id}`);
+    },
+    updateCourseStatus: (id, status) => {
+        return axiosClient.patch(`/admins/courses/${id}/status`, null, { params: { status } });
+    },
 };
 
 export default adminApi;

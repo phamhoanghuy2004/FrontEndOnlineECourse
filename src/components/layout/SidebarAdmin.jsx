@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaBookOpen, FaUserShield, FaClipboardList, FaFileImport } from 'react-icons/fa';
+import { FaHome, FaBookOpen, FaUserShield, FaClipboardList, FaFileImport, FaUsers } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import logo from '../../assets/LOGO.png';
 
@@ -7,6 +7,7 @@ const menuItems = [
     { path: '/admin', label: 'Dashboard', icon: FaHome },
     { path: '/admin/test-sets', label: 'Quản lý bộ đề', icon: FaClipboardList },
     { path: '/admin/consultations', label: 'Yêu cầu tư vấn', icon: FaClipboardList },
+    { path: '/admin/users', label: 'Quản lý người dùng', icon: FaUsers },
 ];
 
 const SidebarAdmin = () => {

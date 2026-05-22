@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaBookOpen, FaUserShield, FaClipboardList, FaFileImport, FaHeadset, FaTicketAlt, FaCoins } from 'react-icons/fa';
+import { FaHome, FaBookOpen, FaUserShield, FaClipboardList, FaFileImport, FaHeadset, FaTicketAlt, FaCoins, FaUsers } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import logo from '../../assets/LOGO.png';
 
@@ -9,6 +9,8 @@ const menuItems = [
     { path: '/admin/consultations', label: 'Yêu cầu tư vấn', icon: FaHeadset },
     { path: '/admin/vouchers', label: 'Mã giảm giá', icon: FaTicketAlt },
     { path: '/admin/coin-packages', label: 'Quản lý gói xu', icon: FaCoins },
+    { path: '/admin/consultations', label: 'Yêu cầu tư vấn', icon: FaClipboardList },
+    { path: '/admin/users', label: 'Quản lý người dùng', icon: FaUsers },
 ];
 
 const SidebarAdmin = () => {

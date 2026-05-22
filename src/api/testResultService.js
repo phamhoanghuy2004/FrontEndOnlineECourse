@@ -5,6 +5,9 @@ const testResultService = {
         return axiosClient.get('/test-results/my-history', {
             params
         });
+    },
+    getRecentFullTestsForEstimation: () => {
+        return axiosClient.get('/test-results/estimations/recent-full');
     }
 };
 

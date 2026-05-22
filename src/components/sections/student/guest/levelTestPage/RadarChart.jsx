@@ -15,7 +15,7 @@ const RadarChart = ({ scores }) => {
     return () => clearTimeout(timer);
   }, [scores]);
 
-  const cx = 200;
+  const cx = 270;
   const cy = 200;
   const maxVal = 5;
   const stepVal = 30; // Radius increment per level
@@ -43,9 +43,9 @@ const RadarChart = ({ scores }) => {
   const pointsStr = getPointsStr(animatedScores);
 
   return (
-    <div className="w-full max-w-sm sm:max-w-md mx-auto aspect-square flex items-center justify-center p-2 bg-white rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
+    <div className="w-full max-w-sm sm:max-w-md mx-auto aspect-[9/7] flex items-center justify-center p-2 bg-white rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
       <svg
-        viewBox="0 0 400 420"
+        viewBox="0 0 540 420"
         className="w-full h-full select-none"
       >
         <defs>

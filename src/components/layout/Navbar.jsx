@@ -93,6 +93,8 @@ const Navbar = () => {
 
     // Kiểm tra Role
     const isStudent = user?.roles?.includes('STUDENT') || user?.roles?.includes('LEARNER');
+    const isAdmin = user?.roles?.includes('ADMIN');
+    const isTeacher = user?.roles?.includes('TEACHER');
 
     // Đồng bộ DTO
     const userAvatar = user?.avatarUrl || user?.avatar;
@@ -157,10 +159,26 @@ const Navbar = () => {
                                     Học ngay
                                 </Link>
                             )}
+                            {isAdmin && (
+                                <Link
+                                    to="/admin"
+                                    className="bg-primary text-white px-5 py-2 rounded-full font-semibold shadow-md hover:bg-green-600 hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                                >
+                                    Quản trị
+                                </Link>
+                            )}
+                            {isTeacher && (
+                                <Link
+                                    to="/teacher"
+                                    className="bg-primary text-white px-5 py-2 rounded-full font-semibold shadow-md hover:bg-green-600 hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                                >
+                                    Giảng dạy
+                                </Link>
+                            )}
 
                             {/* User Avatar Link */}
                             <Link
-                                to={isStudent ? `/learner/${user.id}/profile` : "/"}
+                                to={isStudent ? `/learner/${user.id}/profile` : isAdmin ? "/admin" : isTeacher ? "/teacher" : "/"}
                                 className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-100 shadow-sm cursor-pointer hover:border-primary transition-colors"
                                 title={userName}
                             >

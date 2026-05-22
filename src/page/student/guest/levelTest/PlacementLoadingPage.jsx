@@ -1,34 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, Loader2, RefreshCw } from "lucide-react";
+import { CheckCircle2, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import courseRecommendApi from "../../../../api/courseRecommendApi";
-import RadarChart from "../../../../components/sections/student/guest/levelTestPage/RadarChart";
-
-const mapSkillsToScores = (skills) => {
-  const defaultScores = { Grammar: 3, Vocabulary: 3, Reading: 3, Listening: 3 };
-  if (!skills || !Array.isArray(skills)) return defaultScores;
-
-  const mapped = { ...defaultScores };
-  skills.forEach((s) => {
-    const name = s.tagName || s.name || "";
-    const score = s.score || 0;
-    // Map score (0-100) to level (1-5)
-    const level = Math.max(1, Math.min(5, Math.round((score / 100) * 5)));
-    
-    const upper = name.toUpperCase();
-    if (upper.includes("GRAMMAR") || upper.includes("NGỮ PHÁP")) {
-      mapped.Grammar = level;
-    } else if (upper.includes("VOCABULARY") || upper.includes("VOCAB") || upper.includes("TỪ VỰNG")) {
-      mapped.Vocabulary = level;
-    } else if (upper.includes("READING") || upper.includes("ĐỌC")) {
-      mapped.Reading = level;
-    } else if (upper.includes("LISTENING") || upper.includes("NGHE")) {
-      mapped.Listening = level;
-    }
-  });
-  return mapped;
-};
+import BarChart from "../../../../components/sections/student/guest/levelTestPage/BarChart";
 
 const PlacementLoadingPage = ({ onContinue }) => {
   const navigate = useNavigate();
@@ -151,14 +126,13 @@ const PlacementLoadingPage = ({ onContinue }) => {
               >
                 <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px] z-10 pointer-events-none"></div>
 
-                {/* Left Skeleton Column: Radar representation */}
-                <div className="md:col-span-5 flex flex-col items-center justify-center space-y-4">
-                  <div className="w-48 h-48 rounded-full border-4 border-dashed border-gray-200 flex items-center justify-center animate-pulse">
-                    <div className="w-36 h-36 rounded-full border-4 border-dashed border-gray-200 flex items-center justify-center">
-                      <div className="w-20 h-20 bg-gray-100/80 rounded-full"></div>
-                    </div>
+                {/* Left Skeleton Column: Bar Chart representation */}
+                <div className="md:col-span-5 flex flex-col justify-end space-y-4 h-48 pb-2">
+                  <div className="w-full flex items-end justify-around h-full border-b border-gray-200 pb-2">
+                    {[60, 80, 45, 90].map((h, idx) => (
+                      <div key={idx} className="w-8 bg-gray-200 rounded-t-lg animate-pulse" style={{ height: `${h}%` }}></div>
+                    ))}
                   </div>
-                  <div className="h-4 w-32 bg-gray-100 rounded-full animate-pulse"></div>
                 </div>
 
                 {/* Right Skeleton Column: Skills list */}
@@ -197,9 +171,9 @@ const PlacementLoadingPage = ({ onContinue }) => {
                 transition={{ duration: 0.5, ease: "easeOut" }}
                 className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center"
               >
-                {/* Left Column: Real RadarChart */}
+                {/* Left Column: Real BarChart */}
                 <div className="md:col-span-5 flex flex-col items-center justify-center">
-                  <RadarChart scores={mapSkillsToScores(insightData.skills)} />
+                  <BarChart skills={insightData.skills} />
                 </div>
 
                 {/* Right Column: AI Analytical Remarks */}
@@ -216,24 +190,25 @@ const PlacementLoadingPage = ({ onContinue }) => {
                     <h2 className="font-extrabold text-gray-900 text-xl">
                       Đánh giá từ Hệ thống AI
                     </h2>
-                    <p className="text-sm text-gray-600 font-semibold leading-relaxed bg-gray-50/80 p-4 rounded-2xl border border-gray-100/50">
-                      {insightData.motivationalRemark}
-                    </p>
-                  </div>
+                    <div className="mt-4 p-6 bg-gradient-to-br from-emerald-50 via-white to-teal-50/30 border border-emerald-100 rounded-3xl shadow-sm relative overflow-hidden">
+                      {/* Decorative radial glows */}
+                      <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none"></div>
+                      <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-teal-400/10 rounded-full blur-2xl pointer-events-none"></div>
 
-                  <div className="space-y-3">
-                    <h3 className="font-bold text-gray-800 text-xs uppercase tracking-wider">
-                      Chủ điểm cần cải thiện (Weakness Areas)
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {insightData.weakPoints?.map((weak, idx) => (
-                        <span
-                          key={idx}
-                          className="text-xs font-bold px-3 py-1.5 rounded-xl border bg-rose-50 text-rose-700 border-rose-100"
-                        >
-                          {weak}
-                        </span>
-                      ))}
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 p-3 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl text-white shadow-md shadow-emerald-200/50">
+                          <Sparkles className="w-5 h-5 text-white animate-pulse" />
+                        </div>
+                        
+                        <div className="space-y-1.5 flex-1 text-left">
+                          <h4 className="text-xs font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1.5">
+                            ĐÁNH GIÁ CHUYÊN SÂU TỪ HỆ THỐNG AI
+                          </h4>
+                          <p className="text-slate-800 text-sm sm:text-base font-bold leading-relaxed italic">
+                            "{insightData.motivationalRemark}"
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

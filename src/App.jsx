@@ -194,8 +194,6 @@ function App() {
               <Route path="blog/:id/edit" element={<BlogEditorPage />} />
               <Route path="profile" element={<TeacherProfilePage />} />
               <Route path="chat" element={<TeacherChatPage />} />
-              <Route path="vouchers" element={<VoucherManagementPage />} />
-              <Route path="coin-packages" element={<CoinPackageManagement />} />
             </Route>
 
             {/* =========================================================
@@ -213,6 +211,8 @@ function App() {
               <Route path="test-sets/:id" element={<AdminTestSetDetailPage />} />
               <Route path="tests/:id" element={<AdminTestDetailPage />} />
               <Route path="consultations" element={<ConsultationManagement />} />
+              <Route path="vouchers" element={<VoucherManagementPage />} />
+              <Route path="coin-packages" element={<CoinPackageManagement />} />
               <Route path="users" element={<UserManagementPage />} />
             </Route>
 

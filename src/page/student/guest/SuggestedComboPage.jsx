@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FaCheck, FaArrowRight, FaRoute, FaLightbulb, FaFireAlt, FaShieldAlt } from 'react-icons/fa';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
+import BarChart from '../../../components/sections/student/guest/levelTestPage/BarChart';
 import { useNavigate } from 'react-router-dom';
+import { Sparkles } from 'lucide-react';
 
 // 💥 Import API và AuthContext
 import courseRecommendApi from '../../../api/courseRecommendApi';
@@ -11,7 +12,6 @@ import { useAuth } from '../../../hooks/useAuth';
 const SuggestedComboPage = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const studyGoal = user?.activeGoal;
 
     const [insightData, setInsightData] = useState(null);
     const [recommendedCourses, setRecommendedCourses] = useState([]);
@@ -25,11 +25,6 @@ const SuggestedComboPage = () => {
 
     useEffect(() => {
         const fetchRecommendations = async () => {
-            if (!studyGoal) {
-                setIsLoading(false);
-                return;
-            }
-
             try {
                 setIsLoading(true);
 
@@ -58,7 +53,7 @@ const SuggestedComboPage = () => {
         };
 
         fetchRecommendations();
-    }, [studyGoal]);
+    }, []);
 
     const handleToggleCourse = (courseId) => {
         setSelectedCourses(prev =>
@@ -138,17 +133,6 @@ const SuggestedComboPage = () => {
         );
     }
 
-    if (!studyGoal) {
-        return (
-            <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center pt-40 px-4 text-center">
-                <div className="text-5xl mb-4">🎯</div>
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">Bạn chưa thiết lập Mục tiêu!</h2>
-                <p className="text-slate-500 max-w-md mb-6">Để hệ thống có thể gợi ý lộ trình chính xác nhất, vui lòng thiết lập mục tiêu điểm số của bạn trước nhé.</p>
-                <a href="/study-goal" className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-md">Thiết lập mục tiêu ngay</a>
-            </div>
-        );
-    }
-
     if (errorMsg) {
         return <div className="pt-32 text-center text-red-500 font-bold">{errorMsg}</div>;
     }
@@ -156,8 +140,6 @@ const SuggestedComboPage = () => {
     if (!insightData || recommendedCourses.length === 0) {
         return <div className="pt-32 text-center text-slate-500">Chưa có đủ dữ liệu để gợi ý lộ trình cho bạn.</div>;
     }
-
-    const pointsNeeded = studyGoal.targetTotal - studyGoal.currentTotal;
 
     // ==========================================
     // UI CHÍNH 
@@ -182,7 +164,7 @@ const SuggestedComboPage = () => {
 
                 <div className="mb-10 text-center animate-stagger" style={{ animationDelay: '0.1s' }}>
                     <h1 className="text-3xl md:text-4xl font-black text-emerald-600 tracking-tight drop-shadow-sm">
-                        Phân Tích Năng Lực & Lộ Trình
+                        Đề Xuất Khóa Học
                     </h1>
                 </div>
 
@@ -194,25 +176,38 @@ const SuggestedComboPage = () => {
 
                             <h3 className="text-lg font-bold text-slate-800 mb-4 text-center">Bản đồ Kỹ năng</h3>
 
-                            <div className="h-56 w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <RadarChart cx="50%" cy="50%" outerRadius="75%" data={insightData.skills}>
-                                        <PolarGrid stroke="#f1f5f9" />
-                                        <PolarAngleAxis dataKey="tagName" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} />
-                                        <Radar name="Score" dataKey="score" stroke="#10b981" fill="#34d399" fillOpacity={0.25} strokeWidth={2} />
-                                    </RadarChart>
-                                </ResponsiveContainer>
+                            <div className="w-full">
+                                <BarChart skills={insightData.skills} />
                             </div>
 
-                            <div className="mt-6 pt-5 border-t border-slate-100">
-                                <p className="text-[14px] text-slate-600 leading-relaxed font-medium">
-                                    <FaLightbulb className="inline text-yellow-500 mb-1 mr-1" />
-                                    <span className="font-bold text-slate-800">Dựa vào sơ đồ kỹ năng của bạn, </span>
-                                    để đạt mốc <span className="font-bold text-emerald-600">{studyGoal.targetTotal} {studyGoal.certType}</span>, bạn cần lấp ngay lỗ hổng:
-                                    <span className="font-bold text-orange-500"> {insightData.weakPoints?.join(", ") || ""}</span>.
-                                    Lộ trình bên cạnh được thiết kế để cộng thêm cho bạn ít nhất <span className="font-bold text-emerald-600">{pointsNeeded > 0 ? pointsNeeded : 0} điểm</span> trong thời gian tới!
-                                </p>
-                            </div>
+                            {insightData.motivationalRemark && (
+                                <div className="mt-6 p-6 bg-gradient-to-br from-emerald-50 via-white to-teal-50/30 border border-emerald-100 rounded-3xl shadow-sm relative overflow-hidden">
+                                    {/* Decorative radial glows */}
+                                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none"></div>
+                                    <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-teal-400/10 rounded-full blur-2xl pointer-events-none"></div>
+
+                                    {/* Bọc toàn bộ bằng flex-col để chia dòng */}
+                                    <div className="flex flex-col gap-3">
+
+                                        {/* DÒNG 1: Icon và Tiêu đề nằm ngang (Căn giữa theo trục Y) */}
+                                        <div className="flex items-center gap-3">
+                                            {/* Thu nhỏ padding và icon lại một chút (p-2.5, w-4 h-4, rounded-xl) để nó cân xứng với cái chữ text-xs của tiêu đề */}
+                                            <div className="flex-shrink-0 p-2.5 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl text-white shadow-sm shadow-emerald-200/50">
+                                                <Sparkles className="w-4 h-4 text-white animate-pulse" />
+                                            </div>
+                                            <h4 className="text-xs font-black text-emerald-800 uppercase tracking-widest mt-0.5">
+                                                ĐÁNH GIÁ CHUYÊN SÂU TỪ HỆ THỐNG
+                                            </h4>
+                                        </div>
+
+                                        {/* DÒNG 2: Nội dung nhận xét - Thêm text-justify để căn đều 2 bên */}
+                                        <p className="text-slate-800 text-sm sm:text-base font-bold leading-relaxed italic text-justify">
+                                            "{insightData.motivationalRemark}"
+                                        </p>
+
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -225,7 +220,7 @@ const SuggestedComboPage = () => {
                             <div>
                                 <div className="flex items-center gap-2 mb-1.5">
                                     <FaRoute className="text-emerald-500 text-lg" />
-                                    <h2 className="text-xl font-extrabold text-slate-800">Lộ trình bứt phá</h2>
+                                    <h2 className="text-xl font-extrabold text-slate-800">Combo toàn diện</h2>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <span className="text-sm font-semibold text-slate-600">Đã chọn: <span className="text-emerald-600 font-bold">{selectedCourses.length}/{recommendedCourses.length}</span></span>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     FaBullseye, FaEdit, FaPlus, FaTrophy, FaTimes, FaFire,
@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '../../../hooks/useAuth';
 import userApi from '../../../api/userApi';
+import testResultService from '../../../api/testResultService';
 
 const formatCertName = (certType) => {
     if (certType === 'TOEIC_LR') return 'TOEIC (Listening & Reading)';
@@ -16,29 +17,16 @@ const formatCertName = (certType) => {
 // ==========================================
 // COMPONENT: CARD HIỂN THỊ MỤC TIÊU ACTIVE (ĐÃ ÉP CÂN)
 // ==========================================
-const GoalCard = ({ goal, onEdit }) => {
+const GoalCard = ({ goal, onEdit, estimatedScore, loadingScore }) => {
     const calcProgress = (current, target) => {
         if (!target || target === 0) return 0;
         const percent = (current / target) * 100;
         return percent > 100 ? 100 : percent;
     };
 
-    const overallProgress = calcProgress(goal.currentTotal, goal.targetTotal);
-    const isAchieved = goal.currentTotal >= goal.targetTotal && goal.targetTotal > 0;
-
-    const skillConfigs = {
-        Listening: { icon: <FaHeadphones />, color: 'from-blue-400 to-indigo-500', bg: 'bg-blue-50', text: 'text-blue-600' },
-        Reading: { icon: <FaBookOpen />, color: 'from-emerald-400 to-teal-500', bg: 'bg-emerald-50', text: 'text-emerald-600' },
-        Speaking: { icon: <FaMicrophone />, color: 'from-amber-400 to-orange-500', bg: 'bg-amber-50', text: 'text-amber-600' },
-        Writing: { icon: <FaPen />, color: 'from-purple-400 to-pink-500', bg: 'bg-purple-50', text: 'text-purple-600' },
-    };
-
-    const activeSkills = [
-        { name: 'Listening', current: goal.currentListening || 0, target: goal.targetListening },
-        { name: 'Reading', current: goal.currentReading || 0, target: goal.targetReading },
-        { name: 'Speaking', current: goal.currentSpeaking || 0, target: goal.targetSpeaking },
-        { name: 'Writing', current: goal.currentWriting || 0, target: goal.targetWriting },
-    ].filter(skill => skill.target > 0);
+    const currentScoreValue = estimatedScore || 0;
+    const isAchieved = estimatedScore !== null && estimatedScore >= goal.targetTotal && goal.targetTotal > 0;
+    const overallProgress = calcProgress(currentScoreValue, goal.targetTotal);
 
     return (
         <motion.div
@@ -106,9 +94,16 @@ const GoalCard = ({ goal, onEdit }) => {
                         <h4 className={`${isAchieved ? 'text-amber-600' : 'text-slate-500'} font-bold uppercase tracking-wider text-xs`}>Điểm Hiện Tại</h4>
                     </div>
                     <div className="flex items-baseline gap-1.5">
-                        {/* 💥 Font size 4xl thay vì 5xl */}
-                        <span className={`text-4xl font-black ${isAchieved ? 'text-amber-600' : 'text-slate-800'}`}>{goal.currentTotal || 0}</span>
-                        <span className={`${isAchieved ? 'text-amber-500' : 'text-slate-400'} font-medium text-sm`}>điểm</span>
+                        {loadingScore ? (
+                            <span className="text-xl font-bold text-slate-400">Đang tải...</span>
+                        ) : estimatedScore !== null ? (
+                            <>
+                                <span className={`text-4xl font-black ${isAchieved ? 'text-amber-600' : 'text-slate-800'}`}>{estimatedScore}</span>
+                                <span className={`${isAchieved ? 'text-amber-500' : 'text-slate-400'} font-medium text-sm`}>điểm</span>
+                            </>
+                        ) : (
+                            <span className="text-sm font-bold text-slate-500">Chưa xác định được</span>
+                        )}
                     </div>
                 </motion.div>
 
@@ -130,7 +125,7 @@ const GoalCard = ({ goal, onEdit }) => {
 
             {/* TỔNG QUAN PROGRESS BAR LỚN */}
             {/* 💥 Giảm chiều cao thanh progress h-3 */}
-            <div className="mb-5">
+            <div className="mb-2">
                 <div className="flex justify-between text-xs font-bold mb-1.5">
                     <span className="text-slate-500">Tiến độ tổng thể</span>
                     <span className={isAchieved ? 'text-amber-600' : 'text-emerald-600'}>{overallProgress.toFixed(1)}%</span>
@@ -147,52 +142,6 @@ const GoalCard = ({ goal, onEdit }) => {
                         )}
                     </motion.div>
                 </div>
-            </div>
-
-            {/* CHI TIẾT TỪNG KỸ NĂNG */}
-            {/* 💥 Giảm space-y-3 */}
-            <div className="space-y-3">
-                <h4 className="text-slate-800 font-bold text-base mb-2 border-b border-slate-100 pb-1.5">Chi tiết kỹ năng</h4>
-                {activeSkills.map((skill, index) => {
-                    const conf = skillConfigs[skill.name];
-                    const percent = calcProgress(skill.current, skill.target);
-                    const isSkillAchieved = skill.current >= skill.target;
-
-                    return (
-                        <motion.div
-                            key={skill.name}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.4, delay: 0.2 + (index * 0.05) }}
-                            className="flex items-center gap-3"
-                        >
-                            {/* 💥 Thu nhỏ Icon w-10 h-10 text-lg */}
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-sm ${conf.bg} ${conf.text}`}>
-                                {conf.icon}
-                            </div>
-
-                            <div className="flex-1">
-                                <div className="flex justify-between items-end mb-1">
-                                    <span className="font-bold text-slate-700 text-sm">{skill.name}</span>
-                                    <div className="text-xs font-bold">
-                                        <span className={isSkillAchieved ? 'text-amber-500' : conf.text}>{skill.current}</span>
-                                        <span className="text-slate-300 mx-1">/</span>
-                                        <span className="text-slate-500">{skill.target}</span>
-                                    </div>
-                                </div>
-                                {/* 💥 Giảm chiều cao thanh nhỏ h-2 */}
-                                <div className="w-full bg-slate-100 rounded-full h-2 relative shadow-inner">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${percent}%` }}
-                                        transition={{ duration: 1, delay: 0.3 + (index * 0.05), ease: "easeOut" }}
-                                        className={`h-full rounded-full ${isSkillAchieved ? 'bg-gradient-to-r from-amber-400 to-orange-500' : `bg-gradient-to-r ${conf.color}`}`}
-                                    ></motion.div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    );
-                })}
             </div>
         </motion.div>
     );
@@ -219,6 +168,38 @@ const StudyGoalPage = () => {
     });
 
     const [submitStatus, setSubmitStatus] = useState({ type: '', message: '' });
+
+    const [estimationTests, setEstimationTests] = useState([]);
+    const [loadingEstimation, setLoadingEstimation] = useState(true);
+    const [estimationError, setEstimationError] = useState(false);
+
+    useEffect(() => {
+        const fetchEstimation = async () => {
+            try {
+                setLoadingEstimation(true);
+                setEstimationError(false);
+                const response = await testResultService.getRecentFullTestsForEstimation();
+                setEstimationTests(response.data || []);
+            } catch (err) {
+                console.error("Error loading estimations:", err);
+                setEstimationError(true);
+            } finally {
+                setLoadingEstimation(false);
+            }
+        };
+
+        if (activeGoal) {
+            fetchEstimation();
+        } else {
+            setLoadingEstimation(false);
+        }
+    }, [activeGoal]);
+
+    const estimatedScore = useMemo(() => {
+        if (estimationError || !estimationTests || estimationTests.length < 5) return null;
+        const totalSum = estimationTests.reduce((acc, curr) => acc + (curr.totalScore || 0), 0);
+        return Math.round(totalSum / 5);
+    }, [estimationTests, estimationError]);
 
     const openModal = (goalToEdit = null) => {
         setErrors({});
@@ -412,9 +393,14 @@ const StudyGoalPage = () => {
                             Tạo mục tiêu đầu tiên
                         </button>
                     </div>
-                ) : (
+                                ) : (
                     <div className="mt-2 w-full">
-                        <GoalCard goal={activeGoal} onEdit={openModal} />
+                        <GoalCard 
+                            goal={activeGoal} 
+                            onEdit={openModal} 
+                            estimatedScore={estimatedScore} 
+                            loadingScore={loadingEstimation} 
+                        />
                     </div>
                 )}
             </div>

@@ -5,7 +5,7 @@ import SingleQuestionBlock from '../../../components/common/student/guest/testPr
 import GroupQuestionBlock from '../../../components/common/student/guest/testPractice/GroupQuestionBlock';
 import testApi from '../../../api/testApi';
 import { toast } from 'react-toastify';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+import BarChart from '../../../components/sections/student/guest/levelTestPage/BarChart';
 // 🔴 [MỚI THÊM] Import axiosClient để gọi API Insights
 import axiosClient from '../../../api/axiosClient';
 
@@ -200,25 +200,8 @@ const TestReviewPage = () => {
                                     </div>
 
                                     <div className="flex flex-col lg:flex-row gap-8 items-center">
-                                        <div className="w-full lg:w-1/2 h-[320px]">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={insightData.skills}>
-                                                    <PolarGrid stroke="#e2e8f0" />
-                                                    <PolarAngleAxis
-                                                        dataKey="tagName"
-                                                        tick={{ fill: '#475569', fontSize: 11, fontWeight: 'bold' }}
-                                                    />
-                                                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                                                    <Radar
-                                                        name="Độ thành thạo (%)"
-                                                        dataKey="score"
-                                                        stroke="#3b82f6"
-                                                        strokeWidth={2}
-                                                        fill="#60a5fa"
-                                                        fillOpacity={0.4}
-                                                    />
-                                                </RadarChart>
-                                            </ResponsiveContainer>
+                                        <div className="w-full lg:w-1/2">
+                                            <BarChart skills={insightData.skills} />
                                         </div>
 
                                         <div className="w-full lg:w-1/2 space-y-4">

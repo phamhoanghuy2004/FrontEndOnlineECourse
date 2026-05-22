@@ -11,15 +11,27 @@ import { toast } from 'react-toastify'; // 🔴 Import Toast để show lỗi
 import Button from '../../../components/common/Button';
 import InputField from '../../../components/common/InputField';
 import testResultService from '../../../api/testResultService'; // 🔴 Import Service gọi API
+import courseRecommendApi from '../../../api/courseRecommendApi';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../hooks/useAuth';
 
-// --- MOCK DATA GIỮ NGUYÊN CHO BIỂU ĐỒ KỸ NĂNG (Vì API chưa có phần này) ---
-const SKILL_STATS = [
-    { id: 'listening', label: 'Listening', accuracy: 78, icon: FaHeadphones, color: 'text-blue-500', bg: 'bg-blue-500', bgLight: 'bg-blue-50' },
-    { id: 'reading', label: 'Reading', accuracy: 65, icon: FaBookReader, color: 'text-emerald-500', bg: 'bg-emerald-500', bgLight: 'bg-emerald-50' },
-    { id: 'speaking', label: 'Speaking', accuracy: 45, icon: FaMicrophone, color: 'text-orange-500', bg: 'bg-orange-500', bgLight: 'bg-orange-50' },
-    { id: 'writing', label: 'Writing', accuracy: 60, icon: FaPenNib, color: 'text-purple-500', bg: 'bg-purple-500', bgLight: 'bg-purple-50' },
-];
+// Helper để lấy icon và màu sắc cho từng kỹ năng
+const getSkillStyle = (tagName) => {
+    const name = (tagName || '').toLowerCase();
+    if (name.includes('listening') || name.includes('nghe')) {
+        return { icon: FaHeadphones, color: 'text-blue-500', bg: 'bg-blue-500', bgLight: 'bg-blue-50' };
+    }
+    if (name.includes('reading') || name.includes('đọc')) {
+        return { icon: FaBookReader, color: 'text-emerald-500', bg: 'bg-emerald-500', bgLight: 'bg-emerald-50' };
+    }
+    if (name.includes('speaking') || name.includes('nói')) {
+        return { icon: FaMicrophone, color: 'text-orange-500', bg: 'bg-orange-500', bgLight: 'bg-orange-50' };
+    }
+    if (name.includes('writing') || name.includes('viết')) {
+        return { icon: FaPenNib, color: 'text-purple-500', bg: 'bg-purple-500', bgLight: 'bg-purple-50' };
+    }
+    return { icon: FaStar, color: 'text-slate-500', bg: 'bg-slate-500', bgLight: 'bg-slate-50' };
+};
 
 // 🔴 XÓA HISTORY_DATA MOCK ĐI VÌ ĐÃ DÙNG API
 
@@ -129,6 +141,7 @@ const getCurrentWeekRange = () => {
 
 // --- MAIN PAGE ---
 const LearnerProgressPage = () => {
+    const { user } = useAuth();
     // 🔴 1. KHỞI TẠO LOCATION ĐỂ LẤY STATE ĐƯỢC TRUYỀN SANG
     const location = useLocation();
     const incomingFilter = location.state || {};
@@ -141,6 +154,15 @@ const LearnerProgressPage = () => {
     // 🔴 1. KHAI BÁO CÁC STATE QUẢN LÝ DỮ LIỆU TỪ API
     const [historyData, setHistoryData] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // State cho Điểm ước lượng và biểu đồ 5 bài Full TOEIC gần nhất
+    const [estimationTests, setEstimationTests] = useState([]);
+    const [estimationError, setEstimationError] = useState(null);
+    const [loadingEstimation, setLoadingEstimation] = useState(true);
+
+    // State cho Phân tích tỷ lệ chính xác kỹ năng
+    const [skillInsights, setSkillInsights] = useState(null);
+    const [loadingSkills, setLoadingSkills] = useState(true);
 
     // 🔴 2. KHỞI TẠO STATE VỚI DỮ LIỆU TỪ TRANG TRƯỚC (NẾU CÓ)
     const [testId, setTestId] = useState(incomingFilter.filterTestId || null);
@@ -215,26 +237,73 @@ const LearnerProgressPage = () => {
         setPage(1);
     };
 
+    // Gọi API lấy 5 bài Full TOEIC gần nhất để phục vụ Ước lượng điểm và vẽ biểu đồ
+    useEffect(() => {
+        const fetchEstimation = async () => {
+            try {
+                setLoadingEstimation(true);
+                setEstimationError(null);
+                const response = await testResultService.getRecentFullTestsForEstimation();
+                setEstimationTests(response.data || []);
+            } catch (err) {
+                console.error("Error loading estimations:", err);
+                if (err.code === 1088) {
+                    setEstimationError("NOT_ENOUGH_TESTS");
+                } else {
+                    setEstimationError("ERROR_FETCHING");
+                }
+            } finally {
+                setLoadingEstimation(false);
+            }
+        };
+
+        fetchEstimation();
+    }, []);
+
+    // Gọi API lấy phân tích kỹ năng (Tỷ lệ chính xác)
+    useEffect(() => {
+        const fetchSkillInsights = async () => {
+            try {
+                setLoadingSkills(true);
+                const response = await courseRecommendApi.getSkillInsights();
+                if (response.data) {
+                    setSkillInsights(response.data);
+                }
+            } catch (err) {
+                console.error("Error loading skill insights:", err);
+            } finally {
+                setLoadingSkills(false);
+            }
+        };
+
+        fetchSkillInsights();
+    }, []);
+
     // --- LOGIC TÍNH TOÁN DỰA TRÊN DỮ LIỆU THẬT ---
 
     const estimatedScore = useMemo(() => {
-        // Lấy 5 bài gần nhất (Backend mặc định trả về mới nhất trước)
-        const recentTests = historyData.slice(0, 5);
-        if (recentTests.length === 0) return 0;
-
-        // 🔴 Sửa thành item.totalScore
-        const totalSum = recentTests.reduce((acc, curr) => acc + (curr.totalScore || 0), 0);
-        return Math.round(totalSum / recentTests.length);
-    }, [historyData]);
+        if (!estimationTests || estimationTests.length < 5) return 0;
+        const totalSum = estimationTests.reduce((acc, curr) => acc + (curr.totalScore || 0), 0);
+        return Math.round(totalSum / 5);
+    }, [estimationTests]);
 
     const isGoalReached = estimatedScore >= USER_GOAL;
     const progressToGoal = Math.min((estimatedScore / USER_GOAL) * 100, 100);
 
     const currentLevelInfo = useMemo(() => {
-        if (estimatedScore < 450) return { name: 'Sơ cấp (Beginner)', percent: 30, color: 'bg-slate-400', range: '0 - 450' };
-        if (estimatedScore < 750) return { name: 'Trung cấp (Intermediate)', percent: 65, color: 'bg-blue-500', range: '450 - 750' };
-        return { name: 'Nâng cao (Advanced)', percent: 90, color: 'bg-yellow-500', range: '750 - 990' };
-    }, [estimatedScore]);
+        const level = user?.level || 'UNDETERMINED';
+        switch (level) {
+            case 'BEGINNER':
+                return { name: 'Sơ cấp (Beginner)', color: 'text-slate-500', activeIndex: 0 };
+            case 'INTERMEDIATE':
+                return { name: 'Trung cấp (Intermediate)', color: 'text-blue-500', activeIndex: 1 };
+            case 'ADVANCED':
+                return { name: 'Nâng cao (Advanced)', color: 'text-yellow-500', activeIndex: 2 };
+            case 'UNDETERMINED':
+            default:
+                return { name: 'Chưa xác định (Undetermined)', color: 'text-slate-400', activeIndex: -1 };
+        }
+    }, [user?.level]);
 
 
     return (
@@ -249,9 +318,9 @@ const LearnerProgressPage = () => {
                 </div>
             </div>
 
-            {/* Overviews ... (Giữ nguyên) */}
+            {/* Overviews */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Card 1: Trình độ hiện tại (Giữ nguyên) */}
+                {/* Card 1: Trình độ hiện tại */}
                 <div className="bg-white p-6 rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden flex flex-col justify-between">
                     <div className="absolute top-0 right-0 p-4 opacity-10">
                         <FaTrophy className="text-8xl text-slate-800" />
@@ -259,20 +328,20 @@ const LearnerProgressPage = () => {
 
                     <div>
                         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Trình độ hiện tại</h3>
-                        <div className={`text-3xl font-extrabold tracking-tight ${currentLevelInfo.color.replace('bg-', 'text-')}`}>
+                        <div className={`text-3xl font-extrabold tracking-tight ${currentLevelInfo.color}`}>
                             {currentLevelInfo.name}
                         </div>
                     </div>
 
                     <div className="mt-6 grid grid-cols-3 gap-2">
                         {[
-                            { label: 'Sơ cấp', min: 0, max: 450, color: 'bg-slate-500', activeBorder: 'border-slate-500' },
-                            { label: 'Trung cấp', min: 450, max: 750, color: 'bg-blue-500', activeBorder: 'border-blue-500' },
-                            { label: 'Nâng cao', min: 750, max: 990, color: 'bg-yellow-500', activeBorder: 'border-yellow-500' }
-                        ].map((level, index) => {
-                            const isActive = estimatedScore >= level.min && (index === 2 || estimatedScore < level.max);
+                            { label: 'Sơ cấp', index: 0, color: 'bg-slate-500', activeBorder: 'border-slate-500' },
+                            { label: 'Trung cấp', index: 1, color: 'bg-blue-500', activeBorder: 'border-blue-500' },
+                            { label: 'Nâng cao', index: 2, color: 'bg-yellow-500', activeBorder: 'border-yellow-500' }
+                        ].map((level, idx) => {
+                            const isActive = currentLevelInfo.activeIndex === level.index;
                             return (
-                                <div key={index} className={`relative flex flex-col items-center justify-center py-3 rounded-xl border-2 transition-all duration-300 ${isActive ? `${level.activeBorder} bg-white shadow-md transform -translate-y-1` : 'border-transparent bg-slate-50 opacity-50'}`}>
+                                <div key={idx} className={`relative flex flex-col items-center justify-center py-3 rounded-xl border-2 transition-all duration-300 ${isActive ? `${level.activeBorder} bg-white shadow-md transform -translate-y-1` : 'border-transparent bg-slate-50 opacity-50'}`}>
                                     {isActive && (
                                         <div className={`absolute -top-2.5 bg-white ${level.color.replace('bg-', 'text-')} rounded-full p-0.5 shadow-sm border`}>
                                             <FaMedal size={12} />
@@ -288,8 +357,7 @@ const LearnerProgressPage = () => {
                     </div>
                 </div>
 
-                {/* Card 2 & 3 ... (Giữ nguyên cấu trúc) */}
-                {/* (Phần UI Card Mục Tiêu & Card Thống Kê giữ nguyên y hệt Code của bạn) */}
+                {/* Card 2: Điểm ước lượng */}
                 <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-[1.5rem] shadow-lg shadow-emerald-200 text-white relative flex flex-col justify-between">
                     <div>
                         <div className="flex justify-between items-start">
@@ -298,13 +366,31 @@ const LearnerProgressPage = () => {
                                 <FaChartLine className="text-white" />
                             </div>
                         </div>
-                        <div className="mt-4 flex items-baseline gap-2">
-                            <span className="text-5xl font-extrabold tracking-tighter">{estimatedScore}</span>
-                            <span className="text-emerald-100 font-medium">/ 990</span>
-                        </div>
+                        {loadingEstimation ? (
+                            <div className="mt-4 flex items-center gap-2">
+                                <FaSpinner className="animate-spin text-2xl" />
+                                <span className="text-sm text-emerald-100">Đang tải...</span>
+                            </div>
+                        ) : estimationError === "NOT_ENOUGH_TESTS" ? (
+                            <div className="mt-4">
+                                <span className="text-2xl font-bold tracking-tighter">-- / 990</span>
+                                <p className="text-[11px] text-emerald-100/80 mt-1">Chưa đủ 5 bài Full Test</p>
+                            </div>
+                        ) : (
+                            <div className="mt-4 flex items-baseline gap-2">
+                                <span className="text-5xl font-extrabold tracking-tighter">{estimatedScore}</span>
+                                <span className="text-emerald-100 font-medium">/ 990</span>
+                            </div>
+                        )}
                     </div>
                     <div className="mt-4 pt-4 border-t border-white/20">
-                        {isGoalReached ? (
+                        {loadingEstimation ? (
+                            <span className="text-xs text-emerald-100">Đang tính toán mục tiêu...</span>
+                        ) : estimationError === "NOT_ENOUGH_TESTS" ? (
+                            <p className="text-[11px] text-emerald-50 bg-white/10 p-2.5 rounded-xl border border-white/15 leading-relaxed">
+                                💡 Hãy làm đủ 5 bài Full Test để hệ thống ước lượng điểm số.
+                            </p>
+                        ) : isGoalReached ? (
                             <div className="space-y-3">
                                 <div className="flex items-center gap-2 text-white font-bold animate-pulse">
                                     <FaCrown className="text-yellow-300 text-xl" />
@@ -328,63 +414,82 @@ const LearnerProgressPage = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-2"><FaHistory /></div>
-                        {/* 🔴 Hiện tại stat này mình chưa có API đếm tổng, tạm để logic mảng */}
-                        <span className="text-2xl font-bold text-slate-800">{historyData.length}</span>
-                        <span className="text-xs text-slate-400 uppercase font-bold">Đề hiển thị</span>
-                    </div>
-                    <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
-                        <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mb-2"><FaClock /></div>
-                        <span className="text-2xl font-bold text-slate-800">...</span>
-                        <span className="text-xs text-slate-400 uppercase font-bold">Giờ học</span>
-                    </div>
-                </div>
-            </div>
+                {/* Card 3: Tỷ lệ chính xác (đã được dời lên từ dưới) */}
+                <div className="bg-white p-6 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col justify-between">
+                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
+                        <FaStar className="text-yellow-400" /> Tỷ lệ chính xác
+                    </h3>
+                    {loadingSkills ? (
+                        <div className="flex flex-col items-center justify-center py-10 gap-2">
+                            <FaSpinner className="animate-spin text-xl text-emerald-500" />
+                            <span className="text-xs text-slate-400">Đang tải tỷ lệ chính xác...</span>
+                        </div>
+                    ) : skillInsights?.skills && skillInsights.skills.length > 0 ? (
+                        <div className="space-y-5">
+                            {skillInsights.skills.map((skill) => {
+                                const style = getSkillStyle(skill.tagName);
+                                const SkillIcon = style.icon;
+                                const accuracy = Math.round(skill.score || 0);
 
-            {/* CHART & SKILLS SECTION */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white p-6 rounded-[1.5rem] border border-slate-100 shadow-sm">
-                    <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                            <FaChartLine className="text-emerald-500" /> Biểu đồ điểm số
-                        </h3>
-                    </div>
-                    {/* 🔴 Truyền dữ liệu thật vào Component Chart */}
-                    {!loading && historyData.length > 0 ? (
-                        <ScoreHistoryChart data={historyData} />
+                                return (
+                                    <div key={skill.tagId || skill.tagName} className="group">
+                                        <div className="flex justify-between text-sm mb-1.5">
+                                            <span className="flex items-center gap-2 font-bold text-slate-700">
+                                                <div className={`p-1.5 rounded-lg ${style.bgLight} ${style.color}`}>
+                                                    <SkillIcon size={12} />
+                                                </div>
+                                                {skill.tagName}
+                                            </span>
+                                            <span className="font-bold text-slate-700">{accuracy}%</span>
+                                        </div>
+                                        <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                            <motion.div 
+                                                initial={{ width: 0 }} 
+                                                whileInView={{ width: `${accuracy}%` }} 
+                                                transition={{ duration: 0.8 }} 
+                                                className={`h-full rounded-full ${style.bg}`} 
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     ) : (
-                        <div className="h-64 flex items-center justify-center text-slate-400 text-sm">
-                            {loading ? <FaSpinner className="animate-spin text-2xl" /> : "Chưa có dữ liệu vẽ biểu đồ."}
+                        <div className="flex flex-col items-center justify-center py-10 text-slate-400 text-xs">
+                            <span>Chưa có dữ liệu phân tích kỹ năng.</span>
                         </div>
                     )}
                 </div>
+            </div>
 
-                <div className="bg-white p-6 rounded-[1.5rem] border border-slate-100 shadow-sm">
-                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <FaStar className="text-yellow-400" /> Tỷ lệ chính xác
+            {/* CHART SECTION */}
+            <div className="bg-white p-6 rounded-[1.5rem] border border-slate-100 shadow-sm">
+                <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <FaChartLine className="text-emerald-500" /> Biểu đồ điểm số full test gần đây
                     </h3>
-                    {/* SKILL_STATS Giữ nguyên */}
-                    <div className="space-y-5">
-                        {SKILL_STATS.map((skill) => (
-                            <div key={skill.id} className="group">
-                                <div className="flex justify-between text-sm mb-1.5">
-                                    <span className="flex items-center gap-2 font-bold text-slate-700">
-                                        <div className={`p-1.5 rounded-lg ${skill.bgLight} ${skill.color}`}>
-                                            <skill.icon size={12} />
-                                        </div>
-                                        {skill.label}
-                                    </span>
-                                    <span className="font-bold text-slate-700">{skill.accuracy}%</span>
-                                </div>
-                                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                                    <motion.div initial={{ width: 0 }} whileInView={{ width: `${skill.accuracy}%` }} transition={{ duration: 0.8 }} className={`h-full rounded-full ${skill.bg}`} />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
                 </div>
+                {/* Truyền dữ liệu thật 5 bài Full TOEIC gần nhất vào Component Chart */}
+                {!loadingEstimation && !estimationError && estimationTests.length > 0 ? (
+                    <ScoreHistoryChart data={estimationTests} />
+                ) : (
+                    <div className="h-64 flex flex-col items-center justify-center text-slate-400 text-sm gap-2">
+                        {loadingEstimation ? (
+                            <>
+                                <FaSpinner className="animate-spin text-2xl text-emerald-500" />
+                                <span>Đang tính toán biểu đồ điểm số...</span>
+                            </>
+                        ) : estimationError === "NOT_ENOUGH_TESTS" ? (
+                            <>
+                                <span className="text-3xl mb-1">⚠️</span>
+                                <span className="font-semibold text-slate-500">Chưa đủ 5 bài Full Test</span>
+                                <span className="text-xs text-slate-400 text-center">Hoàn thành tối thiểu 5 bài thi Full Test trên hệ thống Echill để vẽ biểu đồ và phân tích tiến độ.</span>
+                            </>
+                        ) : (
+                            <span>Không thể tải dữ liệu vẽ biểu đồ.</span>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* HISTORY TABLE SECTION */}

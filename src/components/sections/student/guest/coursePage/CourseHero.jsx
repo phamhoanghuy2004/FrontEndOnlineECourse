@@ -6,6 +6,7 @@ import { fadeInLeft, fadeInUp, fadeInRight, floatY } from '../../../../../consta
 import Button from '../../../../common/Button';
 import Title from '../../../../common/Title';
 import axiosClient from '../../../../../api/axiosClient';
+import { toast } from 'react-toastify';
 
 // 1. Thêm hàm xử lý scroll mượt
 const scrollToCourses = () => {
@@ -36,30 +37,26 @@ const CourseHero = () => {
     const handleGetInsights = async () => {
         setIsLoading(true);
         try {
-            // Gọi API bằng axiosClient đã cấu hình
-            const response = await axiosClient.get('/users/skills/insights', {
-                params: { group: 'ENGLISH_TOEIC' } // Truyền param tagGroup
-            });
+            // 🟢 Thay URL gọi sang API kiểm tra trạng thái cực nhẹ này
+            const response = await axiosClient.get('/students/placement-test-status');
+            const { hasCompleted } = response.data; // Bốc cái cờ boolean ra
 
-            // 1. NẾU THÀNH CÔNG: User đã có hồ sơ năng lực
-            console.log("Dữ liệu Insight:", response.data);
-            navigate(`/course-recommendations`); 
-            // TODO: Lưu vào state và mở Modal hiển thị Radar Chart & Gợi ý lộ trình
-            // toast.success("Đã phân tích xong lộ trình của bạn!");
+            if (hasCompleted) {
+                // 1. NẾU ĐÃ CHỐT SỔ PLACEMENT TEST: Chuyển qua trang đề xuất
+                console.log("User đã hoàn thành Placement Test. Chuyển hướng...");
+                navigate(`/course-recommendations`); 
+                toast.success("Đang tải lộ trình của bạn!");
+            } else {
+                // 2. NẾU CHƯA LÀM HOẶC LÀM DỞ DANG: Chuyển thẳng về lò luyện thi
+                console.log("User chưa hoàn thành Placement Test. Chuyển hướng...");
+                toast.info("Bạn cần hoàn thành bài test đầu vào để chúng tôi hiểu rõ năng lực nhé!");
+                navigate(`/level-test`); 
+            }
 
         } catch (error) {
-            // 2. NẾU THẤT BẠI: Bắt đúng mã lỗi 1067 từ Backend
-            if (error.code === 1067) {
-                console.log("User chưa có hồ sơ năng lực. Chuyển hướng sang làm bài Test...");
-                // toast.info("Bạn cần làm bài test đầu vào để chúng tôi hiểu rõ năng lực của bạn nhé!");
-                
-                // 💥 Chuyển hướng đến trang làm bài Test (Nhớ thay URL cho đúng với Route của FE bạn)
-                navigate(`/test-sets/${PLACEMENT_TEST_ID}`); 
-            } else {
-                // Các lỗi khác (Server lỗi, Mất mạng...)
-                console.error("Lỗi gọi API:", error);
-                // toast.error(error.message);
-            }
+            // Chỉ bắt lỗi Server hoặc Mạng ở đây
+            console.error("Lỗi hệ thống khi kiểm tra trạng thái:", error);
+            toast.error("Có lỗi xảy ra, vui lòng thử lại sau!");
         } finally {
             setIsLoading(false);
         }

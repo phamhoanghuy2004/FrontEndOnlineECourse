@@ -9,8 +9,6 @@ const menuItems = [
     { path: '/teacher/students', label: 'Học viên', icon: FaUserGraduate },
     { path: '/teacher/blog', label: 'Blog', icon: FaPenFancy },
     { path: '/teacher/chat', label: 'Tin nhắn', icon: FaComments },
-    { path: '/teacher/vouchers', label: 'Mã giảm giá', icon: FaTicketAlt },
-    { path: '/teacher/coin-packages', label: 'Quản lý gói xu', icon: FaCoins },
 ];
 
 const SidebarTeacher = () => {

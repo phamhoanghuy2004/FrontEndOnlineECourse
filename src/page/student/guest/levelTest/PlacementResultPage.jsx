@@ -1,13 +1,28 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import RadarChart from "../../../../components/sections/student/guest/levelTestPage/RadarChart";
+import BarChart from "../../../../components/sections/student/guest/levelTestPage/BarChart";
 import SkillCard from "../../../../components/sections/student/guest/levelTestPage/SkillCard";
 import RecommendationCard from "../../../../components/sections/student/guest/levelTestPage/RecommendationCard";
 import { RefreshCw, Award, Sparkles, BookOpen } from "lucide-react";
 import ToeicBasic from "../../../../assets/ToeicBasic.png";
 import ToeicAdvanced from "../../../../assets/ToeicAdvanced.png";
+import courseRecommendApi from "../../../../api/courseRecommendApi";
 
 const PlacementResultPage = ({ scores, onRetake, onSelectCourse }) => {
+  const [insightData, setInsightData] = useState(null);
+
+  useEffect(() => {
+    const fetchInsights = async () => {
+      try {
+        const res = await courseRecommendApi.getSkillInsights();
+        setInsightData(res.data);
+      } catch (err) {
+        console.error("Lỗi khi tải thông tin đánh giá:", err);
+      }
+    };
+    fetchInsights();
+  }, []);
+
   const getFeedback = (skill, level) => {
     if (skill === "Grammar") {
       switch (level) {
@@ -65,12 +80,7 @@ const PlacementResultPage = ({ scores, onRetake, onSelectCourse }) => {
     return "Năng lực ổn định, tiếp tục phát huy.";
   };
 
-  const weaknesses = [
-    { name: "Relative Clauses", color: "bg-indigo-50 text-indigo-700 border-indigo-100" },
-    { name: "Business Vocabulary", color: "bg-amber-50 text-amber-700 border-amber-100" },
-    { name: "Part of Speech", color: "bg-sky-50 text-sky-700 border-sky-100" },
-    { name: "Double Passages", color: "bg-rose-50 text-rose-700 border-rose-100" }
-  ];
+
 
   const recommendedCourses = [
     {
@@ -102,10 +112,19 @@ const PlacementResultPage = ({ scores, onRetake, onSelectCourse }) => {
     }
   ];
 
+  const fallbackSkills = [
+    { tagName: "Nghe hiểu (Listening)", score: (scores.Listening || 3) * 20, masteryLevel: `Cấp độ ${scores.Listening || 3}` },
+    { tagName: "Đọc hiểu (Reading)", score: (scores.Reading || 3) * 20, masteryLevel: `Cấp độ ${scores.Reading || 3}` },
+    { tagName: "Từ vựng (Vocabulary)", score: (scores.Vocabulary || 3) * 20, masteryLevel: `Cấp độ ${scores.Vocabulary || 3}` },
+    { tagName: "Ngữ pháp (Grammar)", score: (scores.Grammar || 3) * 20, masteryLevel: `Cấp độ ${scores.Grammar || 3}` }
+  ];
+
+  const chartSkills = insightData?.skills || fallbackSkills;
+
   return (
     <div className="min-h-screen bg-gray-50/50 py-16 px-4 sm:px-6 pt-24 select-none">
       <div className="max-w-6xl mx-auto space-y-10">
-        
+
         {/* Results Page Header */}
         <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full pointer-events-none"></div>
@@ -136,25 +155,50 @@ const PlacementResultPage = ({ scores, onRetake, onSelectCourse }) => {
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Radar Chart Panel */}
+
+          {/* Chart Panel */}
           <div className="lg:col-span-5 space-y-4 bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
             <div className="flex items-center gap-2 px-2">
               <Award className="w-5 h-5 text-indigo-600" />
               <h2 className="font-extrabold text-gray-800 text-base sm:text-lg">
-                Biểu đồ hình nhện năng lực
+                Biểu đồ cột năng lực
               </h2>
             </div>
-            <RadarChart scores={scores} />
-            <p className="text-[11px] text-gray-400 font-bold text-center italic">
-              * Biểu đồ thể hiện mức phân bố trình độ (Level 1-5) của 4 kỹ năng chính.
-            </p>
+            <BarChart skills={chartSkills} />
+            {insightData?.motivationalRemark && (
+              <div className="mt-6 p-6 bg-gradient-to-br from-emerald-50 via-white to-teal-50/30 border border-emerald-100 rounded-3xl shadow-sm relative overflow-hidden">
+                {/* Decorative radial glows */}
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-teal-400/10 rounded-full blur-2xl pointer-events-none"></div>
+
+                {/* Bọc toàn bộ bằng flex-col để chia dòng */}
+                <div className="flex flex-col gap-3">
+
+                  {/* DÒNG 1: Icon và Tiêu đề nằm ngang (Căn giữa theo trục Y) */}
+                  <div className="flex items-center gap-3">
+                    {/* Thu nhỏ icon lại một chút để cân xứng với text-xs của tiêu đề */}
+                    <div className="flex-shrink-0 p-2.5 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl text-white shadow-sm shadow-emerald-200/50">
+                      <Sparkles className="w-4 h-4 text-white animate-pulse" />
+                    </div>
+                    <h4 className="text-xs font-black text-emerald-800 uppercase tracking-widest mt-0.5">
+                      ĐÁNH GIÁ CHUYÊN SÂU TỪ HỆ THỐNG AI
+                    </h4>
+                  </div>
+
+                  {/* DÒNG 2: Nội dung nhận xét - Thêm text-justify để căn đều 2 bên */}
+                  <p className="text-slate-800 text-sm sm:text-base font-bold leading-relaxed italic text-justify">
+                    "{insightData.motivationalRemark}"
+                  </p>
+
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Detailed Skill Breakdown and Weaknesses */}
+          {/* Detailed Skill Breakdown */}
           <div className="lg:col-span-7 space-y-6">
             <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm space-y-6">
-              
+
               <div className="space-y-1">
                 <h2 className="font-extrabold text-gray-900 text-lg">
                   Chi tiết điểm kỹ năng
@@ -173,24 +217,6 @@ const PlacementResultPage = ({ scores, onRetake, onSelectCourse }) => {
                     feedback={getFeedback(skill, scores[skill])}
                   />
                 ))}
-              </div>
-
-              <hr className="border-gray-100" />
-
-              <div className="space-y-3">
-                <h3 className="font-bold text-gray-800 text-sm">
-                  Chủ điểm kiến thức cần cải thiện (Weakness Areas)
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {weaknesses.map((tag) => (
-                    <span
-                      key={tag.name}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-xl border ${tag.color}`}
-                    >
-                      {tag.name}
-                    </span>
-                  ))}
-                </div>
               </div>
 
             </div>

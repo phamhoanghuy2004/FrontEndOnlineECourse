@@ -84,6 +84,20 @@ const adminApi = {
     getAdminFiltersData: () => {
         return axiosClient.get('/admins/analytics/filters');
     },
+
+    // User Management
+    getUsers: (params) => {
+        return axiosClient.get('/admins/users', { params });
+    },
+    getUserDetail: (id) => {
+        return axiosClient.get(`/admins/users/${id}`);
+    },
+    blockUser: (id) => {
+        return axiosClient.patch(`/admins/users/${id}/block`);
+    },
+    unblockUser: (id) => {
+        return axiosClient.patch(`/admins/users/${id}/unblock`);
+    },
 };
 
 export default adminApi;

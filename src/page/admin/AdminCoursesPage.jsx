@@ -1,11 +1,53 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
     FaSearch, FaSpinner, FaChevronLeft, FaChevronRight, FaBookOpen, FaTimes, 
     FaCheckCircle, FaBan, FaEyeSlash, FaStar, FaUser, FaFileAlt, FaGraduationCap, 
-    FaCalendarAlt, FaTags, FaList, FaUserCircle, FaDownload, FaClipboardList, FaFileDownload
+    FaCalendarAlt, FaTags, FaList, FaUserCircle, FaDownload, FaClipboardList, FaFileDownload,
+    FaVideo
 } from 'react-icons/fa';
 import adminApi from '../../api/adminApi';
 import { toast } from 'react-toastify';
+import DOMPurify from 'dompurify';
+import Hls from 'hls.js';
+
+const AdminLessonVideoPlayer = ({ url }) => {
+    const videoRef = useRef(null);
+
+    useEffect(() => {
+        let hls;
+        const video = videoRef.current;
+        if (!video || !url) return;
+
+        if (url.includes('.m3u8')) {
+            if (Hls.isSupported()) {
+                hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.ERROR, function (event, data) {
+                    if (data.fatal) console.error('HLS Error:', data);
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = url;
+            }
+        } else {
+            video.src = url;
+        }
+
+        return () => {
+            if (hls) hls.destroy();
+        };
+    }, [url]);
+
+    return (
+        <div className="relative aspect-video max-w-xl mx-auto bg-black rounded-2xl overflow-hidden border border-slate-200 shadow-md">
+            <video
+                ref={videoRef}
+                controls
+                className="w-full h-full object-contain"
+            />
+        </div>
+    );
+};
 
 const AdminCoursesPage = () => {
     const [courses, setCourses] = useState([]);
@@ -479,7 +521,16 @@ const AdminCoursesPage = () => {
                                                 </span>
                                             </div>
                                             <h3 className="text-2xl font-black text-slate-800 leading-tight">{selectedCourse.name}</h3>
-                                            <p className="text-slate-500 text-sm line-clamp-3">{selectedCourse.description || "Chưa cập nhật mô tả chi tiết."}</p>
+                                            {selectedCourse.description ? (
+                                                <div 
+                                                    className="prose prose-slate prose-sm max-w-none text-slate-600 mt-2 max-h-48 overflow-y-auto bg-slate-50 p-4 rounded-2xl border border-slate-100/60"
+                                                    dangerouslySetInnerHTML={{ 
+                                                        __html: DOMPurify.sanitize(selectedCourse.description.replace(/&nbsp;/g, ' ')) 
+                                                    }}
+                                                />
+                                            ) : (
+                                                <p className="text-slate-400 text-sm italic mt-2">Chưa cập nhật mô tả chi tiết.</p>
+                                            )}
                                             
                                             <div className="flex flex-wrap gap-4 pt-1.5 text-xs font-medium text-slate-550 border-t border-slate-100">
                                                 <span className="flex items-center gap-1.5">
@@ -565,8 +616,23 @@ const AdminCoursesPage = () => {
                                                         {/* Lesson content body */}
                                                         <div className="p-4 space-y-3 bg-white">
                                                             {lesson.content && (
-                                                                <div className="text-xs text-slate-550 border-l-2 border-slate-200 pl-2.5 italic">
-                                                                    {lesson.content}
+                                                                <div className="text-sm text-slate-650 border-l-2 border-emerald-500 pl-3 py-1 bg-slate-50/50 rounded-r-xl">
+                                                                    <div 
+                                                                        className="prose prose-slate prose-sm max-w-none text-slate-600"
+                                                                        dangerouslySetInnerHTML={{ 
+                                                                            __html: DOMPurify.sanitize(lesson.content.replace(/&nbsp;/g, ' ')) 
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            )}
+
+                                                            {/* Lesson Video */}
+                                                            {(lesson.hlsUrl || lesson.rawUrl) && (
+                                                                <div className="mt-2 mb-4">
+                                                                    <div className="text-xs font-bold text-slate-500 flex items-center gap-1.5 mb-2">
+                                                                        <FaVideo className="text-slate-400" /> Video bài giảng
+                                                                    </div>
+                                                                    <AdminLessonVideoPlayer url={lesson.hlsUrl || lesson.rawUrl} />
                                                                 </div>
                                                             )}
 
@@ -652,7 +718,7 @@ const AdminCoursesPage = () => {
                                     <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
                                         {selectedCourse.status !== 'ACTIVE' && (
                                             <button 
-                                                onClick={() => handleUpdateStatus(Number(selectedCourse.id), 'ACTIVE')}
+                                                onClick={() => handleUpdateStatus(selectedCourse.id, 'ACTIVE')}
                                                 disabled={actionLoading}
                                                 className="px-4.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
                                             >
@@ -662,7 +728,7 @@ const AdminCoursesPage = () => {
                                         )}
                                         {selectedCourse.status !== 'INACTIVE' && (
                                             <button 
-                                                onClick={() => handleUpdateStatus(Number(selectedCourse.id), 'INACTIVE')}
+                                                onClick={() => handleUpdateStatus(selectedCourse.id, 'INACTIVE')}
                                                 disabled={actionLoading}
                                                 className="px-4.5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
                                             >
@@ -672,7 +738,7 @@ const AdminCoursesPage = () => {
                                         )}
                                         {selectedCourse.status !== 'BLOCKED' && (
                                             <button 
-                                                onClick={() => handleUpdateStatus(Number(selectedCourse.id), 'BLOCKED')}
+                                                onClick={() => handleUpdateStatus(selectedCourse.id, 'BLOCKED')}
                                                 disabled={actionLoading}
                                                 className="px-4.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-bold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
                                             >

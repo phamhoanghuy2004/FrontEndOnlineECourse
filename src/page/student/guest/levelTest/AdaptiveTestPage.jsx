@@ -95,7 +95,9 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
       } catch (err) {
         if (isMounted) {
           console.error("Lỗi khi bắt đầu bài thi:", err);
-          toast.error(err.message || "Không thể kết nối đến máy chủ để bắt đầu bài thi!");
+          const errorMsg = err.response?.data?.message || err.message || "Không thể kết nối đến máy chủ để bắt đầu bài thi!";
+          toast.error(errorMsg);
+          onCancel();
         }
       } finally {
         if (isMounted) {
@@ -160,7 +162,9 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
       }
     } catch (err) {
       console.error("Lỗi khi nộp câu trả lời:", err);
-      toast.error(err.message || "Có lỗi xảy ra khi nộp bài!");
+      const errorMsg = err.response?.data?.message || err.message || "Có lỗi xảy ra khi nộp bài!";
+      toast.error(errorMsg);
+      onCancel();
     } finally {
       setIsSubmitting(false);
     }

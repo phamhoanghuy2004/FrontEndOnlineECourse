@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import BarChart from "../../../../components/sections/student/guest/levelTestPage/BarChart";
 import SkillCard from "../../../../components/sections/student/guest/levelTestPage/SkillCard";
 import RecommendationCard from "../../../../components/sections/student/guest/levelTestPage/RecommendationCard";
@@ -9,6 +11,7 @@ import ToeicAdvanced from "../../../../assets/ToeicAdvanced.png";
 import courseRecommendApi from "../../../../api/courseRecommendApi";
 
 const PlacementResultPage = ({ scores, onRetake, onSelectCourse }) => {
+  const navigate = useNavigate();
   const [insightData, setInsightData] = useState(null);
 
   useEffect(() => {
@@ -18,10 +21,17 @@ const PlacementResultPage = ({ scores, onRetake, onSelectCourse }) => {
         setInsightData(res.data);
       } catch (err) {
         console.error("Lỗi khi tải thông tin đánh giá:", err);
+        const errorMsg = err.response?.data?.message || err.message || "Không thể kết nối đến máy chủ để tải thông tin đánh giá!";
+        toast.error(errorMsg);
+        if (window.history.length > 1) {
+          navigate(-1);
+        } else {
+          navigate("/");
+        }
       }
     };
     fetchInsights();
-  }, []);
+  }, [navigate]);
 
   const getFeedback = (skill, level) => {
     if (skill === "Grammar") {

@@ -20,6 +20,38 @@ const CourseTable = ({ courses, onDelete, isDeleting }) => {
         }
     };
 
+    const renderStatusBadge = (status) => {
+        switch (status) {
+            case 'ACTIVE':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-bold shadow-sm">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Hoạt động
+                    </span>
+                );
+            case 'INACTIVE':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-bold shadow-sm">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        Chưa duyệt
+                    </span>
+                );
+            case 'BLOCKED':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-full text-xs font-bold shadow-sm">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                        Đã khóa
+                    </span>
+                );
+            default:
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-slate-50 text-slate-700 border border-slate-200 rounded-full text-xs font-bold shadow-sm">
+                        {status || 'Không rõ'}
+                    </span>
+                );
+        }
+    };
+
     return (
         <>
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
@@ -32,6 +64,7 @@ const CourseTable = ({ courses, onDelete, isDeleting }) => {
                                 <th className="p-4">Giá</th>
                                 <th className="p-4">Học viên</th>
                                 <th className="p-4">Đánh giá</th>
+                                <th className="p-4">Trạng thái</th>
                                 <th className="p-4 text-right">Thao tác</th>
                             </tr>
                         </thead>
@@ -65,6 +98,9 @@ const CourseTable = ({ courses, onDelete, isDeleting }) => {
                                         <div className="flex items-center gap-1 text-yellow-500 font-bold text-sm">
                                             <FaStar /> {course.averageRating?.toFixed(1) || '0.0'}
                                         </div>
+                                    </td>
+                                    <td className="p-4">
+                                        {renderStatusBadge(course.status)}
                                     </td>
                                     <td className="p-4">
                                         <div className="flex items-center justify-end gap-2">

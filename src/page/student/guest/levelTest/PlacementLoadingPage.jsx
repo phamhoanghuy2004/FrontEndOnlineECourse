@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import courseRecommendApi from "../../../../api/courseRecommendApi";
 import BarChart from "../../../../components/sections/student/guest/levelTestPage/BarChart";
 
@@ -20,7 +21,13 @@ const PlacementLoadingPage = ({ onContinue }) => {
       setInsightData(res.data);
     } catch (err) {
       console.error("Lỗi khi tải thông tin đánh giá:", err);
-      setErrorMsg(err.message || "Không thể kết nối đến máy chủ để tải thông tin đánh giá!");
+      const errorMsg = err.response?.data?.message || err.message || "Không thể kết nối đến máy chủ để tải thông tin đánh giá!";
+      toast.error(errorMsg);
+      if (window.history.length > 1) {
+        navigate(-1);
+      } else {
+        navigate("/");
+      }
     } finally {
       setLoadingData(false);
     }

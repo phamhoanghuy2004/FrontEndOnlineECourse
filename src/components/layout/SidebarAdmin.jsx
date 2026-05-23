@@ -9,7 +9,7 @@ const menuItems = [
     { path: '/admin/consultations', label: 'Yêu cầu tư vấn', icon: FaHeadset },
     { path: '/admin/vouchers', label: 'Mã giảm giá', icon: FaTicketAlt },
     { path: '/admin/coin-packages', label: 'Quản lý gói xu', icon: FaCoins },
-    { path: '/admin/consultations', label: 'Yêu cầu tư vấn', icon: FaClipboardList },
+    { path: '/admin/courses', label: 'Quản lý khóa học', icon: FaBookOpen },
     { path: '/admin/users', label: 'Quản lý người dùng', icon: FaUsers },
 ];
 

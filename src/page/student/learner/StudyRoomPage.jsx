@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import courseApi from '../../../api/courseApi';
+import lessonApi from '../../../api/lessonApi';
 import CurriculumSidebar from '../../../components/common/learner/CurriculumSidebar';
 import {
     FaArrowLeft, FaPlay, FaBookOpen, FaSpinner,
     FaFilePdf, FaFileWord, FaFilePowerpoint, FaDownload, FaTasks,
-    FaInfoCircle, FaPlayCircle, FaCheckCircle, FaArrowRight
+    FaInfoCircle, FaPlayCircle, FaCheckCircle, FaArrowRight,
+    FaRobot, FaUser, FaPaperPlane, FaTimes, FaCommentDots
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import DOMPurify from 'dompurify';
@@ -23,6 +25,17 @@ const StudyRoomPage = () => {
 
     const [lessonDetail, setLessonDetail] = useState(null);
     const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [chatHistory, setChatHistory] = useState([
+        {
+            sender: 'bot',
+            text: 'Xin chào! Tôi là trợ lý học tập AI. Bạn có thể hỏi tôi bất kỳ điều gì liên quan đến các tài liệu của bài học này.'
+        }
+    ]);
+    const [inputMsg, setInputMsg] = useState('');
+    const [sendingMsg, setSendingMsg] = useState(false);
+    const chatEndRef = useRef(null);
 
     const leftColumnRef = useRef(null);
 
@@ -139,6 +152,33 @@ const StudyRoomPage = () => {
         }
     }, [activeLessonId]);
 
+    useEffect(() => {
+        if (isChatOpen) {
+            chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [chatHistory, sendingMsg, isChatOpen]);
+
+    const handleSendChat = async () => {
+        const trimmed = inputMsg.trim();
+        if (!trimmed) return;
+
+        setChatHistory(prev => [...prev, { sender: 'user', text: trimmed }]);
+        setInputMsg('');
+        setSendingMsg(true);
+
+        try {
+            const response = await lessonApi.chatWithLesson(activeLessonId, trimmed);
+            const aiAnswer = response.data?.data?.answer || response.data?.answer || response.answer || "Không nhận được phản hồi từ AI.";
+            setChatHistory(prev => [...prev, { sender: 'bot', text: aiAnswer }]);
+        } catch (error) {
+            console.error("Lỗi khi chat với AI:", error);
+            const errorMsg = error.response?.data?.message || "Lỗi kết nối máy chủ AI.";
+            setChatHistory(prev => [...prev, { sender: 'bot', text: `❌ Lỗi: ${errorMsg}` }]);
+        } finally {
+            setSendingMsg(false);
+        }
+    };
+
     const handleStartLesson = async () => {
         if (!activeLessonId) return;
 
@@ -195,16 +235,143 @@ const StudyRoomPage = () => {
         <div className="h-[calc(100vh-140px)] flex flex-col font-sans selection:bg-emerald-200">
 
             {/* HEADER */}
-            <div className="flex items-center mb-6 shrink-0">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors text-slate-600 mr-4"
-                >
-                    <FaArrowLeft />
-                </button>
-                <h1 className="text-xl font-extrabold text-slate-800 truncate border-l-2 border-emerald-500 pl-4">
-                    {curriculumData.courseName}
-                </h1>
+            <div className="flex flex-wrap items-center gap-4 mb-6 shrink-0 relative z-50">
+                <div className="flex items-center min-w-0">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors text-slate-600 mr-4 shrink-0"
+                    >
+                        <FaArrowLeft />
+                    </button>
+                    <h1 className="text-xl font-extrabold text-slate-800 truncate border-l-2 border-emerald-500 pl-4 mr-6">
+                        {curriculumData.courseName}
+                    </h1>
+                </div>
+
+                {/* AI Chat Button */}
+                {lessonDetail?.documents && lessonDetail.documents.length > 0 && (
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsChatOpen(!isChatOpen)}
+                            className="group flex items-center gap-2.5 bg-gradient-to-r from-emerald-100 to-teal-50 hover:from-emerald-200 hover:to-teal-100 border border-emerald-200 text-emerald-800 px-4 py-2 rounded-full shadow-sm transition-all duration-300 hover:shadow-md"
+                        >
+                            <div className="relative shrink-0">
+                                <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shadow-inner group-hover:animate-bounce">
+                                    <FaRobot className="text-white text-sm" />
+                                </div>
+                                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping"></span>
+                                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                            </div>
+                            <span className="text-[13px] font-bold whitespace-nowrap">
+                                Bạn có thắc mắc gì không? Mình giải đáp cho ✨
+                            </span>
+                        </button>
+
+                        {/* Chat Box Pop-up */}
+                        <div
+                            className={`absolute top-full left-0 mt-3 transition-all duration-300 ease-in-out transform origin-top-left ${
+                                isChatOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 h-0 w-0 overflow-hidden pointer-events-none'
+                            }`}
+                        >
+                            <div className="w-[360px] md:w-[400px] h-[500px] bg-white rounded-3xl shadow-2xl border border-emerald-100 flex flex-col overflow-hidden">
+                                {/* Chat Header */}
+                                <div className="px-5 py-4 border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50 flex items-center justify-between shrink-0">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-sm shrink-0">
+                                            <FaRobot className="text-lg" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-extrabold text-slate-800 leading-tight">Trợ lý AI</h3>
+                                            <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1.5 mt-0.5">
+                                                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping inline-block"></span>
+                                                Sẵn sàng giải đáp
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsChatOpen(false)}
+                                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-500 transition-colors"
+                                    >
+                                        <FaTimes />
+                                    </button>
+                                </div>
+
+                                {/* Chat History Panel */}
+                                <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-slate-50/50">
+                                    {chatHistory.map((msg, index) => (
+                                        <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                            <div className="flex items-start gap-2 max-w-[88%]">
+                                                {msg.sender === 'bot' && (
+                                                    <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 text-xs mt-0.5">
+                                                        <FaRobot />
+                                                    </div>
+                                                )}
+                                                <div
+                                                    className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+                                                        msg.sender === 'user'
+                                                            ? 'bg-emerald-600 text-white rounded-br-none shadow-md'
+                                                            : 'bg-white text-slate-700 border border-slate-200 rounded-bl-none shadow-sm'
+                                                    }`}
+                                                >
+                                                    {msg.text}
+                                                </div>
+                                                {msg.sender === 'user' && (
+                                                    <div className="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">
+                                                        <FaUser />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {sendingMsg && (
+                                        <div className="flex justify-start">
+                                            <div className="flex items-start gap-2 max-w-[88%]">
+                                                <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 text-xs mt-0.5">
+                                                    <FaRobot />
+                                                </div>
+                                                <div className="px-3.5 py-3 rounded-2xl bg-white border border-slate-200 rounded-bl-none shadow-sm flex items-center gap-1">
+                                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                                    <span className="ml-2 text-slate-400 text-[11px] font-bold">AI đang suy nghĩ...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div ref={chatEndRef} />
+                                </div>
+
+                                {/* Chat Input Area */}
+                                <div className="p-4 border-t border-slate-100 bg-white shrink-0">
+                                    <form
+                                        onSubmit={(e) => {
+                                            e.preventDefault();
+                                            handleSendChat();
+                                        }}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <input
+                                            type="text"
+                                            value={inputMsg}
+                                            onChange={(e) => setInputMsg(e.target.value)}
+                                            placeholder="Hỏi AI về bài học này..."
+                                            disabled={sendingMsg}
+                                            className="flex-1 bg-slate-50 border border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl px-4 py-2.5 text-sm transition-all outline-none"
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={sendingMsg || !inputMsg.trim()}
+                                            className="w-10 h-10 bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:bg-slate-100 disabled:text-slate-400 text-white rounded-xl flex items-center justify-center shadow-md transition-all shrink-0"
+                                        >
+                                            <FaPaperPlane className="text-sm" />
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden">
@@ -337,19 +504,17 @@ const StudyRoomPage = () => {
                                             <h3 className="text-lg font-bold text-emerald-900 mb-3">Tài liệu đính kèm ({lessonDetail.documents.length})</h3>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 {lessonDetail.documents.map(doc => (
-                                                    <a
+                                                    <div
                                                         key={doc.id}
-                                                        href={doc.fileUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center p-4 bg-white border border-slate-200 rounded-2xl hover:border-emerald-400 hover:shadow-md transition-all group"
+                                                        onClick={() => navigate(`/student/documents/${doc.id}`, { state: { doc } })}
+                                                        className="flex items-center p-4 bg-white border border-slate-200 rounded-2xl hover:border-emerald-400 hover:shadow-md transition-all group cursor-pointer"
                                                     >
                                                         {renderFileIcon(doc.fileType)}
                                                         <span className="ml-3 font-semibold text-slate-700 truncate group-hover:text-emerald-600 transition-colors">
                                                             {doc.title}
                                                         </span>
                                                         <FaDownload className="ml-auto text-slate-300 group-hover:text-emerald-500" />
-                                                    </a>
+                                                    </div>
                                                 ))}
                                             </div>
                                         </div>
@@ -402,6 +567,8 @@ const StudyRoomPage = () => {
                                 setActiveLessonId(id);
                                 setLessonDetail(null); 
                                 setProgressStatus({ currentSecond: 0, isVideoWatched: false, isQuizPassed: false });
+                                setChatHistory([{ sender: 'bot', text: 'Xin chào! Tôi là trợ lý học tập AI. Bạn có thể hỏi tôi bất kỳ điều gì liên quan đến các tài liệu của bài học này.' }]);
+                                setIsChatOpen(false);
                             }
                         }}
                     />

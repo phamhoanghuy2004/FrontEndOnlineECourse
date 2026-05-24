@@ -1,4 +1,6 @@
-import { FaFlag, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import React, { useState, useRef, useEffect } from "react";
+import { FaFlag, FaCheckCircle, FaTimesCircle, FaRobot, FaPaperPlane, FaSpinner } from "react-icons/fa";
+import testApi from "../../../../../api/testApi";
 
 const SingleQuestionBlock = ({ question, type, userAnswers, flaggedQuestions, onSelect, onToggleFlag, isSubmitted, isReviewMode }) => {
     const optionsLabel = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -7,6 +9,41 @@ const SingleQuestionBlock = ({ question, type, userAnswers, flaggedQuestions, on
     
     // Lấy đáp án user đã chọn (Bắt an toàn cả dạng số lẫn chuỗi)
     const selectedAnswerId = userAnswers?.[question.id] || userAnswers?.[question.id?.toString()];
+
+    // State cho Chat AI
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [chatHistory, setChatHistory] = useState([]);
+    const [inputMsg, setInputMsg] = useState("");
+    const [isSending, setIsSending] = useState(false);
+    const chatContainerRef = useRef(null);
+
+    useEffect(() => {
+        if (chatContainerRef.current) {
+            // Chỉ cuộn bên trong khung chat, không cuộn window
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [chatHistory, isSending]);
+
+    const handleAskAI = async () => {
+        if (!inputMsg.trim() || isSending) return;
+
+        const userText = inputMsg.trim();
+        setInputMsg("");
+        setChatHistory(prev => [...prev, { role: 'user', content: userText }]);
+        setIsSending(true);
+
+        try {
+            const res = await testApi.chatWithQuestion(question.id, userText);
+            const aiText = res.data?.data?.answer || res.data?.answer || res.answer || "Không nhận được phản hồi từ AI.";
+            
+            setChatHistory(prev => [...prev, { role: 'ai', content: aiText }]);
+        } catch (error) {
+            console.error("Lỗi khi hỏi AI:", error);
+            setChatHistory(prev => [...prev, { role: 'ai', content: "Xin lỗi, đã xảy ra lỗi kết nối với hệ thống AI." }]);
+        } finally {
+            setIsSending(false);
+        }
+    };
 
     return (
         <div id={`question-${question.id}`} className={`flex flex-col gap-4 relative group ${!isReviewMode ? 'select-none' : ''}`}>
@@ -117,6 +154,78 @@ const SingleQuestionBlock = ({ question, type, userAnswers, flaggedQuestions, on
                                 className="text-gray-700 text-sm leading-relaxed prose prose-sm max-w-none"
                                 dangerouslySetInnerHTML={{ __html: question.explanation }}
                             />
+                        </div>
+                    )}
+
+                    {/* 💥 KHU VỰC HỎI ĐÁP AI */}
+                    {isReviewMode && (
+                        <div className="mt-4">
+                            {!isChatOpen ? (
+                                <button 
+                                    onClick={() => setIsChatOpen(true)}
+                                    className="flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors bg-blue-50 px-4 py-2 rounded-lg border border-blue-100"
+                                >
+                                    <FaRobot className="text-lg" /> Bạn chưa hiểu? Hỏi AI ngay ✨
+                                </button>
+                            ) : (
+                                <div className="bg-white border border-blue-200 rounded-xl overflow-hidden shadow-sm mt-2">
+                                    <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-3 flex justify-between items-center">
+                                        <h4 className="text-white font-bold text-sm flex items-center gap-2">
+                                            <FaRobot className="text-lg" /> AI Giải đáp thắc mắc
+                                        </h4>
+                                        <button onClick={() => setIsChatOpen(false)} className="text-white/80 hover:text-white text-sm font-bold">
+                                            Đóng
+                                        </button>
+                                    </div>
+                                    
+                                    <div 
+                                        ref={chatContainerRef}
+                                        className="p-4 bg-slate-50 max-h-60 overflow-y-auto space-y-4 text-sm custom-scrollbar"
+                                    >
+                                        {chatHistory.length === 0 ? (
+                                            <div className="text-center text-gray-500 italic py-4">
+                                                Hãy đặt câu hỏi nếu bạn chưa hiểu phần giải thích nhé!
+                                            </div>
+                                        ) : (
+                                            chatHistory.map((msg, idx) => (
+                                                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                                    <div className={`max-w-[85%] p-3 rounded-2xl ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-700 rounded-tl-sm'}`}>
+                                                        {msg.content.split('\n').map((line, i) => (
+                                                            <span key={i}>{line}<br /></span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                        {isSending && (
+                                            <div className="flex justify-start">
+                                                <div className="bg-white border border-gray-200 text-gray-700 p-3 rounded-2xl rounded-tl-sm flex items-center gap-2">
+                                                    <FaSpinner className="animate-spin text-blue-500" /> AI đang suy nghĩ...
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="p-3 bg-white border-t border-gray-100 flex gap-2">
+                                        <input 
+                                            type="text" 
+                                            value={inputMsg}
+                                            onChange={(e) => setInputMsg(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleAskAI()}
+                                            placeholder="Nhập câu hỏi của bạn..."
+                                            className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            disabled={isSending}
+                                        />
+                                        <button 
+                                            onClick={handleAskAI}
+                                            disabled={isSending || !inputMsg.trim()}
+                                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
+                                        >
+                                            <FaPaperPlane />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

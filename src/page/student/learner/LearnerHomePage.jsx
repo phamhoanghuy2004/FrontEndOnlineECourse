@@ -3,6 +3,7 @@ import StatsOverview from '../../../components/common/student/leaner/dashboard/S
 import ActivitySection from '../../../components/sections/student/leaner/homePage/ActivitySection';
 import WelcomeSection from '../../../components/sections/student/leaner/homePage/WelcomeSection';
 import ContinueLearningSection from '../../../components/sections/student/leaner/homePage/ContinueLearningSection';
+import AdaptiveLearningSection from '../../../components/sections/student/leaner/homePage/AdaptiveLearningSection';
 import Recommended from '../../../components/sections/student/leaner/homePage/Recommended';
 import { motion } from 'framer-motion';
 import { fadeInRight } from '../../../constants/motionVariants';
@@ -37,6 +38,7 @@ const LearnerHomePage = () => {
                 {/* Left Column (Content chính) - Chiếm 2 phần */}
                 <div className="lg:col-span-2 space-y-8">
                     <ContinueLearningSection />
+                    <AdaptiveLearningSection />
                     
                     {/* 🔴 Truyền data xuống cho khối Nhận thưởng (ActivitySection) */}
                     <ActivitySection studyTimeData={studyTimeData} />

@@ -47,6 +47,7 @@ import VirtualSpeakingPage from "./page/student/learner/VirtualSpeakingPage";
 import LearnerChatPage from "./page/student/learner/LearnerChatPage";
 import StudyGoalPage from "./page/student/learner/StudyGoalPage";
 import StudyRoomPage from "./page/student/learner/StudyRoomPage";
+import DocumentViewerPage from "./page/student/learner/DocumentViewerPage";
 
 // --- Teacher Pages ---
 import TeacherDashboard from "./page/teacher/TeacherDashboard";
@@ -96,6 +97,11 @@ function App() {
               Sử dụng GuestLayout (Navbar + Footer truyền thống)
             ========================================================= */}
             <Route path="/level-test" element={<LevelTestPage />} />
+            <Route path="/student/documents/:documentId" element={
+              <ProtectedRoute>
+                <DocumentViewerPage />
+              </ProtectedRoute>
+            } />
 
             <Route element={<GuestLayout />}>
               <Route path="/" element={<HomePage />} />

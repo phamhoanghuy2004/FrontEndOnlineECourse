@@ -1,7 +1,6 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar"; // Import Navbar cũ của bạn
 import Footer from "./Footer"; // Import Footer cũ của bạn
-import ChatWidget from "../common/ChatWidget";
 
 const GuestLayout = () => {
   return (
@@ -14,7 +13,6 @@ const GuestLayout = () => {
       </main>
 
       <Footer />
-      <ChatWidget />
     </div>
   );
 };

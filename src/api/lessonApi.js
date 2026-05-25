@@ -37,6 +37,17 @@ const lessonApi = {
         return axiosClient.delete(`/lessons/${id}`);
     },
 
+    getDocumentDetail: (documentId) => {
+        return axiosClient.get(`/lessons/documents/${documentId}`);
+    },
+
+    chatWithDocument: (documentId, question) => {
+        return axiosClient.post(`/lessons/documents/${documentId}/chat`, { question });
+    },
+
+    chatWithLesson: (lessonId, question) => {
+        return axiosClient.post(`/lessons/${lessonId}/chat`, { question });
+    },
 };
 
 export default lessonApi;

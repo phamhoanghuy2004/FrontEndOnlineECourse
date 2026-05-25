@@ -164,6 +164,35 @@ const LearnerProgressPage = () => {
     const [skillInsights, setSkillInsights] = useState(null);
     const [loadingSkills, setLoadingSkills] = useState(true);
 
+    // State cho Child Skills
+    const [expandedSkillId, setExpandedSkillId] = useState(null);
+    const [childSkillsData, setChildSkillsData] = useState({});
+    const [loadingChildId, setLoadingChildId] = useState(null);
+
+    const handleSkillClick = async (skill) => {
+        if (!skill.tagId) return;
+
+        if (expandedSkillId === skill.tagId) {
+            setExpandedSkillId(null);
+            return;
+        }
+
+        setExpandedSkillId(skill.tagId);
+
+        if (childSkillsData[skill.tagId]) return;
+
+        try {
+            setLoadingChildId(skill.tagId);
+            const res = await courseRecommendApi.getChildSkillInsights(skill.tagId);
+            setChildSkillsData(prev => ({ ...prev, [skill.tagId]: res.data || [] }));
+        } catch (err) {
+            console.error("Lỗi lấy skill con:", err);
+            toast.error("Không thể lấy chi tiết kỹ năng");
+        } finally {
+            setLoadingChildId(null);
+        }
+    };
+
     // 🔴 2. KHỞI TẠO STATE VỚI DỮ LIỆU TỪ TRANG TRƯỚC (NẾU CÓ)
     const [testId, setTestId] = useState(incomingFilter.filterTestId || null);
     const [searchTerm, setSearchTerm] = useState(incomingFilter.filterTestTitle || '');
@@ -432,9 +461,9 @@ const LearnerProgressPage = () => {
                                 const accuracy = Math.round(skill.score || 0);
 
                                 return (
-                                    <div key={skill.tagId || skill.tagName} className="group">
+                                    <div key={skill.tagId || skill.tagName} className="group cursor-pointer" onClick={() => handleSkillClick(skill)}>
                                         <div className="flex justify-between text-sm mb-1.5">
-                                            <span className="flex items-center gap-2 font-bold text-slate-700">
+                                            <span className="flex items-center gap-2 font-bold text-slate-700 hover:text-emerald-600 transition-colors">
                                                 <div className={`p-1.5 rounded-lg ${style.bgLight} ${style.color}`}>
                                                     <SkillIcon size={12} />
                                                 </div>
@@ -450,6 +479,42 @@ const LearnerProgressPage = () => {
                                                 className={`h-full rounded-full ${style.bg}`} 
                                             />
                                         </div>
+
+                                        {/* Hiển thị chi tiết Child Skills */}
+                                        {expandedSkillId === skill.tagId && (
+                                            <motion.div 
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: "auto", opacity: 1 }}
+                                                className="mt-3 bg-slate-50 rounded-xl p-3 space-y-3 border border-slate-100"
+                                                onClick={(e) => e.stopPropagation()} // Tránh đóng khi click vào trong
+                                            >
+                                                {loadingChildId === skill.tagId ? (
+                                                    <div className="flex items-center justify-center gap-2 text-xs text-slate-400 py-2">
+                                                        <FaSpinner className="animate-spin text-emerald-500" /> Đang tải chi tiết...
+                                                    </div>
+                                                ) : childSkillsData[skill.tagId]?.length > 0 ? (
+                                                    childSkillsData[skill.tagId].map((childSkill) => {
+                                                        const childAcc = Math.round(childSkill.score || 0);
+                                                        return (
+                                                            <div key={childSkill.tagId} className="space-y-1">
+                                                                <div className="flex justify-between text-[11px] font-medium text-slate-600">
+                                                                    <span>{childSkill.tagName}</span>
+                                                                    <span>{childAcc}%</span>
+                                                                </div>
+                                                                <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                                                    <div 
+                                                                        style={{ width: `${childAcc}%` }} 
+                                                                        className={`h-full rounded-full ${style.bg}`} 
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <div className="text-[11px] text-slate-400 text-center py-2">Không có chi tiết kỹ năng.</div>
+                                                )}
+                                            </motion.div>
+                                        )}
                                     </div>
                                 );
                             })}

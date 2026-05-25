@@ -86,6 +86,12 @@ const testApi = {
 
     getTestSections: (testId) => {
         return axiosClient.get(`/quizzes/${testId}/sections`);
+    },
+
+    chatWithQuestion: (questionId, questionText) => {
+        return axiosClient.post(`/quizzes/questions/${questionId}/chat`, {
+            question: questionText
+        });
     }
 };
 

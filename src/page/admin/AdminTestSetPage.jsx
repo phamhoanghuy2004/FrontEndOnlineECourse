@@ -11,6 +11,7 @@ const AdminTestSetPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [newTestSet, setNewTestSet] = useState({ title: '', description: '', isPublic: true, year: new Date().getFullYear() });
+    const [activeTab, setActiveTab] = useState('TOEIC'); // 'TOEIC' or 'PLACEMENT_TEST'
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -32,7 +33,7 @@ const AdminTestSetPage = () => {
     const handleCreateTestSet = async (e) => {
         e.preventDefault();
         try {
-            await adminApi.createTestSet(newTestSet);
+            await adminApi.createTestSet({ ...newTestSet, type: activeTab });
             toast.success("Tạo bộ đề thành công!");
             setShowModal(false);
             setNewTestSet({ title: '', description: '', isPublic: true, year: new Date().getFullYear() });
@@ -42,10 +43,12 @@ const AdminTestSetPage = () => {
         }
     };
 
-    const filteredTestSets = testSets.filter(ts => 
-        ts.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ts.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredTestSets = testSets.filter(ts => {
+        const matchesTab = (ts.type || 'TOEIC') === activeTab;
+        const matchesSearch = ts.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              ts.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesTab && matchesSearch;
+    });
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -79,7 +82,11 @@ const AdminTestSetPage = () => {
                     className="space-y-1"
                 >
                     <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý kho bộ đề</h2>
-                    <p className="text-slate-500 font-medium">Xây dựng và quản lý các bộ đề thi TOEIC chất lượng cao</p>
+                    <p className="text-slate-500 font-medium">
+                        {activeTab === 'TOEIC' 
+                            ? "Xây dựng và quản lý các bộ đề thi TOEIC chất lượng cao" 
+                            : "Xây dựng và quản lý các bộ đề thi kiểm tra năng lực đầu vào (Placement Test)"}
+                    </p>
                 </motion.div>
                 
                 <motion.button 
@@ -95,6 +102,36 @@ const AdminTestSetPage = () => {
                     </div>
                     Tạo bộ đề mới
                 </motion.button>
+            </div>
+
+            {/* Tabs Switcher */}
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl max-w-md w-full relative">
+                <button
+                    onClick={() => setActiveTab('TOEIC')}
+                    className={`flex-1 py-3 text-center font-bold text-sm rounded-xl relative z-10 transition-colors duration-300 ${activeTab === 'TOEIC' ? 'text-emerald-700' : 'text-slate-500 hover:text-slate-800'}`}
+                >
+                    {activeTab === 'TOEIC' && (
+                        <motion.div
+                            layoutId="activeTabBg"
+                            className="absolute inset-0 bg-white rounded-xl shadow-md -z-10"
+                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                        />
+                    )}
+                    Đề ETS TOEIC
+                </button>
+                <button
+                    onClick={() => setActiveTab('PLACEMENT_TEST')}
+                    className={`flex-1 py-3 text-center font-bold text-sm rounded-xl relative z-10 transition-colors duration-300 ${activeTab === 'PLACEMENT_TEST' ? 'text-emerald-700' : 'text-slate-500 hover:text-slate-800'}`}
+                >
+                    {activeTab === 'PLACEMENT_TEST' && (
+                        <motion.div
+                            layoutId="activeTabBg"
+                            className="absolute inset-0 bg-white rounded-xl shadow-md -z-10"
+                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                        />
+                    )}
+                    Placement Test
+                </button>
             </div>
 
             {/* Search and Filters */}
@@ -131,10 +168,13 @@ const AdminTestSetPage = () => {
                         <FaRegClipboard size={40} />
                     </div>
                     <h3 className="text-xl font-bold text-slate-800">Chưa có bộ đề nào</h3>
-                    <p className="text-slate-400 mt-2 max-w-sm mx-auto">Bắt đầu bằng cách tạo bộ đề mới để bắt đầu quản lý các bài thi TOEIC.</p>
+                    <p className="text-slate-400 mt-2 max-w-sm mx-auto">
+                        Bắt đầu bằng cách tạo bộ đề mới để bắt đầu quản lý các bài thi {activeTab === 'TOEIC' ? 'TOEIC' : 'Placement Test'}.
+                    </p>
                 </motion.div>
             ) : (
                 <motion.div 
+                    key={activeTab}
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
@@ -204,7 +244,9 @@ const AdminTestSetPage = () => {
                         >
                             <div className="absolute top-0 left-0 w-full h-2 bg-emerald-600" />
                             
-                            <h3 className="text-2xl font-black text-slate-800 mb-6 tracking-tight">Tạo bộ đề thi mới</h3>
+                            <h3 className="text-2xl font-black text-slate-800 mb-6 tracking-tight">
+                                {activeTab === 'TOEIC' ? 'Tạo bộ đề thi TOEIC mới' : 'Tạo bộ đề Placement Test mới'}
+                            </h3>
                             
                             <form onSubmit={handleCreateTestSet} className="space-y-6">
                                 <div>
@@ -213,7 +255,7 @@ const AdminTestSetPage = () => {
                                         required
                                         type="text" 
                                         className="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all font-medium"
-                                        placeholder="VD: TOEIC ETS 2024"
+                                        placeholder={activeTab === 'TOEIC' ? "VD: TOEIC ETS 2024" : "VD: Placement Test 2026"}
                                         value={newTestSet.title}
                                         onChange={(e) => setNewTestSet({...newTestSet, title: e.target.value})}
                                     />

@@ -20,7 +20,9 @@ const AdminTestDetailPage = () => {
     const [uploading, setUploading] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
 
-    const filterLabels = ['Tất cả', 'Thiếu Audio', 'Thiếu Ảnh', 'Câu đơn', 'Câu nhóm'];
+    const filterLabels = test?.type === 'PLACEMENT_TEST'
+        ? ['Tất cả', 'Thiếu Ảnh']
+        : ['Tất cả', 'Thiếu Audio', 'Thiếu Ảnh', 'Câu đơn', 'Câu nhóm'];
 
     useEffect(() => {
         fetchTest();
@@ -70,6 +72,8 @@ const AdminTestDetailPage = () => {
 
     const isTestReady = () => {
         if (!test) return false;
+        // PLACEMENT_TEST does not require audio/image — always considered ready
+        if (test.type === 'PLACEMENT_TEST') return true;
         for (const section of test.sections) {
             const partNum = section.orderIndex;
             if (partNum <= 4) {
@@ -146,7 +150,67 @@ const AdminTestDetailPage = () => {
                 />
             </div>
 
-            {/* Sections */}
+            {/* Sections — flat mode for PLACEMENT_TEST, accordion mode for TOEIC */}
+            {test.type === 'PLACEMENT_TEST' ? (() => {
+                // Gom tất cả câu hỏi từ mọi section thành 1 mảng phẳng
+                const allQuestions = test.sections.flatMap(s =>
+                    (s.questions || []).filter(q => !q.groupId)
+                );
+                const filteredAll = allQuestions.filter(q => {
+                    const matchesSearch = q.content?.toLowerCase().includes(qSearchTerm.toLowerCase());
+                    if (!matchesSearch) return false;
+                    if (activeFilter === 'Thiếu Audio') return !q.audioUrl;
+                    if (activeFilter === 'Thiếu Ảnh') return !q.imageUrl;
+                    if (activeFilter === 'Câu nhóm') return false;
+                    return true;
+                });
+
+                return (
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden"
+                    >
+                        {/* Header card */}
+                        <div className="p-8 flex items-center justify-between border-b border-slate-100/70 bg-slate-50/40">
+                            <div className="flex items-center gap-5">
+                                <div className="w-14 h-14 bg-emerald-600 text-white rounded-[20px] flex items-center justify-center font-black text-xl shadow-lg shadow-emerald-100">
+                                    PT
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-slate-800 text-xl tracking-tight">Danh sách câu hỏi</h3>
+                                    <span className="text-xs font-bold text-slate-400 flex items-center gap-1 mt-1">
+                                        <FaFileAlt size={10} /> {filteredAll.length} / {allQuestions.length} câu
+                                    </span>
+                                </div>
+                            </div>
+                            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-violet-50 text-violet-600 text-[11px] font-black uppercase tracking-widest">
+                                Placement Test
+                            </span>
+                        </div>
+
+                        {/* Flat question list */}
+                        <div className="px-8 pb-10 pt-6 space-y-4">
+                            {filteredAll.length === 0 ? (
+                                <div className="py-16 text-center text-slate-300">
+                                    <FaFileAlt size={36} className="mx-auto mb-3" />
+                                    <p className="font-bold text-sm">Không tìm thấy câu hỏi phù hợp</p>
+                                </div>
+                            ) : filteredAll.map((q) => (
+                                <QuestionCard
+                                    key={q.id}
+                                    question={q}
+                                    part={0}
+                                    onUpload={handleMediaUpload}
+                                    uploading={uploading}
+                                    onPreviewImage={setSelectedImage}
+                                    isPlacementTest={true}
+                                />
+                            ))}
+                        </div>
+                    </motion.div>
+                );
+            })() : (
             <div className="space-y-8">
                 {test.sections.map((section) => {
                     const isExpanded = expandedSections.includes(section.orderIndex);
@@ -317,6 +381,7 @@ const AdminTestDetailPage = () => {
                     );
                 })}
             </div>
+            )}
 
             {/* Image Modal */}
             <AnimatePresence>
@@ -350,7 +415,7 @@ const AdminTestDetailPage = () => {
     );
 };
 
-const QuestionCard = ({ question, isInsideGroup, part, onUpload, uploading, onPreviewImage }) => {
+const QuestionCard = ({ question, isInsideGroup, part, onUpload, uploading, onPreviewImage, isPlacementTest }) => {
     return (
         <motion.div 
             whileHover={{ x: 4 }}
@@ -362,18 +427,23 @@ const QuestionCard = ({ question, isInsideGroup, part, onUpload, uploading, onPr
                 </div>
                 <div className="space-y-1.5 flex-grow">
                     <p className="text-sm font-bold text-slate-800 line-clamp-1">{question.content}</p>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
                         {question.answers?.map((ans, idx) => (
                             <div key={ans.id} className={`text-[10px] px-2 py-1 rounded-lg border font-black transition-all ${ans.isCorrect ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>
                                 {String.fromCharCode(65 + idx)}
                             </div>
                         ))}
+                        {question.difficultyLevel && (
+                            <span className="text-[9px] px-2 py-1 rounded-lg bg-amber-50 border border-amber-100 text-amber-700 font-black tracking-wide">
+                                LVL {question.difficultyLevel}
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>
 
             <div className="flex gap-2 ml-4">
-                {part === 1 && (
+                {(isPlacementTest || part === 1) && (
                     <>
                         <MediaUploadButton 
                             icon={<FaHeadphones />} 
@@ -394,7 +464,7 @@ const QuestionCard = ({ question, isInsideGroup, part, onUpload, uploading, onPr
                     </>
                 )}
 
-                {part === 2 && (
+                {!isPlacementTest && part === 2 && (
                     <MediaUploadButton 
                         icon={<FaHeadphones />} 
                         url={question.audioUrl}

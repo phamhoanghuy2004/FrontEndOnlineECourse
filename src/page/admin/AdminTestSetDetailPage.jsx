@@ -263,7 +263,7 @@ const AdminTestSetDetailPage = () => {
                                 <FaFileExcel size={28} />
                             </div>
                             <h4 className="text-lg font-bold text-slate-700">Bộ đề này còn trống</h4>
-                            <p className="text-slate-400 text-sm mt-2 mb-6 max-w-xs mx-auto">Tải lên file Excel để tạo bài thi TOEIC đầu tiên.</p>
+                            <p className="text-slate-400 text-sm mt-2 mb-6 max-w-xs mx-auto">Tải lên file Excel để tạo bài thi {testSet.type === 'PLACEMENT_TEST' ? 'Placement Test' : 'TOEIC'} đầu tiên.</p>
                             <button
                                 onClick={() => setShowImportModal(true)}
                                 className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all"
@@ -440,7 +440,7 @@ const AdminTestSetDetailPage = () => {
                                             <FaFileExcel size={18} />
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-black text-slate-800">Import bài thi TOEIC</h3>
+                                            <h3 className="text-xl font-black text-slate-800">Import bài thi {testSet.type === 'PLACEMENT_TEST' ? 'Placement Test' : 'TOEIC'}</h3>
                                             <p className="text-xs text-slate-400 font-medium">Hệ thống tự động phân loại 7 phần</p>
                                         </div>
                                     </div>
@@ -484,7 +484,7 @@ const AdminTestSetDetailPage = () => {
                                             <p className="text-slate-700 font-bold text-sm">
                                                 {importData.file ? importData.file.name : "Kéo thả hoặc click để chọn file"}
                                             </p>
-                                            <p className="text-xs text-slate-400 mt-1">Đảm bảo đúng cấu trúc 11 cột chuẩn TOEIC</p>
+                                            <p className="text-xs text-slate-400 mt-1">Đảm bảo đúng cấu trúc 13 cột chuẩn (kèm cột độ khó difficulty từ 1-5)</p>
                                         </div>
                                     </div>
 

@@ -10,12 +10,12 @@ export const ChatProvider = ({ children }) => {
     const { user } = useAuth();
 
     // ============ UI State ============
-    const [isChatBoxOpen, setIsChatBoxOpen]   = useState(false);
+    const [isChatBoxOpen, setIsChatBoxOpen] = useState(false);
 
     // ============ Chat State ============
-    const [activeConversation, setActiveConversation] = useState(null); 
-    const [messages, setMessages]             = useState([]);           
-    const [conversations, setConversations]   = useState([]);           
+    const [activeConversation, setActiveConversation] = useState(null);
+    const [messages, setMessages] = useState([]);
+    const [conversations, setConversations] = useState([]);
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
     // ============ Refs for WebSocket Stability ============
@@ -43,7 +43,7 @@ export const ChatProvider = ({ children }) => {
         // 1. Cập nhật Sidebar (Conversations List)
         setConversations(prev => {
             const index = prev.findIndex(c => c.id.toString() === newMsg.conversationId.toString());
-            
+
             const currentActiveId = activeConversationRef.current?.id?.toString();
             const isTargetActive = currentActiveId === newMsg.conversationId.toString();
 
@@ -61,10 +61,10 @@ export const ChatProvider = ({ children }) => {
             } else {
                 // Nếu là tin nhắn từ hội thoại chưa có trong list (ví dụ mới tạo)
                 // Ta có thể fetch lại list hoặc tạm thời ignore
-                return prev; 
+                return prev;
             }
 
-            return [targetConv, ...newList]; 
+            return [targetConv, ...newList];
         });
 
         // 2. Nếu đang mở phòng chat này → Append message
@@ -93,8 +93,8 @@ export const ChatProvider = ({ children }) => {
                 if (newLastSeen > oldLastSeen) {
                     return {
                         ...current,
-                        participants: current.participants.map(p => 
-                            p.userId.toString() === userId 
+                        participants: current.participants.map(p =>
+                            p.userId.toString() === userId
                                 ? { ...p, lastSeenAt: seenData.lastSeenAt }
                                 : p
                         )
@@ -109,12 +109,12 @@ export const ChatProvider = ({ children }) => {
             if (c.id.toString() === conversationId) {
                 const participant = c.participants.find(p => p.userId.toString() === userId);
                 const oldLastSeen = participant?.lastSeenAt ? new Date(participant.lastSeenAt).getTime() : 0;
-                
+
                 if (newLastSeen > oldLastSeen) {
                     return {
                         ...c,
-                        participants: c.participants.map(p => 
-                            p.userId.toString() === userId 
+                        participants: c.participants.map(p =>
+                            p.userId.toString() === userId
                                 ? { ...p, lastSeenAt: seenData.lastSeenAt }
                                 : p
                         )
@@ -144,7 +144,7 @@ export const ChatProvider = ({ children }) => {
             reconnectDelay: 5000,
             onConnect: () => {
                 console.log('[WS] Global Chat Stream Connected');
-                
+
                 // Subscribe một lần duy nhất vào kênh cá nhân
                 client.subscribe('/user/queue/messages', (frame) => {
                     handleIncomingMessage(JSON.parse(frame.body));
@@ -207,7 +207,7 @@ export const ChatProvider = ({ children }) => {
             isLoadingMessages,
             setIsLoadingMessages,
             // stable dummy function for backward compatibility
-            connectAndSubscribe: useCallback(() => {}, []), 
+            connectAndSubscribe: useCallback(() => { }, []),
             sendMessage,
             appendMessage,
         }}>

@@ -2,7 +2,6 @@ import { Outlet, useNavigate } from 'react-router-dom'; // 🔴 1. Import useNav
 import SidebarLearner from './SidebarLearner';
 import Footer from './Footer';
 import { FaBell } from 'react-icons/fa';
-import ChatWidget from '../common/ChatWidget';
 import { useAuth } from '../../hooks/useAuth';
 
 const LearnerLayout = () => {
@@ -75,7 +74,6 @@ const LearnerLayout = () => {
 
         <Footer />
       </div>
-      <ChatWidget />
     </div>
   );
 };

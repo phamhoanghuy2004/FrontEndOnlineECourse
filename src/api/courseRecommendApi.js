@@ -16,12 +16,28 @@ const courseRecommendApi = {
     },
 
     /**
+     * Lấy danh sách kỹ năng con của một kỹ năng cha
+     */
+    getChildSkillInsights: (parentTagId) => {
+        const url = `/users/skills/${parentTagId}/children/insights`;
+        return axiosClient.get(url);
+    },
+
+    /**
      * 2. Lấy Danh sách Lộ trình Khóa học đề xuất (Từ Elasticsearch)
      * Trả về List: CourseCardResponse
      */
     getRecommendedCourses: () => {
         const url = '/courses/recommendations/combo-path'; // Thay đổi URL này cho khớp với Backend của bạn
         return axiosClient.get(url);
+    },
+
+    /**
+     * 3. Lấy đề xuất bài học cá nhân hóa (Adaptive Learning)
+     * Trả về DTO: AdaptiveLearningResponse
+     */
+    getAdaptiveRecommendation: () => {
+        return axiosClient.get('/users/skills/adaptive-recommendation');
     }
 };
 

@@ -22,6 +22,7 @@ const TestPracticePage = () => {
     // 🔴 1. HỨNG DỮ LIỆU selectedParts TỪ MODAL TRUYỀN SANG
     const location = useLocation();
     const selectedParts = location.state?.selectedParts || [];
+    const preloadedTest = location.state?.preloadedTest;
 
    // 🟢 REFACTOR TÊN BIẾN CHO CHUẨN XÁC
     const testSetId = id; 
@@ -58,9 +59,83 @@ const TestPracticePage = () => {
             return;
         }
 
+        const applyTestData = (beTest) => {
+            if (!beTest) return;
+
+            setTestData(beTest);
+            setSessionId(beTest.sessionId);
+            localStorage.setItem(STORAGE_SESSION_KEY, beTest.sessionId);
+
+            let globalQuestionCounter = 1;
+            const formattedParts = beTest.sections.map((section, index) => {
+                const groupsMap = new Map();
+                const standaloneQuestions = [];
+                const allQuestions = [];
+
+                section.questions.forEach(q => {
+                    const feQuestion = { ...q, displayNum: globalQuestionCounter++ };
+                    allQuestions.push(feQuestion);
+
+                    if (q.group) {
+                        if (!groupsMap.has(q.group.id)) {
+                            groupsMap.set(q.group.id, { ...q.group, questions: [] });
+                        }
+                        groupsMap.get(q.group.id).questions.push(feQuestion);
+                    } else {
+                        standaloneQuestions.push(feQuestion);
+                    }
+                });
+
+                return {
+                    id: section.id,
+                    name: section.title || `Part ${index + 1}`,
+                    title: '',
+                    description: section.instructions,
+                    questionCount: section.questions.length,
+                    groups: Array.from(groupsMap.values()),
+                    questions: standaloneQuestions,
+                    allQuestions: allQuestions
+                };
+            });
+
+            setFilteredParts(formattedParts);
+
+            const localAnswers = JSON.parse(localStorage.getItem(STORAGE_ANSWERS_KEY) || '{}');
+            if (Object.keys(localAnswers).length > 0) {
+                setUserAnswers(localAnswers);
+                toast.info("Đã phục hồi đáp án bạn đang làm dở.");
+            }
+
+            let savedEndTime = localStorage.getItem(STORAGE_ENDTIME_KEY);
+
+            if (savedEndTime) {
+                const remaining = Math.floor((parseInt(savedEndTime) - Date.now()) / 1000);
+                if (remaining > 0) {
+                    endTimeRef.current = parseInt(savedEndTime);
+                    setTimeLeft(remaining);
+                } else {
+                    endTimeRef.current = Date.now();
+                    setTimeLeft(0);
+                }
+            } else {
+                const totalSeconds = (beTest.durationMinutes || 120) * 60;
+                const newEndTime = Date.now() + (totalSeconds * 1000);
+                endTimeRef.current = newEndTime;
+                localStorage.setItem(STORAGE_ENDTIME_KEY, newEndTime.toString());
+                setTimeLeft(totalSeconds);
+            }
+        };
+
         const fetchTestPractice = async () => {
             try {
                 setLoading(true);
+
+                if (preloadedTest) {
+                    if (isMounted) {
+                        applyTestData(preloadedTest);
+                    }
+                    return;
+                }
 
                 // 🔴 2. BIẾN MẢNG [1, 2] THÀNH CHUỖI "1,2" ĐỂ GỬI LÊN BACKEND
                 const partsParam = selectedParts.length > 0 ? selectedParts.join(',') : null;
@@ -71,68 +146,7 @@ const TestPracticePage = () => {
                 const beTest = response.data?.data || response.data;
 
                 if (beTest && isMounted) {
-                    setTestData(beTest);
-                    setSessionId(beTest.sessionId);
-                    localStorage.setItem(STORAGE_SESSION_KEY, beTest.sessionId)
-
-                    let globalQuestionCounter = 1;
-                    const formattedParts = beTest.sections.map((section, index) => {
-                        const groupsMap = new Map();
-                        const standaloneQuestions = [];
-                        const allQuestions = [];
-
-                        section.questions.forEach(q => {
-                            const feQuestion = { ...q, displayNum: globalQuestionCounter++ };
-                            allQuestions.push(feQuestion);
-
-                            if (q.group) {
-                                if (!groupsMap.has(q.group.id)) {
-                                    groupsMap.set(q.group.id, { ...q.group, questions: [] });
-                                }
-                                groupsMap.get(q.group.id).questions.push(feQuestion);
-                            } else {
-                                standaloneQuestions.push(feQuestion);
-                            }
-                        });
-
-                        return {
-                            id: section.id,
-                            name: section.title || `Part ${index + 1}`,
-                            title: '',
-                            description: section.instructions,
-                            questionCount: section.questions.length,
-                            groups: Array.from(groupsMap.values()),
-                            questions: standaloneQuestions,
-                            allQuestions: allQuestions
-                        };
-                    });
-
-                    setFilteredParts(formattedParts);
-
-                    const localAnswers = JSON.parse(localStorage.getItem(STORAGE_ANSWERS_KEY) || '{}');
-                    if (Object.keys(localAnswers).length > 0) {
-                        setUserAnswers(localAnswers);
-                        toast.info("Đã phục hồi đáp án bạn đang làm dở.");
-                    }
-
-                    let savedEndTime = localStorage.getItem(STORAGE_ENDTIME_KEY);
-
-                    if (savedEndTime) {
-                        const remaining = Math.floor((parseInt(savedEndTime) - Date.now()) / 1000);
-                        if (remaining > 0) {
-                            endTimeRef.current = parseInt(savedEndTime);
-                            setTimeLeft(remaining);
-                        } else {
-                            endTimeRef.current = Date.now();
-                            setTimeLeft(0);
-                        }
-                    } else {
-                        const totalSeconds = (beTest.durationMinutes || 120) * 60;
-                        const newEndTime = Date.now() + (totalSeconds * 1000);
-                        endTimeRef.current = newEndTime;
-                        localStorage.setItem(STORAGE_ENDTIME_KEY, newEndTime.toString());
-                        setTimeLeft(totalSeconds);
-                    }
+                    applyTestData(beTest);
                 }
             } catch (error) {
                 if (isMounted) {
@@ -180,7 +194,7 @@ const TestPracticePage = () => {
             isMounted = false;
         };
 
-    }, [testSetId, specificTestId, navigate]);
+    }, [testSetId, specificTestId, navigate, preloadedTest]);
 
 
     useEffect(() => {

@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import {
     FaChartLine, FaHistory, FaTrophy, FaClock,
     FaHeadphones, FaMicrophone, FaBookReader, FaPenNib,
-    FaSearch, FaEye, FaStar, FaMedal, FaCrown, FaTicketAlt, FaSpinner, FaChevronLeft, FaChevronRight // 🔴 Import thêm Icon Spinner và Pagination
+    FaSearch, FaEye, FaStar, FaMedal, FaCrown, FaTicketAlt, FaSpinner, FaChevronLeft, FaChevronRight,
+    FaRobot
 } from 'react-icons/fa';
 import { toast } from 'react-toastify'; // 🔴 Import Toast để show lỗi
 
@@ -12,6 +13,7 @@ import Button from '../../../components/common/Button';
 import InputField from '../../../components/common/InputField';
 import testResultService from '../../../api/testResultService'; // 🔴 Import Service gọi API
 import courseRecommendApi from '../../../api/courseRecommendApi';
+import personalizedTestApi from '../../../api/personalizedTestApi';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
 
@@ -168,6 +170,7 @@ const LearnerProgressPage = () => {
     const [expandedSkillId, setExpandedSkillId] = useState(null);
     const [childSkillsData, setChildSkillsData] = useState({});
     const [loadingChildId, setLoadingChildId] = useState(null);
+    const [generatingPersonalized, setGeneratingPersonalized] = useState(false);
 
     const handleSkillClick = async (skill) => {
         if (!skill.tagId) return;
@@ -319,6 +322,31 @@ const LearnerProgressPage = () => {
     const isGoalReached = estimatedScore >= USER_GOAL;
     const progressToGoal = Math.min((estimatedScore / USER_GOAL) * 100, 100);
 
+    const handlePersonalizedPractice = async () => {
+        try {
+            setGeneratingPersonalized(true);
+            const response = await personalizedTestApi.generate();
+            const testData = response.data?.data || response.data;
+
+            if (!testData?.testSetId || !testData?.sessionId) {
+                toast.error("Không nhận được dữ liệu đề thi từ hệ thống.");
+                return;
+            }
+
+            navigate(`/test-practice/${testData.testSetId}`, {
+                state: {
+                    preloadedTest: testData,
+                    fromPersonalized: true,
+                },
+            });
+        } catch (error) {
+            console.error("Lỗi sinh đề cá nhân hóa:", error);
+            toast.error(error?.message || error?.data || "Không thể sinh đề luyện tập. Vui lòng thử lại sau!");
+        } finally {
+            setGeneratingPersonalized(false);
+        }
+    };
+
     const currentLevelInfo = useMemo(() => {
         const level = user?.level || 'UNDETERMINED';
         switch (level) {
@@ -336,7 +364,15 @@ const LearnerProgressPage = () => {
 
 
     return (
-        <div className="min-h-screen bg-transparent pb-20 space-y-8">
+        <div className="min-h-screen bg-transparent pb-20 space-y-8 relative">
+            {generatingPersonalized && (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+                    <FaSpinner className="animate-spin text-4xl text-emerald-500 mb-4" />
+                    <p className="text-slate-700 font-semibold">AI đang sinh đề luyện tập cá nhân hóa...</p>
+                    <p className="text-slate-400 text-sm mt-1">Vui lòng đợi trong giây lát</p>
+                </div>
+            )}
+
             {/* Header ... (Giữ nguyên) */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
@@ -345,6 +381,15 @@ const LearnerProgressPage = () => {
                         Theo dõi sự tiến bộ của bạn qua từng bài kiểm tra. Dữ liệu được cập nhật dựa trên kết quả làm bài thực tế.
                     </p>
                 </div>
+                <Button
+                    onClick={handlePersonalizedPractice}
+                    disabled={generatingPersonalized}
+                    className="!bg-gradient-to-r !from-violet-600 !to-indigo-600 !text-white !border-0 !shadow-lg hover:!shadow-xl !px-5 !py-3 !rounded-2xl"
+                >
+                    <span className="flex items-center gap-2 font-bold text-sm">
+                        <FaRobot /> Luyện tập cải thiện điểm yếu với AI
+                    </span>
+                </Button>
             </div>
 
             {/* Overviews */}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import courseApi from '../../../api/courseApi';
 import lessonApi from '../../../api/lessonApi';
 import CurriculumSidebar from '../../../components/common/learner/CurriculumSidebar';
@@ -16,6 +16,8 @@ import HlsVideoPlayer from '../../../components/common/HlsVideoPlayer';
 const StudyRoomPage = () => {
     const { courseId } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const targetLessonId = searchParams.get('lessonId');
 
     const [curriculumData, setCurriculumData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -90,9 +92,17 @@ const StudyRoomPage = () => {
                 setCurriculumData(data);
 
                 if (data?.lessons?.length > 0) {
-                    const lessonToPlay = data.lessons.find(l => l.status === 'IN_PROGRESS')
-                        || data.lessons.find(l => l.status === 'NOT_STARTED')
-                        || data.lessons[0];
+                    let lessonToPlay = null;
+                    
+                    if (targetLessonId) {
+                        lessonToPlay = data.lessons.find(l => l.lessonId === Number(targetLessonId)) || data.lessons.find(l => String(l.lessonId) === targetLessonId);
+                    }
+                    
+                    if (!lessonToPlay) {
+                        lessonToPlay = data.lessons.find(l => l.status === 'IN_PROGRESS')
+                            || data.lessons.find(l => l.status === 'NOT_STARTED')
+                            || data.lessons[0];
+                    }
                     setActiveLessonId(lessonToPlay.lessonId);
                 }
             } catch (error) {

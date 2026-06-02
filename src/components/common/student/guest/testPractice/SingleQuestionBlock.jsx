@@ -1,6 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaFlag, FaCheckCircle, FaTimesCircle, FaRobot, FaPaperPlane, FaSpinner } from "react-icons/fa";
 import testApi from "../../../../../api/testApi";
+import DOMPurify from 'dompurify';
+
+const formatMarkdown = (text) => {
+    if (!text) return "";
+    let html = text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n/g, '<br />');
+    return DOMPurify.sanitize(html);
+};
 
 const SingleQuestionBlock = ({ question, type, userAnswers, flaggedQuestions, onSelect, onToggleFlag, isSubmitted, isReviewMode }) => {
     const optionsLabel = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -71,7 +81,12 @@ const SingleQuestionBlock = ({ question, type, userAnswers, flaggedQuestions, on
                     {/* Nội dung câu hỏi */}
                     {question.imageUrl && <div className="mb-4 max-w-md rounded-lg overflow-hidden border border-gray-200 pointer-events-none"><img src={question.imageUrl} alt="Question" className="w-full h-auto" /></div>}
                     {question.audioUrl && <div className="mb-4 bg-gray-100 p-2 rounded-full w-fit"><audio controls className="h-8 w-64"><source src={question.audioUrl} type="audio/mpeg" /></audio></div>}
-                    {question.content && <p className="font-medium text-gray-800 mb-3 text-lg">{question.content}</p>}
+                    {question.content && (
+                        <div 
+                            className="font-medium text-gray-800 mb-3 text-lg prose prose-sm max-w-none"
+                            dangerouslySetInnerHTML={{ __html: formatMarkdown(question.content) }}
+                        />
+                    )}
                     
                     {/* Render Đáp án */}
                     <div className="space-y-2">
@@ -189,11 +204,10 @@ const SingleQuestionBlock = ({ question, type, userAnswers, flaggedQuestions, on
                                         ) : (
                                             chatHistory.map((msg, idx) => (
                                                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                                    <div className={`max-w-[85%] p-3 rounded-2xl ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-700 rounded-tl-sm'}`}>
-                                                        {msg.content.split('\n').map((line, i) => (
-                                                            <span key={i}>{line}<br /></span>
-                                                        ))}
-                                                    </div>
+                                                    <div 
+                                                        className={`max-w-[85%] p-3 rounded-2xl ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-700 rounded-tl-sm'} prose prose-sm max-w-none`}
+                                                        dangerouslySetInnerHTML={{ __html: formatMarkdown(msg.content) }}
+                                                    />
                                                 </div>
                                             ))
                                         )}

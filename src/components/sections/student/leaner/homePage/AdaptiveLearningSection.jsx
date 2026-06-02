@@ -1,17 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaLightbulb, FaPlayCircle, FaShoppingCart, FaClipboardCheck, FaTrophy, FaSpinner, FaArrowRight } from 'react-icons/fa';
+import { FaLightbulb, FaPlayCircle, FaShoppingCart, FaClipboardCheck, FaTrophy, FaSpinner, FaArrowRight, FaRobot } from 'react-icons/fa';
 import { fadeInUp } from '../../../../../constants/motionVariants';
 import Title from '../../../../common/Title';
 import courseRecommendApi from '../../../../../api/courseRecommendApi';
+import personalizedTestApi from '../../../../../api/personalizedTestApi';
 import { useAuth } from '../../../../../hooks/useAuth';
+import { toast } from 'react-toastify';
 
 const AdaptiveLearningSection = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [generatingPersonalized, setGeneratingPersonalized] = useState(false);
     const { user } = useAuth();
     const navigate = useNavigate();
+
+    const handlePersonalizedPractice = async () => {
+        try {
+            setGeneratingPersonalized(true);
+            const response = await personalizedTestApi.generate();
+            const testData = response.data?.data || response.data;
+
+            if (!testData?.testSetId || !testData?.sessionId) {
+                toast.error("Không nhận được dữ liệu đề thi từ hệ thống.");
+                return;
+            }
+
+            navigate(`/test-practice/${testData.testSetId}`, {
+                state: {
+                    preloadedTest: testData,
+                    fromPersonalized: true,
+                },
+            });
+        } catch (error) {
+            console.error("Lỗi sinh đề cá nhân hóa:", error);
+            toast.error(error?.message || error?.data || "Không thể sinh đề luyện tập. Vui lòng thử lại sau!");
+        } finally {
+            setGeneratingPersonalized(false);
+        }
+    };
 
     useEffect(() => {
         const fetchRecommendation = async () => {
@@ -120,7 +148,14 @@ const AdaptiveLearningSection = () => {
     // ===== TRẠNG THÁI 3: TÌM ĐƯỢC BÀI HỌC ĐỀ XUẤT =====
     if (data.status === 'LESSON_FOUND') {
         return (
-            <section>
+            <section className="relative">
+                {generatingPersonalized && (
+                    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+                        <FaSpinner className="animate-spin text-4xl text-emerald-500 mb-4" />
+                        <p className="text-slate-700 font-semibold">AI đang sinh đề luyện tập cá nhân hóa...</p>
+                        <p className="text-slate-400 text-sm mt-1">Vui lòng đợi trong giây lát</p>
+                    </div>
+                )}
                 <div className="flex items-center gap-2 mb-4">
                     <Title text='Đề xuất học tập' as="h3" variants={fadeInUp} className="text-xl font-bold !text-slate-800" />
                 </div>
@@ -182,12 +217,21 @@ const AdaptiveLearningSection = () => {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={() => navigate(`/learner/${user?.id}/study-room/${data.courseId}`)}
-                                className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-3 px-5 rounded-xl shadow-lg shadow-emerald-200 hover:shadow-emerald-300 hover:from-emerald-600 hover:to-teal-600 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex-shrink-0 text-sm"
-                            >
-                                <FaPlayCircle /> Học ngay
-                            </button>
+                            <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
+                                <button
+                                    onClick={handlePersonalizedPractice}
+                                    disabled={generatingPersonalized}
+                                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold py-3 px-5 rounded-xl shadow-lg shadow-violet-200 hover:shadow-violet-300 hover:from-violet-700 hover:to-indigo-700 transition-all transform hover:-translate-y-0.5 active:translate-y-0 text-sm w-full sm:w-auto"
+                                >
+                                    <FaRobot /> Luyện đề với AI
+                                </button>
+                                <button
+                                    onClick={() => navigate(`/learner/${user?.id}/study-room/${data.courseId}?lessonId=${data.lessonId}`)}
+                                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-3 px-5 rounded-xl shadow-lg shadow-emerald-200 hover:shadow-emerald-300 hover:from-emerald-600 hover:to-teal-600 transition-all transform hover:-translate-y-0.5 active:translate-y-0 text-sm w-full sm:w-auto"
+                                >
+                                    <FaPlayCircle /> Học ngay
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </motion.div>
@@ -198,7 +242,14 @@ const AdaptiveLearningSection = () => {
     // ===== TRẠNG THÁI 4: UPSELL - CHƯA CÓ BÀI HỌC, GỢI Ý MUA KHÓA =====
     if (data.status === 'UPSELL') {
         return (
-            <section>
+            <section className="relative">
+                {generatingPersonalized && (
+                    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+                        <FaSpinner className="animate-spin text-4xl text-purple-500 mb-4" />
+                        <p className="text-slate-700 font-semibold">AI đang sinh đề luyện tập cá nhân hóa...</p>
+                        <p className="text-slate-400 text-sm mt-1">Vui lòng đợi trong giây lát</p>
+                    </div>
+                )}
                 <div className="flex items-center gap-2 mb-4">
                     <Title text='Đề xuất học tập' as="h3" variants={fadeInUp} className="text-xl font-bold !text-slate-800" />
                 </div>
@@ -231,12 +282,21 @@ const AdaptiveLearningSection = () => {
                             </p>
                         </div>
 
-                        <button
-                            onClick={() => navigate('/course-recommendations')}
-                            className="flex items-center gap-2 bg-gradient-to-r from-violet-500 to-purple-500 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-purple-200 hover:shadow-purple-300 hover:from-violet-600 hover:to-purple-600 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex-shrink-0 text-sm"
-                        >
-                            Khám phá khóa học <FaArrowRight />
-                        </button>
+                            <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
+                                <button
+                                    onClick={handlePersonalizedPractice}
+                                    disabled={generatingPersonalized}
+                                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold py-3 px-5 rounded-xl shadow-lg shadow-violet-200 hover:shadow-violet-300 hover:from-violet-700 hover:to-indigo-700 transition-all transform hover:-translate-y-0.5 active:translate-y-0 text-sm w-full sm:w-auto"
+                                >
+                                    <FaRobot /> Luyện với AI
+                                </button>
+                                <button
+                                    onClick={() => navigate('/course-recommendations')}
+                                    className="flex items-center justify-center gap-2 bg-white text-purple-600 border border-purple-200 font-bold py-3 px-5 rounded-xl shadow-sm hover:bg-purple-50 transition-all transform hover:-translate-y-0.5 active:translate-y-0 text-sm w-full sm:w-auto"
+                                >
+                                    Khám phá khóa học <FaArrowRight />
+                                </button>
+                            </div>
                     </div>
                 </motion.div>
             </section>

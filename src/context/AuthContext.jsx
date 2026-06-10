@@ -10,11 +10,18 @@ export const AuthContext = createContext();
 // ===== Helpers =====
 const getRolesFromToken = (token) => {
     try {
-        const payloadBase64 = token.split('.')[1];
-        const decoded = JSON.parse(atob(payloadBase64));
+        let payloadBase64 = token.split('.')[1];
+        payloadBase64 = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+        while (payloadBase64.length % 4 !== 0) {
+            payloadBase64 += '=';
+        }
+        const decoded = JSON.parse(decodeURIComponent(escape(atob(payloadBase64))));
         const scope = decoded.scope || '';
-        return scope.split(' ').filter(s => s.startsWith('ROLE_')).map(s => s.replace('ROLE_', ''));
-    } catch {
+        const roles = scope.split(' ').filter(s => s.startsWith('ROLE_')).map(s => s.replace('ROLE_', ''));
+        console.log("[DEBUG] Decoded roles:", roles);
+        return roles;
+    } catch (error) {
+        console.error("Lỗi giải mã token:", error);
         return [];
     }
 };
@@ -66,6 +73,11 @@ export const AuthProvider = ({ children }) => {
 
             const currentUser = response.data ?? null;
 
+            if (currentUser && Array.isArray(currentUser.roles)) {
+                // Normalize roles to string array because UserResponse returns objects for roles
+                currentUser.roles = currentUser.roles.map(r => typeof r === 'string' ? r : (r?.name || r));
+            }
+
             setUser(currentUser);
             localStorage.setItem("currentUser", JSON.stringify(currentUser));
 
@@ -94,6 +106,8 @@ export const AuthProvider = ({ children }) => {
             await fetchUserProfile(roles);
         
             const redirectPath = resolveRedirectPath(roles, authData.isFirstTime);
+            console.log("[DEBUG] Roles for redirect:", roles);
+            console.log("[DEBUG] Redirecting to:", redirectPath);
 
             navigate(redirectPath);
 

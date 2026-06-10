@@ -46,7 +46,7 @@ const HlsVideoPlayer = ({ url, lessonId, initialProgress = 0, duration = 0, onCo
 
             if (isBeacon) {
                 const token = localStorage.getItem('token'); 
-                fetch(`http://localhost:8080/lessons/${lessonId}/progress`, {
+                fetch(`https://phamhoanghuy-echill-backend.hf.space/lessons/${lessonId}/progress`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ const HlsVideoPlayer = ({ url, lessonId, initialProgress = 0, duration = 0, onCo
                 // Bắn ngầm khi tắt trình duyệt
                 const token = localStorage.getItem('token'); 
                 // 🔴 Đã sửa URL fetch thành /students/ping cho đồng bộ với API mới của bạn
-                fetch(`http://localhost:8080/students/ping`, {
+                fetch(`https://phamhoanghuy-echill-backend.hf.space/students/ping`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

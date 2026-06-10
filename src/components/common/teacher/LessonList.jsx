@@ -204,7 +204,7 @@ const LessonItem = ({ index, lesson, courseId, availableTags, onUpdateLocal, onD
 
     useEffect(() => {
         if (!isNewLesson && lesson.videoStatus === 'PROCESSING') {
-            const socket = new SockJS('http://localhost:8080/ws');
+            const socket = new SockJS('https://phamhoanghuy-echill-backend.hf.space/ws');
             const client = new Client({
                 webSocketFactory: () => socket,
                 reconnectDelay: 5000,

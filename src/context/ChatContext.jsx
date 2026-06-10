@@ -139,7 +139,7 @@ export const ChatProvider = ({ children }) => {
         if (!token) return;
 
         const client = new Client({
-            webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+            webSocketFactory: () => new SockJS('https://phamhoanghuy-echill-backend.hf.space/ws'),
             connectHeaders: { Authorization: `Bearer ${token}` },
             reconnectDelay: 5000,
             onConnect: () => {

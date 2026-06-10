@@ -9,6 +9,7 @@ import testApi from '../../../api/testApi';
 import AddTestModal from './AddTestModal';
 import TestQuestionManager from './TestQuestionManager';
 
+import { toast } from 'react-toastify';
 const TestSetDetailModal = ({ isOpen, onClose, testSet: initialTestSet }) => {
     const [testSet, setTestSet] = useState(null);
     const [tests, setTests] = useState([]);
@@ -65,10 +66,10 @@ const TestSetDetailModal = ({ isOpen, onClose, testSet: initialTestSet }) => {
             const response = await testApi.updateTestSet(testSet.id, editInfo);
             setTestSet(response.data?.data || response.data);
             setIsEditingInfo(false);
-            alert("Đã cập nhật thông tin bộ test!");
+            toast.success("Đã cập nhật thông tin bộ test!");
         } catch (error) {
             console.error("Lỗi khi cập nhật thông tin:", error);
-            alert("Lỗi khi lưu: " + (error.response?.data?.message || error.message));
+            toast.error("Lỗi khi lưu: " + (error.response?.data?.message || error.message));
         } finally {
             setIsSavingInfo(false);
         }
@@ -88,10 +89,10 @@ const TestSetDetailModal = ({ isOpen, onClose, testSet: initialTestSet }) => {
         try {
             await testApi.deleteTest(testId);
             setTests(tests.filter(t => t.id !== testId));
-            alert("Đã xóa bài Test thành công!");
+            toast.success("Đã xóa bài Test thành công!");
         } catch (error) {
             console.error("Lỗi khi xóa bài test:", error);
-            alert(error.response?.data?.message || "Lỗi khi xóa bài test!");
+            toast.error(error.response?.data?.message || "Lỗi khi xóa bài test!");
         } finally {
             setIsDeleting(null);
         }

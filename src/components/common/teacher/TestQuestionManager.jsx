@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../Button';
 import testApi from '../../../api/testApi';
 
+import { toast } from 'react-toastify';
 const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
     const [test, setTest] = useState(null);
     const [questions, setQuestions] = useState([]);
@@ -75,11 +76,11 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
             if (type === 'q-audio') await testApi.uploadQuestionAudio(targetId, file);
             else if (type === 'q-image') await testApi.uploadQuestionImage(targetId, file);
             
-            alert("Tải lên thành công!");
+            toast.success("Tải lên thành công!");
             fetchTestDetails(); // fetch lại data để có url mới
         } catch (error) {
             console.error("Lỗi khi tải lên file", error);
-            alert("Lỗi khi tải lên file");
+            toast.error("Lỗi khi tải lên file");
         } finally {
             setUploading(null);
         }
@@ -93,10 +94,10 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
             setTest(updatedData);
             setIsEditingInfo(false);
             if (onUpdateSuccess) onUpdateSuccess();
-            alert("Đã cập nhật thông tin bài test!");
+            toast.success("Đã cập nhật thông tin bài test!");
         } catch (error) {
             console.error("Lỗi khi cập nhật thông tin test:", error);
-            alert("Lỗi khi lưu: " + (error.response?.data?.message || error.message));
+            toast.error("Lỗi khi lưu: " + (error.response?.data?.message || error.message));
         } finally {
             setIsSavingInfo(false);
         }
@@ -144,10 +145,10 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
 
             setQuestions(prev => prev.map(q => q.id === questionId ? { ...questionData } : q));
             if (onUpdateSuccess) onUpdateSuccess();
-            alert("Đã lưu thay đổi câu hỏi!");
+            toast.success("Đã lưu thay đổi câu hỏi!");
         } catch (error) {
             console.error("Lỗi khi lưu câu hỏi:", error);
-            alert("Lỗi khi lưu thay đổi: " + (error.response?.data?.message || error.message));
+            toast.error("Lỗi khi lưu thay đổi: " + (error.response?.data?.message || error.message));
         } finally {
             setIsSaving(null);
         }

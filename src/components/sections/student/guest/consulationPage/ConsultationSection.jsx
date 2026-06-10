@@ -5,6 +5,7 @@ import { useChat } from '../../../../../hooks/useChat';
 import TuVanVien from '../../../../../assets/TuVanVien.png';
 import consultaionApi from '../../../../../api/consultaionApi';
 
+import { toast } from 'react-toastify';
 const ConsultationSection = () => {
     const fadeInUp = {
         hidden: { opacity: 0, y: 50 },
@@ -54,7 +55,7 @@ const ConsultationSection = () => {
 
             await consultaionApi.submitRequest(payload);
 
-            alert("Yêu cầu tư vấn của bạn đã được gửi thành công!");
+            toast.success("Yêu cầu tư vấn của bạn đã được gửi thành công!");
 
             // Reset form sau khi gửi
             setFormData({
@@ -67,7 +68,7 @@ const ConsultationSection = () => {
         } catch (error) {
             // Lấy thông báo lỗi từ backend (nếu có)
             const errorMessage = error.message || "Có lỗi xảy ra, vui lòng kiểm tra lại thông tin!";
-            alert(errorMessage);
+            toast.info(errorMessage);
         } finally {
             setIsLoading(false);
         }

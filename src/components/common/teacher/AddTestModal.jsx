@@ -4,6 +4,7 @@ import Button from '../Button';
 import InputField from '../InputField';
 import testApi from '../../../api/testApi';
 
+import { toast } from 'react-toastify';
 const AddTestModal = ({ isOpen, onClose, testSetId, onSuccess }) => {
     const [formData, setFormData] = useState({
         title: '',
@@ -32,7 +33,7 @@ const AddTestModal = ({ isOpen, onClose, testSetId, onSuccess }) => {
     };
 
     const handleSubmit = async () => {
-        if (!file) return alert("Vui lòng chọn file Excel!");
+        if (!file) return toast.warning("Vui lòng chọn file Excel!");
         setIsSaving(true);
         try {
             const data = new FormData();
@@ -44,12 +45,12 @@ const AddTestModal = ({ isOpen, onClose, testSetId, onSuccess }) => {
             data.append('file', file);
 
             const response = await testApi.createTest(data);
-            alert("Tạo bài Test và Import câu hỏi thành công!");
+            toast.success("Tạo bài Test và Import câu hỏi thành công!");
             onSuccess(response.data?.data || response.data);
             onClose();
         } catch (error) {
             console.error("Server Error Response:", error.response?.data);
-            alert(error.response?.data?.message || "Lỗi hệ thống khi Import");
+            toast.error(error.response?.data?.message || "Lỗi hệ thống khi Import");
         } finally {
             setIsSaving(false);
         }

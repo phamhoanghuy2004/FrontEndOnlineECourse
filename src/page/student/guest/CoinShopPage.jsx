@@ -3,6 +3,7 @@ import { Coins, Zap, ShieldCheck, Loader2, X, AlertCircle } from 'lucide-react';
 import coinPackageApi from '../../../api/coinPackageApi';
 import paymentApi from '../../../api/paymentApi';   
 
+import { toast } from 'react-toastify';
 const CoinShopPage = () => {
     const [packages, setPackages] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -73,7 +74,7 @@ const CoinShopPage = () => {
         } catch (error) {
             console.error("Lỗi thanh toán:", error);
             // Có thể dùng thư viện react-hot-toast thay thế cho alert để UI xịn hơn
-            alert(`Lỗi thanh toán: ${error.message || "Vui lòng thử lại sau."}`);
+            toast.error(`Lỗi thanh toán: ${error.message || "Vui lòng thử lại sau."}`);
         } finally {
             setIsProcessing(false);
         }

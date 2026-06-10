@@ -20,6 +20,7 @@ import TestSetDetailModal from './TestSetDetailModal';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
+import { toast } from 'react-toastify';
 const getGroupConfig = (parentName) => {
     switch (parentName) {
         case 'Grammar':
@@ -217,7 +218,7 @@ const LessonItem = ({ index, lesson, courseId, availableTags, onUpdateLocal, onD
                                 hlsUrl: payload.hlsUrl,
                                 durationSeconds: payload.durationSeconds
                             });
-                            alert(`Nấu video thành công cho bài học: ${lesson.title}`);
+                            toast.success(`Nấu video thành công cho bài học: ${lesson.title}`);
                             client.deactivate();
                         }
                     });
@@ -240,7 +241,7 @@ const LessonItem = ({ index, lesson, courseId, availableTags, onUpdateLocal, onD
                 return { ...prev, tagIds: (prev.tagIds || []).filter(id => id !== tagId) };
             } else {
                 if ((prev.tagIds || []).length >= 3) {
-                    alert("Chỉ được chọn tối đa 3 kỹ năng trọng tâm!");
+                    toast.warning("Chỉ được chọn tối đa 3 kỹ năng trọng tâm!");
                     return prev;
                 }
                 return { ...prev, tagIds: [...(prev.tagIds || []), tagId] };
@@ -257,15 +258,15 @@ const LessonItem = ({ index, lesson, courseId, availableTags, onUpdateLocal, onD
             if (isNewLesson) {
                 const response = await lessonApi.create(payload);
                 savedLesson = response.data?.data || response.data || response;
-                alert("Tạo bài học mới thành công!");
+                toast.success("Tạo bài học mới thành công!");
             } else {
                 const response = await lessonApi.update(lesson.id, payload);
                 savedLesson = response.data?.data || response.data || response;
-                alert("Cập nhật thông tin bài học thành công!");
+                toast.success("Cập nhật thông tin bài học thành công!");
             }
             if (savedLesson) onUpdateLocal(lesson.id, savedLesson);
         } catch (error) {
-            alert(error.response?.data?.message || "Lỗi khi lưu thông tin bài học!");
+            toast.error(error.response?.data?.message || "Lỗi khi lưu thông tin bài học!");
         } finally {
             setIsSavingText(false);
         }
@@ -280,7 +281,7 @@ const LessonItem = ({ index, lesson, courseId, availableTags, onUpdateLocal, onD
     };
 
     const handleUploadVideo = async () => {
-        if (!videoFile || isNewLesson) return alert("Vui lòng Lưu thông tin trước khi tải video!");
+        if (!videoFile || isNewLesson) return toast.warning("Vui lòng Lưu thông tin trước khi tải video!");
         setVideoUploading(true);
         try {
             const sigResponse = await lessonApi.getVideoUploadSignature(lesson.id);
@@ -326,9 +327,9 @@ const LessonItem = ({ index, lesson, courseId, availableTags, onUpdateLocal, onD
                 durationSeconds: durationSeconds
             });
 
-            alert("Upload video thành công!");
+            toast.success("Upload video thành công!");
         } catch (error) {
-            alert(`Upload thất bại! ${error.message}`);
+            toast.error(`Upload thất bại! ${error.message}`);
         } finally {
             setVideoUploading(false);
             setVideoProgress(0);
@@ -345,7 +346,7 @@ const LessonItem = ({ index, lesson, courseId, availableTags, onUpdateLocal, onD
     };
 
     const handleUploadDocument = async () => {
-        if (!docFile || !docTitle.trim() || isNewLesson) return alert("Vui lòng nhập tên và chọn file!");
+        if (!docFile || !docTitle.trim() || isNewLesson) return toast.warning("Vui lòng nhập tên và chọn file!");
         setIsDocUploading(true);
         try {
             const formData = new FormData();
@@ -357,10 +358,10 @@ const LessonItem = ({ index, lesson, courseId, availableTags, onUpdateLocal, onD
                 ...lesson,
                 documents: [...(lesson.documents || []), newDoc]
             });
-            alert("Tải lên tài liệu thành công!");
+            toast.success("Tải lên tài liệu thành công!");
             setDocFile(null); setDocTitle('');
         } catch (error) {
-            alert(error.response?.data?.message || "Lỗi tải lên tài liệu!");
+            toast.error(error.response?.data?.message || "Lỗi tải lên tài liệu!");
         } finally {
             setIsDocUploading(false);
         }
@@ -375,7 +376,7 @@ const LessonItem = ({ index, lesson, courseId, availableTags, onUpdateLocal, onD
                 documents: (lesson.documents || []).filter(d => d.id !== did)
             });
         } catch (error) {
-            alert(error.response?.data?.message || "Lỗi khi xóa tài liệu!");
+            toast.error(error.response?.data?.message || "Lỗi khi xóa tài liệu!");
         }
     };
 
@@ -668,7 +669,7 @@ const LessonList = ({ lessons, onChange, courseId }) => {
 
     const handleAddLesson = () => {
         const hasUnsavedLesson = lessons.some(l => String(l.id).startsWith('temp_'));
-        if (hasUnsavedLesson) return alert("Vui lòng lưu bài mới trước!");
+        if (hasUnsavedLesson) return toast.warning("Vui lòng lưu bài mới trước!");
         onChange([...lessons, { id: `temp_${Date.now()}`, title: '', content: '', isPreview: false, videoStatus: 'NONE', displayOrder: lessons.length + 1, documents: [], tags: [] }]);
     };
 
@@ -685,7 +686,7 @@ const LessonList = ({ lessons, onChange, courseId }) => {
                 onChange(lessons.filter(l => l.id !== selectedLessonId));
                 setIsDeleteModalOpen(false);
             } catch (error) { 
-                alert(error.response?.data?.message || "Lỗi khi xóa bài học."); 
+                toast.error(error.response?.data?.message || "Lỗi khi xóa bài học."); 
             }
             finally { setIsDeleting(false); }
         }

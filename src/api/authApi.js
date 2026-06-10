@@ -41,6 +41,12 @@ const authApi = {
         const url = '/auth/reset-password';
         return axiosClient.post(url, data);
     },
+
+    // 7. Đăng xuất
+    logout: (data) => {
+        const url = '/auth/logout';
+        return axiosClient.post(url, data);
+    }
 };
 
 export default authApi;

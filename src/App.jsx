@@ -96,7 +96,12 @@ function App() {
               GROUP 1: GUEST ROUTES
               Sử dụng GuestLayout (Navbar + Footer truyền thống)
             ========================================================= */}
-            <Route path="/level-test" element={<LevelTestPage />} />
+            <Route path="/level-test" element={
+              <ProtectedRoute>
+                <LevelTestPage />
+              </ProtectedRoute>
+            } />
+
             <Route path="/student/documents/:documentId" element={
               <ProtectedRoute>
                 <DocumentViewerPage />
@@ -111,15 +116,31 @@ function App() {
               <Route path="/blog/:id" element={<BlogDetailPage />} />
               <Route path="/consultation" element={<ConsulationPage />} />
               <Route path="/tests" element={<TestSetPage />} />
-              <Route path="/tests/:id" element={<TestDetailPage />} />
-              <Route path="/test-practice/:id" element={<TestPracticePage />} />
+
+              <Route path="/tests/:id" element={
+                <ProtectedRoute>
+                  <TestDetailPage />
+                </ProtectedRoute>
+              } />
+
+
+              <Route path="/test-practice/:id" element={
+                <ProtectedRoute>
+                  <TestPracticePage />
+                </ProtectedRoute>
+              } />
 
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/verify-otp" element={<VerifyOtpPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/payment/result" element={<PaymentResultPage />} />
-              <Route path="/course-recommendations" element={<SuggestedComboPage />} />
+
+              <Route path="/course-recommendations" element={
+                <ProtectedRoute>
+                  <SuggestedComboPage />
+                </ProtectedRoute>
+              } />
 
               <Route path="/complete-profile" element={
                 <ProtectedRoute>
@@ -185,7 +206,7 @@ function App() {
               Truy cập qua: /teacher/...
             ========================================================= */}
             <Route path="/teacher" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['TEACHER']}>
                 <TeacherLayout />
               </ProtectedRoute>
             }>
@@ -209,7 +230,7 @@ function App() {
               Truy cập qua: /admin/...
             ========================================================= */}
             <Route path="/admin" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminLayout />
               </ProtectedRoute>
             }>

@@ -6,6 +6,7 @@ import Button from '../../components/common/Button';
 import authApi from '../../api/authApi';
 import { useAuth } from '../../hooks/useAuth';
 
+import { toast } from 'react-toastify';
 // ===== Helpers 
 const getRolesFromToken = (token) => {
     try {
@@ -200,7 +201,7 @@ const VerifyOtpPage = () => {
         try {
             await authApi.resendOtp({ email }); 
 
-            alert('Đã gửi lại mã OTP. Vui lòng kiểm tra email!');
+            toast.success('Đã gửi lại mã OTP. Vui lòng kiểm tra email!');
             setTimer(60);
             setCanResend(false);
             setOtp(['', '', '', '', '', '']);

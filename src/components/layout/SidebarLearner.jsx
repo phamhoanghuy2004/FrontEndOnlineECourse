@@ -9,7 +9,7 @@ const menuItems = [
   { path: '/tests', label: 'Luyện đề', icon: FaDumbbell },
   { path: '/learner/:id/progresss', label: 'Tiến độ học', icon: FaChartLine },
   { path: '/learner/:id/study-goal', label: 'Theo dõi mục tiêu', icon: FaBullseye },
-  { path: '/learner/:id/virtualSpeaking', label: 'Phòng nói ảo', icon: FaMicrophone },
+  // { path: '/learner/:id/virtualSpeaking', label: 'Phòng nói ảo', icon: FaMicrophone },
   { path: '/learner/:id/chat', label: 'Chat trực tiếp', icon: FaComments },
 ];
 

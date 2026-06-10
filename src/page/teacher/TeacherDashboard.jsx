@@ -10,11 +10,17 @@ import { toast } from 'react-hot-toast';
    MODAL: Báo cáo chi tiết bán chạy nhất
 ───────────────────────────────────────── */
 const DetailReportModal = ({ onClose }) => {
-    const today = new Date().toISOString().split('T')[0];
-    const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+    const getLocalDateString = (date) => {
+        const offset = date.getTimezoneOffset();
+        return new Date(date.getTime() - (offset * 60 * 1000)).toISOString().split('T')[0];
+    };
+
+    const today = getLocalDateString(new Date());
+    const firstDayOfMonth = getLocalDateString(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
 
     const [fromDate, setFromDate] = useState(firstDayOfMonth);
     const [toDate, setToDate] = useState(today);
+    const [sortBy, setSortBy] = useState('REVENUE');
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -25,14 +31,14 @@ const DetailReportModal = ({ onClose }) => {
     const fetchDetail = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await teacherApi.getTopCoursesDetail(fromDate || undefined, toDate || undefined);
+            const res = await teacherApi.getTopCoursesDetail(fromDate || undefined, toDate || undefined, sortBy);
             setData(res.data);
         } catch {
             toast.error('Không thể tải báo cáo chi tiết');
         } finally {
             setLoading(false);
         }
-    }, [fromDate, toDate]);
+    }, [fromDate, toDate, sortBy]);
 
     useEffect(() => { fetchDetail(); }, [fetchDetail]);
 
@@ -117,6 +123,17 @@ const DetailReportModal = ({ onClose }) => {
                                         className="pl-9 pr-4 py-2 bg-white rounded-xl text-slate-700 font-semibold text-sm outline-none shadow-sm focus:ring-2 focus:ring-white/50"
                                     />
                                 </div>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-white/80 text-xs font-semibold uppercase tracking-wide">Sắp xếp theo</label>
+                                <select
+                                    value={sortBy}
+                                    onChange={e => setSortBy(e.target.value)}
+                                    className="px-4 py-2 bg-white rounded-xl text-slate-700 font-semibold text-sm outline-none shadow-sm focus:ring-2 focus:ring-white/50 cursor-pointer h-9"
+                                >
+                                    <option value="REVENUE">Doanh thu nhất</option>
+                                    <option value="SALES">Bán chạy nhất (Lượt bán)</option>
+                                </select>
                             </div>
                             <button
                                 onClick={fetchDetail}
@@ -256,6 +273,11 @@ const TeacherDashboard = () => {
     const [myCourses, setMyCourses] = useState([]);
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [period, setPeriod] = useState('MONTH');
+    
+    const currentYear = new Date().getFullYear();
+    const availableYears = Array.from({ length: 4 }, (_, i) => currentYear - i);
+    const [selectedYear, setSelectedYear] = useState(currentYear);
+
     const [loading, setLoading] = useState(true);
     const [showDetailModal, setShowDetailModal] = useState(false);
 
@@ -282,7 +304,7 @@ const TeacherDashboard = () => {
             try {
                 const [summaryRes, chartRes] = await Promise.all([
                     teacherApi.getSummary(selectedCourse),
-                    teacherApi.getRevenueChart(selectedCourse, period)
+                    teacherApi.getRevenueChart(selectedCourse, period, selectedYear)
                 ]);
                 setSummary(summaryRes.data);
                 setChartData(chartRes.data);
@@ -294,7 +316,7 @@ const TeacherDashboard = () => {
             }
         };
         fetchAnalytics();
-    }, [selectedCourse, period]);
+    }, [selectedCourse, period, selectedYear]);
 
     const formatCurrency = (value) =>
         new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(value);
@@ -363,20 +385,31 @@ const TeacherDashboard = () => {
                                 <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Dữ liệu cập nhật thời gian thực</p>
                             </div>
                         </div>
-                        <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-100 self-start sm:self-center">
-                            {periods.map((p) => (
-                                <button
-                                    key={p.value}
-                                    onClick={() => setPeriod(p.value)}
-                                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                                        period === p.value
-                                            ? 'bg-white text-emerald-600 shadow-sm border border-slate-100'
-                                            : 'text-slate-400 hover:text-slate-600'
-                                    }`}
-                                >
-                                    {p.label}
-                                </button>
-                            ))}
+                        <div className="flex items-center gap-3 self-start sm:self-center">
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                className="px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-600 text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none cursor-pointer"
+                            >
+                                {availableYears.map(year => (
+                                    <option key={year} value={year}>Năm {year}</option>
+                                ))}
+                            </select>
+                            <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-100">
+                                {periods.map((p) => (
+                                    <button
+                                        key={p.value}
+                                        onClick={() => setPeriod(p.value)}
+                                        className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                            period === p.value
+                                                ? 'bg-white text-emerald-600 shadow-sm border border-slate-100'
+                                                : 'text-slate-400 hover:text-slate-600'
+                                        }`}
+                                    >
+                                        {p.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
                     <div className="h-[350px] w-full">
@@ -417,7 +450,7 @@ const TeacherDashboard = () => {
                         <div className="w-10 h-10 rounded-2xl bg-yellow-50 flex items-center justify-center text-yellow-600">
                             <FaTrophy />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-800">Bán chạy nhất</h3>
+                        <h3 className="text-lg font-bold text-slate-800">Bán chạy nhất tháng</h3>
                     </div>
 
                     <div className="space-y-5 flex-1">
@@ -433,7 +466,7 @@ const TeacherDashboard = () => {
                                     </div>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-slate-800 truncate group-hover:text-emerald-600 transition-colors">
+                                    <p className="font-bold text-slate-800 truncate group-hover:text-emerald-600 transition-colors" title={course.courseName}>
                                         {course.courseName}
                                     </p>
                                     <div className="flex items-center gap-3 text-xs font-semibold text-slate-400 mt-0.5">

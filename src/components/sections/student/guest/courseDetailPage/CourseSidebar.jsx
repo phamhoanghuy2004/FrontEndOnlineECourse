@@ -64,8 +64,8 @@ const CourseSidebar = ({ course, isRegistered }) => {
                             Đăng ký học ngay
                         </button>
                     ) : (
-                        <button className="w-full bg-slate-800 text-white py-4 rounded-xl font-bold text-lg shadow-md hover:bg-slate-900 transition-all block">
-                            Tiếp tục học thuật
+                        <button onClick={() => navigate(`/learner/${user.id}/study-room/${course.id}`)} className="w-full bg-slate-800 text-white py-4 rounded-xl font-bold text-lg shadow-md hover:shadow-lg hover:bg-slate-900 transition-all block">
+                            Bạn đã sở hữu (Vào học ngay)
                         </button>
                     )}
                     

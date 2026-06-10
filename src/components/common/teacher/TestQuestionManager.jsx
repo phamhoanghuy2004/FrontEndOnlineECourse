@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import React from 'react';
 import {
     FaArrowLeft, FaSave, FaTrash, FaCheck, FaTimes, FaEdit, FaClock,
     FaPlus, FaLightbulb, FaTag, FaBrain, FaRegCircle, FaCheckCircle,
-    FaSpinner, FaBookOpen
+    FaSpinner, FaBookOpen, FaHeadphones, FaImage, FaCloudUploadAlt, FaTimesCircle
 } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../Button';
 import testApi from '../../../api/testApi';
 
@@ -13,6 +15,9 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(null);
     const [editStates, setEditStates] = useState({});
+
+    const [uploading, setUploading] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     const [isEditingInfo, setIsEditingInfo] = useState(false);
     const [editTestInfo, setEditTestInfo] = useState({
@@ -57,6 +62,26 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
             console.error("Lỗi khi tải chi tiết bài test:", error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleMediaUpload = async (targetId, type, file) => {
+        if (!file) return;
+        
+        const uploadKey = `${targetId}-${type}`;
+        setUploading(uploadKey);
+        
+        try {
+            if (type === 'q-audio') await testApi.uploadQuestionAudio(targetId, file);
+            else if (type === 'q-image') await testApi.uploadQuestionImage(targetId, file);
+            
+            alert("Tải lên thành công!");
+            fetchTestDetails(); // fetch lại data để có url mới
+        } catch (error) {
+            console.error("Lỗi khi tải lên file", error);
+            alert("Lỗi khi tải lên file");
+        } finally {
+            setUploading(null);
         }
     };
 
@@ -289,6 +314,25 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
                                         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) e.stopPropagation(); }}
                                         placeholder="Nhập nội dung câu hỏi..."
                                     />
+                                    
+                                    <div className="flex gap-2 ml-1 mt-2">
+                                        <MediaUploadButton 
+                                            icon={<FaHeadphones />} 
+                                            url={editQ.audioUrl || q.audioUrl}
+                                            isAudio
+                                            compact
+                                            onUpload={(file) => handleMediaUpload(q.id, 'q-audio', file)}
+                                            uploading={uploading === `${q.id}-q-audio`}
+                                        />
+                                        <MediaUploadButton 
+                                            icon={<FaImage />} 
+                                            url={editQ.imageUrl || q.imageUrl}
+                                            compact
+                                            onUpload={(file) => handleMediaUpload(q.id, 'q-image', file)}
+                                            uploading={uploading === `${q.id}-q-image`}
+                                            onPreviewImage={setSelectedImage}
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Answers Grid */}
@@ -372,6 +416,172 @@ const TestQuestionManager = ({ testId, onBack, onUpdateSuccess }) => {
                         </div>
                     );
                 })}
+            </div>
+
+            {/* Image Modal */}
+            <AnimatePresence>
+                {selectedImage && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedImage(null)}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        />
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="relative max-w-4xl max-h-[90vh] bg-white p-2 rounded-3xl shadow-2xl overflow-hidden"
+                        >
+                            <img src={selectedImage} alt="Preview" className="w-full h-full object-contain rounded-2xl" />
+                            <button 
+                                type="button"
+                                onClick={() => setSelectedImage(null)}
+                                className="absolute top-4 right-4 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-all backdrop-blur-md"
+                            >
+                                <FaTimesCircle />
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
+
+const MediaUploadButton = ({ label, icon, url, isAudio, compact, onUpload, uploading, onPreviewImage }) => {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [duration, setDuration] = useState(0);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [showPlayer, setShowPlayer] = useState(false);
+    const audioRef = React.useRef(null);
+
+    const toggleAudio = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!showPlayer) {
+            setShowPlayer(true);
+            return;
+        }
+        if (!audioRef.current) return;
+        if (isPlaying) audioRef.current.pause();
+        else audioRef.current.play();
+        setIsPlaying(!isPlaying);
+    };
+
+    const handleTimeUpdate = () => {
+        if (audioRef.current) {
+            setCurrentTime(audioRef.current.currentTime);
+        }
+    };
+
+    const handleLoadedMetadata = () => {
+        if (audioRef.current) {
+            setDuration(audioRef.current.duration);
+        }
+    };
+
+    const handleSeek = (e) => {
+        const time = parseFloat(e.target.value);
+        setCurrentTime(time);
+        if (audioRef.current) {
+            audioRef.current.currentTime = time;
+        }
+    };
+
+    const formatTime = (time) => {
+        const mins = Math.floor(time / 60);
+        const secs = Math.floor(time % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    };
+
+    return (
+        <div className="flex items-center gap-1.5">
+            {/* Preview Section */}
+            {url && (
+                <div className="flex items-center gap-1">
+                    {isAudio ? (
+                        <div className="flex items-center bg-emerald-50 rounded-2xl overflow-hidden transition-all duration-300">
+                            <button 
+                                type="button"
+                                onClick={toggleAudio}
+                                className={`w-9 h-9 flex items-center justify-center transition-all ${isPlaying ? 'bg-emerald-600 text-white' : 'text-emerald-600 hover:bg-emerald-100'}`}
+                                title={isPlaying ? "Dừng" : "Nghe thử"}
+                            >
+                                {isPlaying ? <div className="w-3 h-3 bg-white rounded-sm" /> : <FaHeadphones size={14} />}
+                            </button>
+                            
+                            <AnimatePresence>
+                                {showPlayer && (
+                                    <motion.div 
+                                        initial={{ width: 0, opacity: 0 }}
+                                        animate={{ width: 140, opacity: 1 }}
+                                        exit={{ width: 0, opacity: 0 }}
+                                        className="flex items-center gap-2 px-3 overflow-hidden"
+                                    >
+                                        <input 
+                                            type="range"
+                                            min="0"
+                                            max={duration || 0}
+                                            value={currentTime}
+                                            onChange={handleSeek}
+                                            className="w-full h-1 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                                        />
+                                        <span className="text-[9px] font-bold text-emerald-700 whitespace-nowrap w-8">
+                                            {formatTime(currentTime)}
+                                        </span>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <audio 
+                                ref={audioRef} 
+                                src={url} 
+                                onTimeUpdate={handleTimeUpdate}
+                                onLoadedMetadata={handleLoadedMetadata}
+                                onEnded={() => setIsPlaying(false)}
+                                className="hidden" 
+                            />
+                        </div>
+                    ) : (
+                        <button 
+                            type="button"
+                            onClick={() => onPreviewImage(url)}
+                            className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-all"
+                            title="Xem ảnh"
+                        >
+                            <FaImage size={14} />
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {/* Upload Button */}
+            <div className="relative group/btn">
+                <input 
+                    type="file" 
+                    accept={isAudio ? "audio/*" : "image/*"} 
+                    className="absolute inset-0 opacity-0 cursor-pointer z-20"
+                    onChange={(e) => onUpload(e.target.files[0])}
+                    disabled={uploading}
+                />
+                <button type="button" className={`flex items-center gap-2 rounded-2xl transition-all border font-black shadow-sm ${compact ? 'p-2.5' : 'px-5 py-2.5 text-xs'} ${
+                    url 
+                    ? 'bg-white border-emerald-100 text-emerald-600' 
+                    : 'bg-white border-slate-200 text-slate-400 hover:border-emerald-300 hover:text-emerald-600 hover:shadow-emerald-50'
+                }`}>
+                    {uploading ? (
+                        <div className="w-4 h-4 border-2 border-slate-200 border-t-emerald-600 rounded-full animate-spin"></div>
+                    ) : (
+                        <>
+                            {!compact && (url ? "Thay đổi" : label)}
+                            {compact && (url ? <FaCloudUploadAlt size={14} /> : icon)}
+                            {!compact && <FaCloudUploadAlt size={14} className="ml-0.5" />}
+                        </>
+                    )}
+                </button>
             </div>
         </div>
     );

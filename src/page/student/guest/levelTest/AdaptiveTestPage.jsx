@@ -64,6 +64,7 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
       options: options,
       answerIds: answerIds,
       audio: bq.audioUrl || bq.audio || "",
+      image: bq.imageUrl || bq.image || "",
       passage: bq.sharedContent || bq.passage || "",
       transcript: bq.transcript || "",
       originalAnswers: bq.answers || []
@@ -71,8 +72,11 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
   }, []);
 
   // 1. Initial mounting: Call startTest API
+  const hasInitialized = React.useRef(false);
+  
   useEffect(() => {
-    let isMounted = true;
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
 
     const initTest = async () => {
       try {
@@ -80,38 +84,30 @@ const AdaptiveTestPage = ({ onFinish, onCancel }) => {
         const res = await placementTestApi.startTest();
         const nextStep = res.data;
 
-        if (isMounted) {
-          if (nextStep.isFinished || !nextStep.nextQuestion) {
-            // Already finished
-            const finalScores = nextStep.scores || nextStep.skillLevels || nextStep.results || skillLevels;
-            onFinish(finalScores);
-          } else {
-            const mappedQ = mapBackendQuestionToFrontend(nextStep.nextQuestion);
-            setCurrentQuestion(mappedQ);
-            setSelectedOption(null);
-            setTotalAnswersCount(0);
-          }
+        if (nextStep.isFinished || !nextStep.nextQuestion) {
+          // Already finished
+          const finalScores = nextStep.scores || nextStep.skillLevels || nextStep.results || skillLevels;
+          onFinish(finalScores);
+        } else {
+          const mappedQ = mapBackendQuestionToFrontend(nextStep.nextQuestion);
+          setCurrentQuestion(mappedQ);
+          setSelectedOption(null);
+          setTotalAnswersCount(0);
         }
       } catch (err) {
-        if (isMounted) {
-          console.error("Lỗi khi bắt đầu bài thi:", err);
-          const errorMsg = err.response?.data?.message || err.message || "Không thể kết nối đến máy chủ để bắt đầu bài thi!";
-          toast.error(errorMsg);
-          onCancel();
-        }
+        console.error("Lỗi khi bắt đầu bài thi:", err);
+        const errorMsg = err.response?.data?.message || err.message || "Không thể kết nối đến máy chủ để bắt đầu bài thi!";
+        toast.error(errorMsg);
+        onCancel();
       } finally {
-        if (isMounted) {
-          setInitialLoading(false);
-        }
+        setInitialLoading(false);
       }
     };
 
     initTest();
 
-    return () => {
-      isMounted = false;
-    };
-  }, [onFinish, mapBackendQuestionToFrontend]);
+    // Removed isMounted cleanup because we want the first fetch to update the state of the remounted component
+  }, [onFinish, mapBackendQuestionToFrontend, skillLevels, onCancel]);
 
   // Keep track of skill levels as they are presented
   useEffect(() => {

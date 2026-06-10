@@ -76,7 +76,7 @@ const CourseTable = ({ courses, onDelete, isDeleting }) => {
                                             <img src={course.imageUrl || course.image} alt={course.name || course.title} className="w-16 h-10 object-cover rounded-md shadow-sm border border-slate-100" />
                                             <div>
                                                 <h4 className="font-bold text-slate-800 text-sm line-clamp-1 group-hover:text-emerald-600 transition-colors">{course.name || course.title}</h4>
-                                                <span className="text-xs text-slate-400">{course.lessons?.length || 0} bài học</span>
+                                                <span className="text-xs text-slate-400">{course.totalLessonsCount || course.lessons?.length || 0} bài học</span>
                                             </div>
                                         </div>
                                     </td>

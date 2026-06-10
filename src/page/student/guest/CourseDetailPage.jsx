@@ -17,6 +17,7 @@ const CourseDetailPage = () => {
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isRegistered, setIsRegistered] = useState(false);
 
     useEffect(() => {
         const fetchCourseDetail = async () => {
@@ -25,6 +26,17 @@ const CourseDetailPage = () => {
                 const response = await courseApi.getCourseDetail(id);
                 if (response && response.data) {
                     setCourse(response.data);
+                    
+                    // Nếu user đã đăng nhập, kiểm tra xem đã mua khóa này chưa
+                    if (user) {
+                        try {
+                            const enrollRes = await courseApi.checkEnrollment(id);
+                            setIsRegistered(enrollRes.data);
+                        } catch (e) {
+                            console.error("Lỗi khi kiểm tra trạng thái sở hữu khóa học:", e);
+                            setIsRegistered(false);
+                        }
+                    }
                 } else {
                     setError("Không tìm thấy khóa học");
                 }
@@ -49,8 +61,6 @@ const CourseDetailPage = () => {
         );
     }
 
-    const isRegistered = user && course.id === 1; // Logic fake tạm thời
-    
     // 💥 KIỂM TRA XEM KHÓA HỌC CÓ BÀI HỌC HAY KHÔNG
     const hasLessons = course.lessons && course.lessons.length > 0;
 

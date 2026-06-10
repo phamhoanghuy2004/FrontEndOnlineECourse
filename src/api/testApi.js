@@ -46,6 +46,26 @@ const testApi = {
         return axiosClient.put(`/quizzes/questions/${questionId}`, data);
     },
 
+    uploadQuestionAudio: (id, file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return axiosClient.post(`/quizzes/questions/${id}/audio`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    },
+
+    uploadQuestionImage: (id, file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return axiosClient.post(`/quizzes/questions/${id}/image`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    },
+
     getRandomTest: (testSetId, testId = null, selectedParts = null) => {
         return axiosClient.get(`/quizzes/test-set/practice/${testSetId}`, {
             params: {

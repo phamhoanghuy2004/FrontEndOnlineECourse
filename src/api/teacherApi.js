@@ -6,17 +6,17 @@ const teacherApi = {
             params: { courseId }
         });
     },
-    getRevenueChart: (courseId, period) => {
+    getRevenueChart: (courseId, period, year) => {
         return axiosClient.get('/teachers/analytics/revenue-chart', {
-            params: { courseId, period }
+            params: { courseId, period, year }
         });
     },
     getTopCourses: () => {
         return axiosClient.get('/teachers/analytics/top-courses');
     },
-    getTopCoursesDetail: (fromDate, toDate) => {
+    getTopCoursesDetail: (fromDate, toDate, sortBy) => {
         return axiosClient.get('/teachers/analytics/top-courses/detail', {
-            params: { fromDate, toDate }
+            params: { fromDate, toDate, sortBy }
         });
     },
     getMyCoursesBasic: () => {

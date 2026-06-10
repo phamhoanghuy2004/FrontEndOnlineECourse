@@ -22,6 +22,9 @@ const AdminTestSetDetailPage = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [editData, setEditData] = useState({ title: '', description: '', isPublic: true, year: new Date().getFullYear() });
     const [saving, setSaving] = useState(false);
+    
+    // Delete loading
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -89,11 +92,14 @@ const AdminTestSetDetailPage = () => {
     const handleDeleteTest = async (testId) => {
         if (!window.confirm("Bạn có chắc chắn muốn xóa bài test này?")) return;
         try {
+            setIsDeleting(true);
             await testApi.deleteTest(testId);
             toast.success("Đã xóa bài test");
             fetchData();
         } catch (error) {
             toast.error("Lỗi khi xóa bài test");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -116,6 +122,24 @@ const AdminTestSetDetailPage = () => {
 
     return (
         <div className="max-w-7xl mx-auto space-y-8 pb-20">
+            {/* Global Delete Loading Overlay */}
+            <AnimatePresence>
+                {isDeleting && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-sm flex flex-col items-center justify-center"
+                    >
+                        <div className="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center min-w-[280px]">
+                            <div className="w-12 h-12 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin mb-4"></div>
+                            <p className="text-slate-800 font-bold tracking-wide">Đang xóa bài test...</p>
+                            <p className="text-sm text-slate-500 mt-2">Vui lòng chờ trong giây lát</p>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
 
             {/* Back Button */}
             <motion.button

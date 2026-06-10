@@ -8,6 +8,7 @@ import {
 import { useAuth } from "../../../hooks/useAuth";
 import userApi from "../../../api/userApi";
 
+import { toast } from 'react-toastify';
 const validateProfile = (data) => {
     const errors = {};
 
@@ -226,7 +227,7 @@ const ProfilePage = () => {
             await userApi.updateUser(submitFormData);
 
             console.log("Payload gọi API:", payload, avatarFile);
-            alert("Cập nhật thông tin thành công!");
+            toast.success("Cập nhật thông tin thành công!");
 
             await fetchUserProfile(user.roles);
 

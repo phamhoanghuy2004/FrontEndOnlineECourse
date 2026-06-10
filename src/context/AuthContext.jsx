@@ -149,13 +149,24 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const logout = () => {
-        setUser(null);
-        setError(null); 
-        localStorage.removeItem("currentUser");
-        localStorage.removeItem("token");
-        sessionStorage.removeItem("verifyData"); 
-        navigate('/login'); 
+    const logout = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            if (token) {
+                await authApi.logout({ token });
+            }
+        } catch (err) {
+            console.error("Lỗi khi gọi API đăng xuất:", err);
+        } finally {
+            setUser(null);
+            setError(null); 
+            localStorage.removeItem("currentUser");
+            localStorage.removeItem("token");
+            sessionStorage.removeItem("verifyData"); 
+            
+            // Ép tải lại trang bằng hard-redirect để xoá sạch cache và state còn sót trong React
+            window.location.href = '/login';
+        }
     };
 
     const value = {

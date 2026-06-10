@@ -6,6 +6,7 @@ import InputField from '../../components/common/InputField';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import blogApi from '../../api/blogApi';
 
+import { toast } from 'react-toastify';
 const stripHtml = (html) => {
     if (!html) return '';
     const tmp = document.createElement("DIV");
@@ -53,7 +54,7 @@ const TeacherBlogPage = () => {
                 setIsDeleteModalOpen(false);
             } catch (error) {
                 console.error("Failed to delete blog", error);
-                alert("Failed to delete blog: " + (error.response?.data?.message || error.message));
+                toast.error("Failed to delete blog: " + (error.response?.data?.message || error.message));
             } finally {
                 setIsDeleting(false);
             }

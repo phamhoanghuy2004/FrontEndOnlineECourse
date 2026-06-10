@@ -6,6 +6,7 @@ import InputField from '../../components/common/InputField';
 import PasswordField from '../../components/common/PasswordField';
 import authApi from '../../api/authApi';
 
+import { toast } from 'react-toastify';
 // ==========================================
 // 1. TÁCH HÀM VALIDATION
 // ==========================================
@@ -125,7 +126,7 @@ const ForgotPasswordPage = () => {
 
         try {
             await authApi.forgotPassword({ email: formData.email });
-            alert('Đã gửi lại mã OTP. Vui lòng kiểm tra email!');
+            toast.success('Đã gửi lại mã OTP. Vui lòng kiểm tra email!');
 
             setTimer(60);
             setCanResend(false);
@@ -162,7 +163,7 @@ const ForgotPasswordPage = () => {
             // 💥 ĐỔI XONG THÌ DỌN RÁC
             sessionStorage.removeItem("forgotPasswordData");
 
-            alert("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
+            toast.success("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
             navigate('/login');
         } catch (error) {
             // 💥 FIX: Đã chuẩn hóa dùng error.message

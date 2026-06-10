@@ -24,9 +24,6 @@ const ReadingQuestion = ({ question, children }) => {
       {/* RIGHT COLUMN: Sticky Question + Options */}
       <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-5">
         <div className="space-y-3">
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
-            Reading Question
-          </span>
           <h2 className="text-lg sm:text-xl font-black text-gray-900 leading-snug">
             {question.question}
           </h2>

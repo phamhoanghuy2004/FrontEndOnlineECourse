@@ -209,9 +209,6 @@ const ListeningQuestion = ({ question, children }) => {
       {/* Question Context Area */}
       <div className="space-y-4">
         <div className="space-y-2">
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
-            Listening Question
-          </span>
           <h2 className="text-xl sm:text-2xl font-black text-gray-900 leading-snug">
             {question.question}
           </h2>

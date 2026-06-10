@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from "react-router-dom";
 import courseApi from '../../api/courseApi';
 
+import { toast } from 'react-toastify';
 const CourseEditorPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -19,7 +20,7 @@ const CourseEditorPage = () => {
                     setInitialData(response.data);
                 } catch (error) {
                     console.error('Error fetching course:', error);
-                    alert('Không tìm thấy khóa học!');
+                    toast.error('Không tìm thấy khóa học!');
                     navigate('/teacher/courses');
                 }
             };
@@ -51,10 +52,10 @@ const CourseEditorPage = () => {
 
             if (isEditing) {
                 await courseApi.update(id, data);
-                alert('Cập nhật khóa học thành công!');
+                toast.success('Cập nhật khóa học thành công!');
             } else {
                 await courseApi.create(data);
-                alert('Tạo khóa học mới thành công!');
+                toast.success('Tạo khóa học mới thành công!');
             }
             navigate('/teacher/courses');
         } finally {

@@ -5,6 +5,7 @@ import Button from '../Button';
 import InputField from '../InputField';
 import testApi from '../../../api/testApi';
 
+import { toast } from 'react-toastify';
 const AddTestSetModal = ({ isOpen, onClose, lessonId, onSuccess }) => {
     const [formData, setFormData] = useState({
         title: '',
@@ -34,10 +35,10 @@ const AddTestSetModal = ({ isOpen, onClose, lessonId, onSuccess }) => {
         try {
             const response = await testApi.createTestSet(formData);
             const newTestSet = response.data?.data || response.data;
-            alert("Tạo TestSet thành công!");
+            toast.success("Tạo TestSet thành công!");
             onSuccess(newTestSet);
         } catch (error) {
-            alert(error.response?.data?.message || "Lỗi khi tạo TestSet");
+            toast.error(error.response?.data?.message || "Lỗi khi tạo TestSet");
         } finally {
             setIsSaving(false);
         }

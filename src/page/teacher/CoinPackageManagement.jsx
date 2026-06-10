@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, Plus, Edit, Coins, X, Loader2 } from 'lucide-react';
 import coinPackageApi from '../../api/coinPackageApi';
 
+import { toast } from 'react-toastify';
 const CoinPackageManagement = () => {
     // ==========================================
     // 1. STATE QUẢN LÝ DỮ LIỆU & PHÂN TRANG
@@ -79,7 +80,7 @@ const CoinPackageManagement = () => {
         } catch (error) {
             console.error('Lỗi khi tải danh sách:', error);
             // Lỗi nằm thẳng trong error (như Huy miêu tả)
-            alert(error.message || 'Không thể tải danh sách gói xu!');
+            toast.error(error.message || 'Không thể tải danh sách gói xu!');
         } finally {
             setLoading(false);
             setLoadingMore(false);
@@ -156,7 +157,7 @@ const CoinPackageManagement = () => {
         } catch (error) {
             console.error('Lỗi Submit:', error);
             // Lỗi nằm thẳng trong error
-            alert(error.message || 'Có lỗi xảy ra khi lưu trữ!');
+            toast.error(error.message || 'Có lỗi xảy ra khi lưu trữ!');
         } finally {
             setSubmitting(false);
         }

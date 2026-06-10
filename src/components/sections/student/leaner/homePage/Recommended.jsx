@@ -4,11 +4,13 @@ import { fadeInUp } from "../../../../../constants/motionVariants";
 import Button from "../../../../common/Button";
 import testApi from "../../../../../api/testApi"; // 🔴 Nhớ check lại đường dẫn import cho đúng dự án của bạn nhé
 import { FaBookOpen } from "react-icons/fa"; // Thêm icon cho đẹp
+import { useNavigate } from "react-router-dom";
 
 const Recommended = () => {
     // 1. Khởi tạo State lưu danh sách bộ đề
     const [recommendations, setRecommendations] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
 
     // 2. Gọi API khi Component vừa mount
     useEffect(() => {
@@ -58,7 +60,8 @@ const Recommended = () => {
                         return (
                             <div 
                                 key={item.id} 
-                                className={`rounded-[2rem] p-6 relative overflow-hidden shadow-lg transition-transform hover:-translate-y-1 ${
+                                onClick={() => navigate(`/tests/${item.id}`)}
+                                className={`cursor-pointer rounded-[2rem] p-6 relative overflow-hidden shadow-lg transition-transform hover:-translate-y-1 ${
                                     isFirst 
                                         ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white" 
                                         : "bg-white border border-slate-100 text-slate-800"

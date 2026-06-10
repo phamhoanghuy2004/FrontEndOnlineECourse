@@ -6,6 +6,7 @@ import {
 import consultaionApi from '../../api/consultaionApi';
 import { useAuth } from '../../hooks/useAuth';
 
+import { toast } from 'react-toastify';
 const ConsultationManagement = () => {
     const { user } = useAuth(); // Lấy thông tin admin hiện tại
     
@@ -69,9 +70,9 @@ const ConsultationManagement = () => {
             
             // Cập nhật ngay dòng đó trên UI
             setConsultations(prev => prev.map(item => item.id === id ? updatedItem : item));
-            alert("Đã nhận tư vấn thành công!");
+            toast.success("Đã nhận tư vấn thành công!");
         } catch (error) {
-            alert(error.message || "Có lỗi xảy ra hoặc đã có người khác nhận.");
+            toast.error(error.message || "Có lỗi xảy ra hoặc đã có người khác nhận.");
         }
     };
 
@@ -85,9 +86,9 @@ const ConsultationManagement = () => {
             
             // Cập nhật ngay dòng đó trên UI
             setConsultations(prev => prev.map(item => item.id === id ? updatedItem : item));
-            alert("Đã hoàn tất tư vấn!");
+            toast.success("Đã hoàn tất tư vấn!");
         } catch (error) {
-            alert(error.message || "Có lỗi xảy ra.");
+            toast.error(error.message || "Có lỗi xảy ra.");
         }
     };
 

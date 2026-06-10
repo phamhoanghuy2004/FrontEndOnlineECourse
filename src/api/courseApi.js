@@ -14,6 +14,10 @@ const courseApi = {
         return axiosClient.get(`/courses/${id}`);
     },
 
+    checkEnrollment: (courseId) => {
+        return axiosClient.get(`/courses/${courseId}/check-enrollment`);
+    },
+
     getMyLearningCourses: (params) => {
         return axiosClient.get('/enrollments/my-course', {
             params

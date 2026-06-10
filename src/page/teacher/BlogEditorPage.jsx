@@ -8,6 +8,7 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { useAuth } from '../../hooks/useAuth';
 
+import { toast } from 'react-toastify';
 const BlogEditorPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -74,7 +75,7 @@ const BlogEditorPage = () => {
         try {
             const currentUser = user || JSON.parse(localStorage.getItem('currentUser'));
             if (!currentUser || !currentUser.id) {
-                alert("Vui lòng đăng nhập lại để thực hiện.");
+                toast.warning("Vui lòng đăng nhập lại để thực hiện.");
                 return;
             }
 
@@ -91,11 +92,11 @@ const BlogEditorPage = () => {
             } else {
                 await blogApi.create(data);
             }
-            alert(isEditing ? 'Cập nhật bài viết thành công!' : 'Đăng bài viết thành công!');
+            toast.success(isEditing ? 'Cập nhật bài viết thành công!' : 'Đăng bài viết thành công!');
             navigate('/teacher/blog');
         } catch (error) {
             console.error("Failed to save blog", error);
-            alert("Có lỗi xảy ra, vui lòng thử lại!");
+            toast.error("Có lỗi xảy ra, vui lòng thử lại!");
         } finally {
             setIsLoading(false);
         }

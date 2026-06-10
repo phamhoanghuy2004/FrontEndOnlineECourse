@@ -8,6 +8,7 @@ import { FaPlus, FaSearch } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import courseApi from '../../api/courseApi';
 
+import { toast } from 'react-toastify';
 const CourseManagementPage = () => {
     const navigate = useNavigate();
     const [courses, setCourses] = useState([]);
@@ -38,7 +39,7 @@ const CourseManagementPage = () => {
             setCourses(courses.filter(course => course.id !== id));
         } catch (error) {
             console.error('Error deleting course:', error);
-            alert('Có lỗi xảy ra khi xóa khóa học!');
+            toast.error('Có lỗi xảy ra khi xóa khóa học!');
         } finally {
             setIsDeleting(false);
         }

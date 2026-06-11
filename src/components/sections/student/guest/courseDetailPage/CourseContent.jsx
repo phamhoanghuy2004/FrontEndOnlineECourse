@@ -1,8 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { FaPlayCircle, FaFileAlt, FaLock, FaChevronDown, FaChevronUp, FaListUl, FaClipboardCheck, FaPen } from "react-icons/fa"; // 💥 Import thêm Icon bài Test
 import DOMPurify from 'dompurify';
 import { useNavigate } from 'react-router-dom';
+import Hls from 'hls.js';
+
+const PreviewVideoPlayer = ({ url }) => {
+    const videoRef = useRef(null);
+
+    useEffect(() => {
+        let hls;
+        const video = videoRef.current;
+        if (!video || !url) return;
+
+        if (url.includes('.m3u8')) {
+            if (Hls.isSupported()) {
+                hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.ERROR, function (event, data) {
+                    if (data.fatal) console.error('HLS Error:', data);
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = url;
+            }
+        } else {
+            video.src = url;
+        }
+
+        return () => {
+            if (hls) hls.destroy();
+        };
+    }, [url]);
+
+    return (
+        <video
+            ref={videoRef}
+            className="absolute top-0 left-0 w-full h-full object-contain bg-black"
+            controls
+            controlsList="nodownload"
+        >
+            Trình duyệt của bạn không hỗ trợ thẻ video.
+        </video>
+    );
+};
 
 const formatDuration = (seconds) => {
     if (!seconds) return "00:00";
@@ -16,7 +57,7 @@ const LessonItem = ({ lesson, isRegistered }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const navigate = useNavigate();
 
-   const handleDoTest = () => {
+    const handleDoTest = () => {
         if (!lesson.testSetId) return;
         navigate(`/test-sets/${lesson.testSetId}`);
     };
@@ -95,14 +136,7 @@ const LessonItem = ({ lesson, isRegistered }) => {
                                 <>
                                     <div className="relative pt-[56.25%] bg-black rounded-xl overflow-hidden shadow-sm mb-6 group">
                                         {lesson.previewVideoUrl ? (
-                                            <video
-                                                className="absolute top-0 left-0 w-full h-full object-contain bg-black"
-                                                src={lesson.previewVideoUrl}
-                                                controls
-                                                controlsList="nodownload"
-                                            >
-                                                Trình duyệt của bạn không hỗ trợ thẻ video.
-                                            </video>
+                                            <PreviewVideoPlayer url={lesson.previewVideoUrl} />
                                         ) : (
                                             <div className="absolute inset-0 flex items-center justify-center text-slate-500">
                                                 Video đang được cập nhật...

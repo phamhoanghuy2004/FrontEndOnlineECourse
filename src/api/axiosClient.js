@@ -2,7 +2,7 @@ import axios from 'axios';
 
 
 const axiosClient = axios.create({
-    baseURL: 'https://phamhoanghuy-echill-backend.hf.space',
+    baseURL: 'https://echillbackend.onrender.com',
     headers: {
         'Content-Type': 'application/json',
     },

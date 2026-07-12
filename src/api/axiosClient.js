@@ -2,19 +2,19 @@ import axios from 'axios';
 
 
 const axiosClient = axios.create({
-    baseURL: 'https://echillbackend.onrender.com',
+    baseURL: 'http://157.245.205.7/toeic/',
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
 const PUBLIC_ENDPOINTS = [
-    '/auth/login', 
-    '/auth/register', 
+    '/auth/login',
+    '/auth/register',
     '/auth/verify-register-otp',
-    '/auth/resend-register-otp', 
-    '/auth/google-login', 
-    '/auth/forgot-password', 
+    '/auth/resend-register-otp',
+    '/auth/google-login',
+    '/auth/forgot-password',
     '/auth/reset-password',
     '/auth/refresh'
 ];
@@ -46,7 +46,7 @@ axiosClient.interceptors.request.use(
                 config.headers.Authorization = `Bearer ${token}`;
             }
         }
-        
+
         return config;
     },
     (error) => {
@@ -68,7 +68,7 @@ axiosClient.interceptors.response.use(
 
         // Bắt lỗi 1006 từ JwtAuthenticationEntryPoint
         if (responseData?.code === 1006 && originalRequest) {
-            
+
             // Nếu chính API refresh bị 1006 (token cũ cũng hết hạn hoặc không hợp lệ) -> Đăng nhập lại
             if (originalRequest.url.includes('/auth/refresh')) {
                 localStorage.removeItem("token");
@@ -81,7 +81,7 @@ axiosClient.interceptors.response.use(
                 originalRequest._retry = true;
 
                 if (isRefreshing) {
-                    return new Promise(function(resolve, reject) {
+                    return new Promise(function (resolve, reject) {
                         failedQueue.push({ resolve, reject });
                     }).then(token => {
                         originalRequest.headers.Authorization = `Bearer ${token}`;
@@ -93,7 +93,7 @@ axiosClient.interceptors.response.use(
 
                 isRefreshing = true;
                 const oldToken = localStorage.getItem('token');
-                
+
                 return new Promise(function (resolve, reject) {
                     axiosClient.post('/auth/refresh', { token: oldToken })
                         .then((res) => {

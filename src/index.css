@@ -12,6 +12,11 @@
 body {
   background-color: #F9FAFB;
   color: var(--color-dark);
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
 }
 
 /* Tùy chỉnh thanh định vị (Pagination) của Swiper */

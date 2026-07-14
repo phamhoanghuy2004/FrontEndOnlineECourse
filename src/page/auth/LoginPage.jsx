@@ -268,45 +268,7 @@ const LoginPage = () => {
                   </div>
                 </div>
 
-                {/* Account Item - Giáo Viên */}
-                <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all duration-300">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-7 h-7 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-xs">
-                      <FaChalkboardTeacher />
-                    </span>
-                    <span className="text-sm font-bold text-slate-700">Giáo viên</span>
-                  </div>
-                  <div className="ml-9 space-y-2 text-[12px]">
-                    <div className="flex justify-between items-center text-slate-600">
-                      <span className="text-slate-400 font-medium w-8">TK:</span>
-                      <code className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-teal-700 font-bold select-all flex-1 ml-2 text-right">teacher</code>
-                    </div>
-                    <div className="flex justify-between items-center text-slate-600">
-                      <span className="text-slate-400 font-medium w-8">MK:</span>
-                      <code className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-teal-700 font-bold select-all flex-1 ml-2 text-right">17102004Huy@</code>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Account Item - Admin */}
-                <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs">
-                      <FaUserShield />
-                    </span>
-                    <span className="text-sm font-bold text-slate-700">Quản trị viên (Admin)</span>
-                  </div>
-                  <div className="ml-9 space-y-2 text-[12px]">
-                    <div className="flex justify-between items-center text-slate-600">
-                      <span className="text-slate-400 font-medium w-8">TK:</span>
-                      <code className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-indigo-700 font-bold select-all flex-1 ml-2 text-right">admin</code>
-                    </div>
-                    <div className="flex justify-between items-center text-slate-600">
-                      <span className="text-slate-400 font-medium w-8">MK:</span>
-                      <code className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-indigo-700 font-bold select-all flex-1 ml-2 text-right">admin</code>
-                    </div>
-                  </div>
-                </div>
               </div>
 
             </div>

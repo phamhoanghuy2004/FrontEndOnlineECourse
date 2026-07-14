@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaUser, FaGraduationCap, FaChalkboardTeacher } from 'react-icons/fa';
+import { FaUser, FaGraduationCap, FaChalkboardTeacher, FaInfoCircle, FaUserShield } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import InputField from '../../components/common/InputField';
 import PasswordField from '../../components/common/PasswordField';
@@ -90,8 +90,12 @@ const LoginPage = () => {
         <div className="absolute top-[20%] right-[-5%] w-[400px] h-[400px] bg-blue-200/30 rounded-full blur-3xl opacity-60"></div>
       </div>
 
-      <div className="w-full max-w-[400px] px-4 relative z-10">
-        <motion.div
+      {/* Main Container for Form and Info Box */}
+      <div className="relative z-10 w-full max-w-5xl px-4 flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12">
+        
+        {/* Left Side: Login Form */}
+        <div className="w-full max-w-[400px]">
+          <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
@@ -216,7 +220,99 @@ const LoginPage = () => {
             </form>
 
           </div>
-        </motion.div>
+          </motion.div>
+        </div>
+
+        {/* Right Side: Test Accounts Info Box */}
+        <div className="w-full max-w-[400px] lg:max-w-[360px]">
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+          >
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-emerald-900/10 border border-white/60 p-6 relative overflow-hidden group">
+              {/* Decorative background elements */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-emerald-200/50 to-teal-100/10 rounded-bl-full -z-10 transition-transform duration-700 group-hover:scale-110"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-100/40 to-transparent rounded-tr-full -z-10"></div>
+              
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-6 relative">
+                <div className="absolute inset-0 bg-emerald-400 blur-xl opacity-20 rounded-full transform scale-110"></div>
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30 border border-white/20 relative z-10">
+                  <FaInfoCircle className="text-xl drop-shadow-sm" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-800 tracking-tight">Tài khoản dùng thử</h3>
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">Dành cho việc trải nghiệm</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {/* Account Item - Sinh Viên */}
+                <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all duration-300">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
+                      <FaGraduationCap />
+                    </span>
+                    <span className="text-sm font-bold text-slate-700">Sinh viên</span>
+                  </div>
+                  <div className="ml-9 space-y-2 text-[12px]">
+                    <div className="flex justify-between items-center text-slate-600">
+                      <span className="text-slate-400 font-medium w-8">TK:</span>
+                      <code className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-emerald-700 font-bold select-all flex-1 ml-2 text-right">hoanghuy</code>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-600">
+                      <span className="text-slate-400 font-medium w-8">MK:</span>
+                      <code className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-emerald-700 font-bold select-all flex-1 ml-2 text-right">17102004Huy@</code>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Item - Giáo Viên */}
+                <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all duration-300">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-7 h-7 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-xs">
+                      <FaChalkboardTeacher />
+                    </span>
+                    <span className="text-sm font-bold text-slate-700">Giáo viên</span>
+                  </div>
+                  <div className="ml-9 space-y-2 text-[12px]">
+                    <div className="flex justify-between items-center text-slate-600">
+                      <span className="text-slate-400 font-medium w-8">TK:</span>
+                      <code className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-teal-700 font-bold select-all flex-1 ml-2 text-right">teacher</code>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-600">
+                      <span className="text-slate-400 font-medium w-8">MK:</span>
+                      <code className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-teal-700 font-bold select-all flex-1 ml-2 text-right">17102004Huy@</code>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Item - Admin */}
+                <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs">
+                      <FaUserShield />
+                    </span>
+                    <span className="text-sm font-bold text-slate-700">Quản trị viên (Admin)</span>
+                  </div>
+                  <div className="ml-9 space-y-2 text-[12px]">
+                    <div className="flex justify-between items-center text-slate-600">
+                      <span className="text-slate-400 font-medium w-8">TK:</span>
+                      <code className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-indigo-700 font-bold select-all flex-1 ml-2 text-right">admin</code>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-600">
+                      <span className="text-slate-400 font-medium w-8">MK:</span>
+                      <code className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-indigo-700 font-bold select-all flex-1 ml-2 text-right">admin</code>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </motion.div>
+        </div>
+
       </div>
     </div>
   );

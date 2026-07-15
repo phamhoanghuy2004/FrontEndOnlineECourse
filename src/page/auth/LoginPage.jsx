@@ -259,11 +259,11 @@ const LoginPage = () => {
                   <div className="ml-9 space-y-2 text-[12px]">
                     <div className="flex justify-between items-center text-slate-600">
                       <span className="text-slate-400 font-medium w-8">TK:</span>
-                      <code className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-emerald-700 font-bold select-all flex-1 ml-2 text-right">hoanghuy</code>
+                      <code className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-emerald-700 font-bold select-all flex-1 ml-2 text-right">student</code>
                     </div>
                     <div className="flex justify-between items-center text-slate-600">
                       <span className="text-slate-400 font-medium w-8">MK:</span>
-                      <code className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-emerald-700 font-bold select-all flex-1 ml-2 text-right">17102004Huy@</code>
+                      <code className="bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-emerald-700 font-bold select-all flex-1 ml-2 text-right">123456A@</code>
                     </div>
                   </div>
                 </div>
